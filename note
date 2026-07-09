@@ -1,0 +1,16 @@
+- Memasang package excel 
+    composer require maatwebsite/excel
+
+php artisan config:clear
+php artisan key:generate
+
+- Membersihkan cache lama
+    php artisan optimize:clear
+- Menghapus tabel dan data lama
+    php artisan migrate:fresh --seed
+- Membuat akses link upload
+    php artisan storage:link
+- Mengecek route API
+    php artisan route:list --path=api
+- Menjalankan Laravel
+    php artisan serve
