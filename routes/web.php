@@ -6,6 +6,7 @@ use App\Http\Controllers\Superadmin\AdminController as SuperadminAdminController
 use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAturanPerusahaanController;
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -53,6 +54,10 @@ Route::get('/dashboard', function () {
 
     if ($user?->role === 'superadmin') {
         return redirect()->route('superadmin.dashboard');
+    }
+
+    if ($user?->role === 'admin') {
+        return redirect()->route('admin.dashboard');
     }
 
     return view('dashboard');
@@ -147,6 +152,42 @@ Route::middleware(['auth', 'role:superadmin'])
             '/jam-absensi/reset',
             [SuperadminJamAbsensiController::class, 'reset']
         )->name('jam-absensi.reset');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Admin
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get(
+            '/dashboard',
+            AdminDashboardController::class
+        )->name('dashboard');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Menu di bawah ini belum ada controller/view-nya.
+        | Sidebar otomatis tampil "Soon" sampai route-nya didaftarkan di sini,
+        | dengan nama route yang SAMA seperti di resources/views/partials/sidebar.blade.php
+        |--------------------------------------------------------------------------
+        */
+
+        // Route::resource('permintaan-magang', PermintaanMagangController::class);
+        // Route::resource('peserta', PesertaController::class);
+        // Route::resource('absensi', AbsensiController::class);
+        // Route::resource('tugas', TugasController::class);
+        // Route::resource('pengumpulan-tugas', PengumpulanTugasController::class);
+        // Route::resource('metode-pembayaran', MetodePembayaranController::class);
+        // Route::resource('pembayaran', PembayaranController::class);
+        // Route::get('laporan/peserta', [LaporanController::class, 'peserta'])->name('laporan.peserta');
+        // Route::get('laporan/absensi', [LaporanController::class, 'absensi'])->name('laporan.absensi');
+        // Route::get('laporan/penugasan', [LaporanController::class, 'penugasan'])->name('laporan.penugasan');
+        // Route::get('laporan/pembayaran', [LaporanController::class, 'pembayaran'])->name('laporan.pembayaran');
     });
 
 /*

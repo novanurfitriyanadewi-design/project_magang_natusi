@@ -1,171 +1,142 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('title', 'Portal Magang') | CV Natusi</title>
 
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Manrope:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    @stack('styles')
+
     <style>
-        [x-cloak] {
-            display: none !important;
+        [x-cloak]{
+            display:none !important;
         }
 
-        /*
-         * Menjaga layar tetap gelap ketika guided tour
-         * sedang berpindah halaman, sehingga tidak berkedip.
-         */
-        html.natusi-tour-loading::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: 2147482999;
-            background: rgba(2, 6, 23, 0.78);
-            pointer-events: none;
+        html{
+            font-family:'Inter',sans-serif;
+        }
+
+        body{
+            margin:0;
+            min-height:100vh;
+            background:#f8fafc;
+            color:#0f172a;
+        }
+
+        .material-symbols-outlined{
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24;
+        }
+
+        .headline{
+            font-family:'Manrope',sans-serif;
+        }
+
+        html.natusi-tour-loading::before{
+            content:'';
+            position:fixed;
+            inset:0;
+            z-index:99999;
+            background:rgba(15,23,42,.7);
+            pointer-events:none;
         }
     </style>
 
-
-    @stack('styles')
 </head>
 
-<body
-    class="
-        h-screen overflow-hidden
-        bg-gradient-to-br
-        from-slate-50 via-blue-50/70 to-cyan-50/50
-        font-['Inter'] text-slate-900 antialiased
-    "
+<body class="bg-slate-50">
+
+<div
+    x-data="{
+        sidebarOpen:false,
+        profileOpen:false,
+        query:'',
+
+        matches(text){
+            return String(text ?? '')
+                .toLowerCase()
+                .includes(this.query.toLowerCase());
+        }
+    }"
+    class="relative min-h-screen"
 >
+
+    {{-- Overlay --}}
     <div
-        class="relative h-screen overflow-hidden"
-        x-data="{
-            sidebarOpen: false,
-            profileOpen: false,
-            query: '',
+        x-show="sidebarOpen"
+        x-transition.opacity
+        x-cloak
+        class="fixed inset-0 z-40 bg-black/50 lg:hidden"
+        @click="sidebarOpen=false"
+    ></div>
 
-            matches(text) {
-                return String(text ?? '')
-                    .toLowerCase()
-                    .includes(this.query.toLowerCase());
-            },
-        }"
-        @keydown.escape.window="
-            sidebarOpen = false;
-            profileOpen = false;
-        "
-        @natusi-tour-open-sidebar.window="sidebarOpen = true"
-        @natusi-tour-close-sidebar.window="sidebarOpen = false"
-    >
-        <div
-            class="
-                pointer-events-none fixed
-                -right-28 top-20 h-80 w-80
-                rounded-full bg-sky-200/35 blur-3xl
-            "
-        ></div>
+    {{-- Sidebar --}}
+    @include('partials.sidebar')
 
-        <div
-            class="
-                pointer-events-none fixed
-                bottom-8 left-52 h-72 w-72
-                rounded-full bg-indigo-200/25 blur-3xl
-            "
-        ></div>
+    {{-- Header --}}
+    @include('partials.header')
 
-        <div
-            x-cloak
-            x-show="sidebarOpen"
-            x-transition.opacity
-            class="
-                fixed inset-0 z-40
-                bg-slate-950/45 backdrop-blur-sm
-                lg:hidden
-            "
-            @click="sidebarOpen = false"
-            aria-hidden="true"
-        ></div>
+    {{-- Content --}}
+    <div class="lg:pl-[245px]">
 
-        @include('partials.sidebar')
-        @include('partials.header')
+        <main
+            class="pt-[72px] min-h-screen bg-slate-50 px-6 py-6"
+        >
 
-        <div class="relative z-10 h-screen lg:pl-[245px]">
-            <div
-                class="
-                    h-screen overflow-y-auto pt-[72px]
-                    [scrollbar-gutter:stable]
-                "
-            >
-                <main
-                    class="
-                        min-h-[calc(100vh-72px-49px)]
-                        px-4 py-5 sm:px-6
-                        lg:px-7 lg:py-6
-                    "
-                >
-                    @if (session('success'))
-                        <div
-                            role="status"
-                            class="
-                                mb-5 rounded-2xl
-                                border border-emerald-200/80
-                                bg-gradient-to-r
-                                from-emerald-50 to-teal-50
-                                px-4 py-3 text-sm font-medium
-                                text-emerald-700 shadow-sm
-                            "
-                        >
-                            {{ session('success') }}
-                        </div>
-                    @endif
+            @if(session('success'))
 
-                    @if (session('error'))
-                        <div
-                            role="alert"
-                            class="
-                                mb-5 rounded-2xl
-                                border border-rose-200/80
-                                bg-gradient-to-r
-                                from-rose-50 to-orange-50
-                                px-4 py-3 text-sm font-medium
-                                text-rose-700 shadow-sm
-                            "
-                        >
-                            {{ session('error') }}
-                        </div>
-                    @endif
+                <div class="mb-5 rounded-xl border border-green-200 bg-green-50 p-4 text-green-700">
 
-                    @yield('content')
-                </main>
+                    {{ session('success') }}
 
-                <footer
-                    class="
-                        border-t border-slate-200/70
-                        bg-white/55 px-6 py-4 text-center
-                        text-[10px] tracking-wide text-slate-500
-                        backdrop-blur-xl
-                    "
-                >
-                    © {{ date('Y') }} CV Natusi Internship Portal.
-                    Seluruh hak cipta dilindungi.
-                </footer>
-            </div>
-        </div>
+                </div>
+
+            @endif
+
+            @if(session('error'))
+
+                <div class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+
+                    {{ session('error') }}
+
+                </div>
+
+            @endif
+
+            @yield('content')
+
+        </main>
+
+        <footer class="border-t bg-white py-4 text-center text-xs text-slate-500">
+
+            © {{ date('Y') }} CV Natusi Internship Portal
+
+        </footer>
+
     </div>
 
-    @include('partials.delete-confirmation')
-    @include('partials.support-tour')
+</div>
 
-    @stack('scripts')
+@include('partials.delete-confirmation')
+@include('partials.support-tour')
+
+@stack('scripts')
+
 </body>
 </html>
