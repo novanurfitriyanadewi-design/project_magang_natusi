@@ -1,3 +1,4 @@
+
 @php
     $user = auth()->user();
     $role = $user?->role ?? 'peserta';
@@ -21,7 +22,15 @@
             ['label' => 'Dashboard', 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
             ['label' => 'Permintaan Magang', 'route' => 'admin.permintaan.index', 'match' => 'admin.permintaan.*', 'icon' => 'inbox', 'tour' => 'internship-requests'],
             ['label' => 'Peserta Magang', 'route' => 'admin.peserta.index', 'match' => 'admin.peserta.*', 'icon' => 'users', 'tour' => 'internship-participants'],
+            ['label' => 'Data Absensi', 'route' => 'admin.absensi.index', 'match' => 'admin.absensi.*', 'icon' => 'clock', 'tour' => 'attendance-data'],
             ['label' => 'Kelola Tugas', 'route' => 'admin.tugas.index', 'match' => 'admin.tugas.*', 'icon' => 'tasks', 'tour' => 'manage-tasks'],
+            ['label' => 'Pengumpulan Tugas', 'route' => 'admin.pengumpulan-tugas.index', 'match' => 'admin.pengumpulan-tugas.*', 'icon' => 'tasks', 'tour' => 'task-submissions'],
+            ['label' => 'Metode Pembayaran', 'route' => 'admin.metode-pembayaran.index', 'match' => 'admin.metode-pembayaran.*', 'icon' => 'bank', 'tour' => 'payment-methods'],
+            ['label' => 'Data Pembayaran', 'route' => 'admin.pembayaran.index', 'match' => 'admin.pembayaran.*', 'icon' => 'bank', 'tour' => 'payment-data'],
+            ['label' => 'Laporan Peserta', 'route' => 'admin.laporan.peserta', 'match' => 'admin.laporan.peserta', 'icon' => 'rules', 'tour' => 'report-participants'],
+            ['label' => 'Laporan Absensi', 'route' => 'admin.laporan.absensi', 'match' => 'admin.laporan.absensi', 'icon' => 'rules', 'tour' => 'report-attendance'],
+            ['label' => 'Laporan Penugasan', 'route' => 'admin.laporan.penugasan', 'match' => 'admin.laporan.penugasan', 'icon' => 'rules', 'tour' => 'report-tasks'],
+            ['label' => 'Laporan Pembayaran', 'route' => 'admin.laporan.pembayaran', 'match' => 'admin.laporan.pembayaran', 'icon' => 'rules', 'tour' => 'report-payments'],
             ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
         default => [

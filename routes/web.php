@@ -5,8 +5,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Superadmin\AdminController as SuperadminAdminController;
 use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAturanPerusahaanController;
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
-use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiControl;
+use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\PesertaMagangController as AdminPesertaMagangController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
 use Illuminate\Support\Facades\Route;
 
@@ -204,23 +205,70 @@ Route::middleware(['auth', 'role:admin'])
 
         /*
         |--------------------------------------------------------------------------
+        | Kelola Data Peserta Magang
+        |--------------------------------------------------------------------------
+        */
+
+        Route::resource('peserta', AdminPesertaMagangController::class)
+            ->except(['create', 'show', 'edit']) // create & edit pakai modal di halaman index, bukan halaman terpisah
+            ->parameters(['peserta' => 'peserta_magang']); // biar {peserta} di URL nge-bind ke $pesertaMagang di controller
+
+        /*
+        |--------------------------------------------------------------------------
         | Menu di bawah ini belum ada controller/view-nya.
         | Sidebar otomatis tampil "Soon" sampai route-nya didaftarkan di sini,
         | dengan nama route yang SAMA seperti di resources/views/partials/sidebar.blade.php
         |--------------------------------------------------------------------------
         */
 
-        // Route::resource('permintaan-magang', PermintaanMagangController::class);
-        // Route::resource('peserta', PesertaController::class);
-        // Route::resource('absensi', AbsensiController::class);
-        // Route::resource('tugas', TugasController::class);
-        // Route::resource('pengumpulan-tugas', PengumpulanTugasController::class);
-        // Route::resource('metode-pembayaran', MetodePembayaranController::class);
-        // Route::resource('pembayaran', PembayaranController::class);
-        // Route::get('laporan/peserta', [LaporanController::class, 'peserta'])->name('laporan.peserta');
-        // Route::get('laporan/absensi', [LaporanController::class, 'absensi'])->name('laporan.absensi');
-        // Route::get('laporan/penugasan', [LaporanController::class, 'penugasan'])->name('laporan.penugasan');
-        // Route::get('laporan/pembayaran', [LaporanController::class, 'pembayaran'])->name('laporan.pembayaran');
+        Route::get('/permintaan', function () {
+            return view('admin-permintaanmagang');
+        })->name('permintaan.index');
+
+        Route::get('/absensi', function () {
+            return view('admin-absensi');
+        })->name('absensi.index');
+
+        Route::get('/tugas', function () {
+            return view('admin-tugas');
+        })->name('tugas.index');
+
+        Route::get('/pengumpulan-tugas', function () {
+            return view('admin-pengumpulantugas');
+        })->name('pengumpulan-tugas.index');
+
+        Route::get('/metode-pembayaran', function () {
+            return view('admin-metodepembayaran');
+        })->name('metode-pembayaran.index');
+
+        Route::get('/pembayaran', function () {
+            return view('admin-pembayaran');
+        })->name('pembayaran.index');
+
+        Route::get('/laporan/peserta', function () {
+            return view('admin-laporanpeserta');
+        })->name('laporan.peserta');
+
+        Route::get('/laporan/absensi', function () {
+            return view('admin-laporanabsensi');
+        })->name('laporan.absensi');
+
+        Route::get('/laporan/penugasan', function () {
+            return view('admin-laporanpenugasan');
+        })->name('laporan.penugasan');
+
+        Route::get('/laporan/pembayaran', function () {
+            return view('admin-laporanpembayaran');
+        })->name('laporan.pembayaran');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Catatan: closure di atas cuma placeholder biar menu sidebar aktif & bisa
+        | diklik (gak nampilin "Soon" lagi). Kalau controller & fitur aslinya
+        | sudah jadi, tinggal ganti masing-masing closure dengan:
+        | Route::resource('nama-menu', NamaController::class);
+        |--------------------------------------------------------------------------
+        */
     });
 
 /*
