@@ -5,7 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Superadmin\AdminController as SuperadminAdminController;
 use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAturanPerusahaanController;
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
-use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiControl
+use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiControl;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
 use Illuminate\Support\Facades\Route;

@@ -4,219 +4,169 @@
 @section('page-title', 'Internship Portal')
 
 @section('content')
+
     {{-- Welcome Header --}}
     <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
-            <h3 class="text-3xl font-bold tracking-tight text-slate-900" style="font-family: 'Manrope', sans-serif;">
-                Dashboard Overview
-            </h3>
-            <p class="mt-1 text-sm text-slate-500">
-                Monitoring internship activities and administrative tasks for CV Natusi.
-            </p>
+            <h3 class="text-3xl font-bold tracking-tight text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Dashboard Overview</h3>
+            <p class="text-sm text-slate-500 mt-1">Monitoring internship activities and administrative tasks for CV Natusi.</p>
         </div>
     </div>
 
     {{-- Key Metrics --}}
-    <section class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="absolute inset-y-0 left-0 w-1 bg-[#006191]"></div>
-            <div class="flex items-start justify-between">
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#006191]"></div>
+            <div class="flex justify-between items-start">
                 <span class="text-[11px] font-semibold tracking-wider text-slate-500">ACTIVE INTERNS</span>
-                <div class="rounded-lg bg-[#006191]/10 p-2 text-[#006191]">
+                <div class="p-2 bg-[#006191]/10 rounded-lg text-[#006191]">
                     <span class="material-symbols-outlined">groups</span>
                 </div>
             </div>
             <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-extrabold" style="font-family: 'Manrope', sans-serif;">
-                    {{ $activeInterns ?? 0 }}
-                </span>
-                <span class="text-xs font-bold text-green-600">
-                    +{{ $newInternsThisMonth ?? 0 }} this month
-                </span>
+                <span class="text-3xl font-extrabold headline" style="font-family: 'Manrope', sans-serif;">{{ $activeInterns ?? 0 }}</span>
+                <span class="text-xs text-green-600 font-bold">+{{ $newInternsThisMonth ?? 0 }} this month</span>
             </div>
         </div>
 
-        <div class="relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="absolute inset-y-0 left-0 w-1 bg-[#d32f2f]"></div>
-            <div class="flex items-start justify-between">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#d32f2f]"></div>
+            <div class="flex justify-between items-start">
                 <span class="text-[11px] font-semibold tracking-wider text-slate-500">PENDING REQUESTS</span>
-                <div class="rounded-lg bg-[#d32f2f]/10 p-2 text-[#d32f2f]">
+                <div class="p-2 bg-[#d32f2f]/10 rounded-lg text-[#d32f2f]">
                     <span class="material-symbols-outlined">pending_actions</span>
                 </div>
             </div>
             <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-extrabold" style="font-family: 'Manrope', sans-serif;">
-                    {{ $pendingRequests ?? 0 }}
-                </span>
-                <span class="text-xs font-bold text-[#d32f2f]">Needs Review</span>
+                <span class="text-3xl font-extrabold headline" style="font-family: 'Manrope', sans-serif;">{{ $pendingRequests ?? 0 }}</span>
+                <span class="text-xs text-[#d32f2f] font-bold">Needs Review</span>
             </div>
         </div>
 
-        <div class="relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="absolute inset-y-0 left-0 w-1 bg-indigo-500"></div>
-            <div class="flex items-start justify-between">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#6366f1]"></div>
+            <div class="flex justify-between items-start">
                 <span class="text-[11px] font-semibold tracking-wider text-slate-500">TODAY'S ATTENDANCE</span>
-                <div class="rounded-lg bg-indigo-50 p-2 text-indigo-500">
+                <div class="p-2 bg-[#6366f1]/10 rounded-lg text-[#6366f1]">
                     <span class="material-symbols-outlined">how_to_reg</span>
                 </div>
             </div>
             <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-extrabold" style="font-family: 'Manrope', sans-serif;">
-                    {{ $attendanceRate ?? 0 }}%
-                </span>
-                <span class="text-xs text-slate-400">
-                    {{ $presentToday ?? 0 }}/{{ $activeInterns ?? 0 }} Present
-                </span>
+                <span class="text-3xl font-extrabold headline" style="font-family: 'Manrope', sans-serif;">{{ $attendanceRate ?? 0 }}%</span>
+                <span class="text-xs text-slate-400">{{ $presentToday ?? 0 }}/{{ $activeInterns ?? 0 }} Present</span>
             </div>
         </div>
 
-        <div class="relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="absolute inset-y-0 left-0 w-1 bg-sky-200"></div>
-            <div class="flex items-start justify-between">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 relative overflow-hidden">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#f59e0b]"></div>
+            <div class="flex justify-between items-start">
                 <span class="text-[11px] font-semibold tracking-wider text-slate-500">TASK REVIEWS</span>
-                <div class="rounded-lg bg-sky-50 p-2 text-sky-600">
+                <div class="p-2 bg-[#f59e0b]/10 rounded-lg text-[#f59e0b]">
                     <span class="material-symbols-outlined">assignment_turned_in</span>
                 </div>
             </div>
             <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-extrabold" style="font-family: 'Manrope', sans-serif;">
-                    {{ str_pad($pendingTaskReviews ?? 0, 2, '0', STR_PAD_LEFT) }}
-                </span>
+                <span class="text-3xl font-extrabold headline" style="font-family: 'Manrope', sans-serif;">{{ str_pad($pendingTaskReviews ?? 0, 2, '0', STR_PAD_LEFT) }}</span>
                 <span class="text-xs text-slate-400">Assignments pending</span>
             </div>
         </div>
     </section>
 
-    {{-- Main Section --}}
-    <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <section class="space-y-6 lg:col-span-2">
-            {{-- Laporan Magang Summary --}}
-            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-                    <div class="flex items-center gap-3">
-                        <div class="h-6 w-1 rounded-full bg-[#006191]"></div>
-                        <h4 class="text-lg font-semibold text-slate-900" style="font-family: 'Manrope', sans-serif;">
-                            Laporan Magang Summary
-                        </h4>
-                    </div>
+    {{-- Main Interactive Section --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
 
+        {{-- Laporan Magang Summary --}}
+        <section class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-1 h-6 bg-[#006191] rounded-full"></div>
+                        <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Laporan Magang Summary</h4>
+                    </div>
                     @if (Route::has('admin.laporan.peserta'))
-                        <a href="{{ route('admin.laporan.peserta') }}"
-                           class="text-[11px] font-semibold tracking-wider text-[#006191] hover:underline">
-                            View All
-                        </a>
+                        <a href="{{ route('admin.laporan.peserta') }}" class="text-[#006191] text-[11px] font-semibold tracking-wider hover:underline">View All</a>
                     @endif
                 </div>
-
                 <div class="p-5">
                     <div class="space-y-4">
                         @forelse ($recentReports ?? [] as $report)
-                            <div class="group flex items-center gap-4 rounded-lg p-3 transition-colors hover:bg-slate-50">
-                                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                            <div class="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-lg transition-colors group">
+                                <div class="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
                                     <span class="material-symbols-outlined text-[#006191]">description</span>
                                 </div>
-
-                                <div class="min-w-0 flex-1">
-                                    <h5 class="truncate text-sm font-semibold text-slate-900">
-                                        {{ $report->title ?? 'Tanpa judul' }}
-                                    </h5>
-                                    <p class="truncate text-sm text-slate-500">
-                                        Submitted by: {{ $report->intern_name ?? '-' }}
-                                        &bull;
-                                        {{ !empty($report->submitted_at) ? \Illuminate\Support\Carbon::parse($report->submitted_at)->diffForHumans() : '-' }}
-                                    </p>
+                                <div class="flex-1 min-w-0">
+                                    <h5 class="text-sm font-semibold text-slate-900 truncate">{{ $report->title }}</h5>
+                                    <p class="text-sm text-slate-500 truncate">Submitted by: {{ $report->intern_name }} &bull; {{ $report->submitted_at->diffForHumans() }}</p>
                                 </div>
-
                                 <div class="flex items-center gap-3">
-                                    <span class="rounded px-2 py-1 text-[10px] font-bold uppercase
-                                        {{ ($report->status ?? '') === 'submitted'
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-yellow-100 text-yellow-700' }}">
-                                        {{ ($report->status ?? '') === 'submitted' ? 'SUBMITTED' : 'IN REVIEW' }}
+                                    <span class="px-2 py-1 text-[10px] font-bold rounded uppercase
+                                        {{ $report->status === 'submitted' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
+                                        {{ $report->status === 'submitted' ? 'Submitted' : 'In Review' }}
                                     </span>
-                                    <button type="button"
-                                            class="rounded p-1 transition-colors hover:bg-white group-hover:shadow-sm"
-                                            aria-label="Lihat laporan">
+                                    <button class="p-1 hover:bg-white rounded transition-colors group-hover:shadow-sm">
                                         <span class="material-symbols-outlined text-[20px]">chevron_right</span>
                                     </button>
                                 </div>
                             </div>
                         @empty
-                            <p class="text-sm italic text-slate-500">Belum ada laporan yang masuk.</p>
+                            <p class="text-sm text-slate-500 italic">Belum ada laporan yang masuk.</p>
                         @endforelse
                     </div>
                 </div>
             </div>
 
             {{-- Weekly Attendance Overview --}}
-            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="h-6 w-1 rounded-full bg-[#006191]"></div>
-                        <h4 class="text-lg font-semibold text-slate-900" style="font-family: 'Manrope', sans-serif;">
-                            Weekly Attendance Overview
-                        </h4>
+                        <div class="w-1 h-6 bg-[#006191] rounded-full"></div>
+                        <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Weekly Attendance Overview</h4>
                     </div>
                 </div>
-
                 <div class="p-5">
-                    @php
-                        $days = $weeklyAttendance ?? [
-                            'Mon' => 95,
-                            'Tue' => 92,
-                            'Wed' => 98,
-                            'Thu' => 94,
-                            'Fri' => 88,
-                        ];
-                    @endphp
-
-                    <div class="flex h-40 items-end justify-between gap-4 px-2">
+                    <div class="flex items-end justify-between h-40 gap-4 px-3">
+                        @php
+                            $days = $weeklyAttendance ?? [
+                                'Mon' => 95, 'Tue' => 92, 'Wed' => 98, 'Thu' => 94, 'Fri' => 88,
+                            ];
+                        @endphp
                         @foreach ($days as $day => $percent)
-                            @php
-                                $safePercent = max(0, min(100, (int) $percent));
-                            @endphp
-                            <div class="flex flex-1 flex-col items-center gap-2">
-                                <div class="group relative h-32 w-full overflow-hidden rounded-t-lg bg-[#006191]/10">
-                                    <div class="absolute inset-x-0 bottom-0 rounded-t-lg bg-[#006191] transition-all"
-                                         style="height: {{ $safePercent }}%"></div>
-                                    <div class="absolute left-1/2 top-1 -translate-x-1/2 rounded bg-slate-900 px-2 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-                                        {{ $safePercent }}%
-                                    </div>
+                            <div class="flex-1 flex flex-col items-center gap-2">
+                                <div class="w-full bg-[#006191]/10 rounded-t-lg relative group h-[85%]">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-[#006191] rounded-t-lg transition-all" style="height: {{ $percent }}%"></div>
+                                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">{{ $percent }}%</div>
                                 </div>
-                                <span class="text-[10px] font-bold text-slate-500">{{ $day }}</span>
+                                <span class="text-[10px] font-semibold text-slate-500">{{ $day }}</span>
                             </div>
                         @endforeach
                     </div>
 
-                    <div class="mt-6 grid grid-cols-2 gap-4 border-t border-slate-200 pt-5 sm:grid-cols-4">
-                        <div class="flex items-center gap-3">
-                            <div class="h-3 w-3 rounded-full bg-red-500"></div>
+                    <div class="mt-6 pt-4 border-t border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-slate-400"></div>
                             <div class="flex flex-col">
-                                <span class="text-[10px] font-bold uppercase text-slate-500">Absen</span>
+                                <span class="text-[10px] font-semibold text-slate-500 uppercase">Absen</span>
                                 <span class="text-sm font-bold text-slate-900">{{ $absentCount ?? 0 }} Orang</span>
                             </div>
                         </div>
-
-                        <div class="flex items-center gap-3">
-                            <div class="h-3 w-3 rounded-full border border-yellow-700 bg-yellow-100"></div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-yellow-100 border border-yellow-700"></div>
                             <div class="flex flex-col">
-                                <span class="text-[10px] font-bold uppercase text-slate-500">Izin/Sakit</span>
+                                <span class="text-[10px] font-semibold text-slate-500 uppercase">Izin/Sakit</span>
                                 <span class="text-sm font-bold text-slate-900">{{ $leaveCount ?? 0 }} Orang</span>
                             </div>
                         </div>
-
-                        <div class="flex items-center gap-3">
-                            <div class="h-3 w-3 rounded-full bg-slate-300"></div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-slate-200"></div>
                             <div class="flex flex-col">
-                                <span class="text-[10px] font-bold uppercase text-slate-500">Belum Absen</span>
+                                <span class="text-[10px] font-semibold text-slate-500 uppercase">Belum Absen</span>
                                 <span class="text-sm font-bold text-slate-900">{{ $notYetCount ?? 0 }} Orang</span>
                             </div>
                         </div>
-
-                        <div class="flex items-center gap-3">
-                            <div class="h-3 w-3 rounded-full bg-[#006191]"></div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-[#006191]"></div>
                             <div class="flex flex-col">
-                                <span class="text-[10px] font-bold uppercase text-slate-500">Hadir</span>
+                                <span class="text-[10px] font-semibold text-slate-500 uppercase">Hadir</span>
                                 <span class="text-sm font-bold text-slate-900">{{ $presentToday ?? 0 }} Orang</span>
                             </div>
                         </div>
@@ -227,45 +177,34 @@
 
         {{-- Sidebar Content --}}
         <aside class="space-y-6">
-            {{-- Monthly Payment Info --}}
-            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div class="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
-                    <div class="h-6 w-1 rounded-full bg-[#006191]"></div>
-                    <h4 class="text-lg font-semibold text-slate-900" style="font-family: 'Manrope', sans-serif;">
-                        Monthly Payment Info
-                    </h4>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200 flex items-center gap-3">
+                    <div class="w-1 h-6 bg-[#006191] rounded-full"></div>
+                    <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Monthly Payment Info</h4>
                 </div>
-
-                <div class="space-y-4 p-5">
+                <div class="p-5 space-y-4">
                     <div class="flex flex-col gap-1">
-                        <span class="text-[11px] font-bold text-slate-500">TOTAL COLLECTED</span>
-                        <span class="text-2xl font-extrabold text-[#006191]">
-                            Rp {{ number_format($totalCollected ?? 0, 0, ',', '.') }}
-                        </span>
+                        <span class="text-[11px] font-semibold tracking-wider text-slate-500">TOTAL COLLECTED</span>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-2xl font-extrabold text-[#006191]">Rp {{ number_format($totalCollected ?? 0, 0, ',', '.') }}</span>
+                        </div>
                     </div>
-
-                    <div class="flex items-center justify-between rounded-lg border border-[#006191]/10 bg-[#006191]/5 p-3">
+                    <div class="flex items-center justify-between p-3 bg-[#006191]/5 rounded-lg border border-[#006191]/10">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-[#006191]">pending_actions</span>
-                            <span class="text-sm font-medium text-slate-700">
-                                {{ $pendingPayments ?? 0 }} Pending Verification
-                            </span>
+                            <span class="text-sm font-medium text-slate-900">{{ $pendingPayments ?? 0 }} Pending Verification</span>
                         </div>
-                        <span class="material-symbols-outlined text-[18px] text-[#006191]">arrow_forward</span>
+                        <span class="material-symbols-outlined text-[#006191] text-[18px]">arrow_forward</span>
                     </div>
                 </div>
             </div>
 
-            {{-- Quick Links --}}
-            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div class="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
-                    <div class="h-6 w-1 rounded-full bg-red-500"></div>
-                    <h4 class="text-lg font-semibold text-slate-900" style="font-family: 'Manrope', sans-serif;">
-                        Quick Links
-                    </h4>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200 flex items-center gap-3">
+                    <div class="w-1 h-6 bg-[#6366f1] rounded-full"></div>
+                    <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Quick Links</h4>
                 </div>
-
-                <div class="space-y-2 p-5">
+                <div class="p-5 space-y-1">
                     @php
                         $quickLinks = [
                             ['label' => 'Laporan Absensi', 'icon' => 'calendar_today', 'route' => 'admin.laporan.absensi'],
@@ -273,56 +212,34 @@
                             ['label' => 'Performance Analytics', 'icon' => 'analytics', 'route' => 'admin.analytics'],
                         ];
                     @endphp
-
                     @foreach ($quickLinks as $link)
-                        @php
-                            $routeExists = Route::has($link['route']);
-                        @endphp
-                        <a href="{{ $routeExists ? route($link['route']) : '#' }}"
-                           class="group flex items-center justify-between rounded-lg border border-transparent bg-slate-50 p-4 transition-all hover:border-slate-200 hover:bg-slate-100 {{ $routeExists ? '' : 'pointer-events-none opacity-50' }}">
-                            <div class="flex items-center gap-4">
+                        <a href="{{ Route::has($link['route']) ? route($link['route']) : '#' }}"
+                           class="flex items-center justify-between p-3 bg-white hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all group {{ Route::has($link['route']) ? '' : 'opacity-50 pointer-events-none' }}">
+                            <div class="flex items-center gap-3">
                                 <span class="material-symbols-outlined text-[#006191]">{{ $link['icon'] }}</span>
-                                <span class="text-sm font-semibold text-slate-700">{{ $link['label'] }}</span>
+                                <span class="text-sm font-semibold text-slate-900">{{ $link['label'] }}</span>
                             </div>
-                            <span class="material-symbols-outlined text-slate-400 opacity-0 transition-opacity group-hover:opacity-100">
-                                arrow_forward
-                            </span>
+                            <span class="material-symbols-outlined text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
                         </a>
                     @endforeach
                 </div>
             </div>
 
-            {{-- Attendance Alerts --}}
-            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div class="border-b border-slate-200 px-5 py-4">
-                    <h4 class="text-lg font-semibold text-slate-900" style="font-family: 'Manrope', sans-serif;">
-                        Attendance Alerts
-                    </h4>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200">
+                    <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Attendance Alerts</h4>
                 </div>
-
-                <div class="space-y-4 p-5">
+                <div class="p-5 space-y-3">
                     @forelse ($attendanceAlerts ?? [] as $alert)
-                        @php
-                            $isWarning = ($alert['type'] ?? '') === 'warning';
-                        @endphp
-                        <div class="flex items-start gap-3 rounded-lg border-l-4 p-3
-                            {{ $isWarning
-                                ? 'border-red-500 bg-red-50'
-                                : 'border-[#006191] bg-sky-50' }}">
-                            <span class="material-symbols-outlined mt-1 {{ $isWarning ? 'text-red-500' : 'text-[#006191]' }}">
-                                {{ $isWarning ? 'warning' : 'info' }}
-                            </span>
+                        <div class="p-3 rounded-lg border-l-4 {{ $alert['type'] === 'warning' ? 'border-[#d32f2f] bg-[#d32f2f]/5' : 'border-[#006191] bg-[#006191]/5' }} flex items-start gap-3">
+                            <span class="material-symbols-outlined {{ $alert['type'] === 'warning' ? 'text-[#d32f2f]' : 'text-[#006191]' }} mt-1">{{ $alert['type'] === 'warning' ? 'warning' : 'info' }}</span>
                             <div>
-                                <p class="text-sm font-semibold text-slate-900">
-                                    {{ $alert['title'] ?? 'Informasi' }}
-                                </p>
-                                <p class="text-xs text-slate-500">
-                                    {{ $alert['message'] ?? '-' }}
-                                </p>
+                                <p class="text-sm font-semibold text-slate-900">{{ $alert['title'] }}</p>
+                                <p class="text-xs text-slate-500">{{ $alert['message'] }}</p>
                             </div>
                         </div>
                     @empty
-                        <p class="text-sm italic text-slate-500">Tidak ada notifikasi saat ini.</p>
+                        <p class="text-sm text-slate-500 italic">Tidak ada notifikasi saat ini.</p>
                     @endforelse
                 </div>
             </div>
@@ -330,80 +247,62 @@
     </div>
 
     {{-- Recent Task Review Table --}}
-    <section class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-            <h4 class="text-lg font-semibold text-slate-900" style="font-family: 'Manrope', sans-serif;">
-                Recent Task Reviews
-            </h4>
-
+    <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mt-6">
+        <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+            <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Recent Task Reviews</h4>
             @if (Route::has('admin.pengumpulan-tugas.index'))
-                <a href="{{ route('admin.pengumpulan-tugas.index') }}"
-                   class="flex items-center gap-1 text-sm font-semibold text-[#006191] hover:underline">
-                    Show More
-                    <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                <a href="{{ route('admin.pengumpulan-tugas.index') }}" class="text-[#006191] text-[11px] font-semibold tracking-wider hover:underline flex items-center gap-1">
+                    Show More <span class="material-symbols-outlined text-[18px]">open_in_new</span>
                 </a>
             @endif
         </div>
-
         <div class="overflow-x-auto">
             <table class="w-full text-left">
-                <thead class="border-b border-slate-200 bg-slate-50">
+                <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
-                        <th class="px-5 py-3 text-xs font-bold text-slate-500">INTERN NAME</th>
-                        <th class="px-5 py-3 text-xs font-bold text-slate-500">TASK TITLE</th>
-                        <th class="px-5 py-3 text-xs font-bold text-slate-500">DEADLINE</th>
-                        <th class="px-5 py-3 text-xs font-bold text-slate-500">STATUS</th>
-                        <th class="px-5 py-3 text-right text-xs font-bold text-slate-500">ACTION</th>
+                        <th class="px-5 py-3 text-[11px] font-semibold tracking-wider text-slate-500">INTERN NAME</th>
+                        <th class="px-5 py-3 text-[11px] font-semibold tracking-wider text-slate-500">TASK TITLE</th>
+                        <th class="px-5 py-3 text-[11px] font-semibold tracking-wider text-slate-500">DEADLINE</th>
+                        <th class="px-5 py-3 text-[11px] font-semibold tracking-wider text-slate-500">STATUS</th>
+                        <th class="px-5 py-3 text-[11px] font-semibold tracking-wider text-slate-500 text-right">ACTION</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @forelse ($taskReviews ?? [] as $task)
-                        <tr class="transition-colors hover:bg-slate-50">
+                        <tr class="hover:bg-slate-50 transition-colors">
                             <td class="px-5 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-[#006191]">
-                                        {{ $task->initials ?? '?' }}
+                                    <div class="w-8 h-8 rounded-full bg-[#006191]/10 text-[#006191] flex items-center justify-center font-bold text-xs">
+                                        {{ $task->initials }}
                                     </div>
-                                    <span class="text-sm font-medium text-slate-700">
-                                        {{ $task->intern_name ?? '-' }}
-                                    </span>
+                                    <span class="text-sm font-medium text-slate-900">{{ $task->intern_name }}</span>
                                 </div>
                             </td>
-                            <td class="px-5 py-4 text-sm text-slate-700">{{ $task->title ?? '-' }}</td>
-                            <td class="px-5 py-4 text-sm text-slate-700">
-                                {{ !empty($task->deadline) ? \Illuminate\Support\Carbon::parse($task->deadline)->format('d M Y') : '-' }}
-                            </td>
+                            <td class="px-5 py-4 text-sm text-slate-700">{{ $task->title }}</td>
+                            <td class="px-5 py-4 text-sm text-slate-700">{{ $task->deadline->format('d M Y') }}</td>
                             <td class="px-5 py-4">
-                                <span class="rounded px-2 py-1 text-[10px] font-bold uppercase
-                                    {{ ($task->status ?? '') === 'completed'
-                                        ? 'bg-green-100 text-green-700'
-                                        : 'bg-sky-100 text-[#006191]' }}">
-                                    {{ ($task->status ?? '') === 'completed' ? 'Completed' : 'In Review' }}
+                                <span class="px-2 py-1 text-[10px] font-bold rounded uppercase
+                                    {{ $task->status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-[#006191]/10 text-[#006191]' }}">
+                                    {{ $task->status === 'completed' ? 'Completed' : 'In Review' }}
                                 </span>
                             </td>
                             <td class="px-5 py-4 text-right">
-                                <button type="button"
-                                        class="text-sm font-semibold hover:underline
-                                            {{ ($task->status ?? '') === 'completed' ? 'text-slate-500' : 'text-[#006191]' }}">
-                                    {{ ($task->status ?? '') === 'completed' ? 'Details' : 'Review' }}
+                                <button class="{{ $task->status === 'completed' ? 'text-slate-400' : 'text-[#006191]' }} hover:underline text-sm font-semibold">
+                                    {{ $task->status === 'completed' ? 'Details' : 'Review' }}
                                 </button>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-5 py-6 text-center text-sm italic text-slate-500">
-                                Belum ada tugas yang perlu direview.
-                            </td>
+                            <td colspan="5" class="px-5 py-6 text-center text-sm text-slate-500 italic">Belum ada tugas yang perlu direview.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-
-        <div class="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-5 py-3">
-            <span class="text-xs italic text-slate-500">
-                Showing {{ count($taskReviews ?? []) }} of {{ $pendingTaskReviews ?? 0 }} pending reviews
-            </span>
+        <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+            <span class="text-[11px] font-semibold tracking-wider text-slate-500 opacity-70 italic">Showing {{ ($taskReviews ?? [])->count() ?? 0 }} of {{ $pendingTaskReviews ?? 0 }} pending reviews</span>
         </div>
     </section>
+
 @endsection
