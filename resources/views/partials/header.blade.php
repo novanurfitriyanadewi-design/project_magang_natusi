@@ -28,6 +28,7 @@
 
     $isAdminPage = request()->routeIs('superadmin.admin*');
     $isRulePage = request()->routeIs('superadmin.aturan*');
+    $isPaymentPage = request()->routeIs('superadmin.metode-pembayaran*');
 
     $searchAction = match (true) {
         $isAdminPage && Route::has('superadmin.admin')
@@ -36,18 +37,23 @@
         $isRulePage && Route::has('superadmin.aturan.index')
             => route('superadmin.aturan.index'),
 
+        $isPaymentPage && Route::has('superadmin.metode-pembayaran.index')
+            => route('superadmin.metode-pembayaran.index'),
+
         default => null,
     };
 
     $searchLabel = match (true) {
         $isAdminPage => 'Cari nama admin',
         $isRulePage => 'Cari aturan',
+        $isPaymentPage => 'Cari rekening pembayaran',
         default => 'Cari menu',
     };
 
     $searchPlaceholder = match (true) {
         $isAdminPage => 'Cari nama admin...',
         $isRulePage => 'Cari nama atau isi aturan...',
+        $isPaymentPage => 'Cari bank, rekening, atau pemilik...',
         default => 'Cari menu...',
     };
 

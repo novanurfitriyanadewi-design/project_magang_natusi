@@ -5,8 +5,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Superadmin\AdminController as SuperadminAdminController;
 use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAturanPerusahaanController;
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
-use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
+use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiControl
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -152,6 +153,38 @@ Route::middleware(['auth', 'role:superadmin'])
             '/jam-absensi/reset',
             [SuperadminJamAbsensiController::class, 'reset']
         )->name('jam-absensi.reset');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Kelola Metode Pembayaran
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            '/metode-pembayaran',
+            [SuperadminMetodePembayaranController::class, 'index']
+        )->name('metode-pembayaran.index');
+
+        Route::put(
+            '/metode-pembayaran/nominal',
+            [SuperadminMetodePembayaranController::class, 'updateNominal']
+        )->name('metode-pembayaran.nominal.update');
+
+        Route::post(
+            '/metode-pembayaran/rekening',
+            [SuperadminMetodePembayaranController::class, 'storeBank']
+        )->name('metode-pembayaran.bank.store');
+
+        Route::put(
+            '/metode-pembayaran/rekening/{bank}',
+            [SuperadminMetodePembayaranController::class, 'updateBank']
+        )->name('metode-pembayaran.bank.update');
+
+        Route::delete(
+            '/metode-pembayaran/rekening/{bank}',
+            [SuperadminMetodePembayaranController::class, 'destroyBank']
+        )->name('metode-pembayaran.bank.destroy');
     });
 
 /*
