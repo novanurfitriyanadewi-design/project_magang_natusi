@@ -12,7 +12,6 @@ class PermintaanMagang extends Model
     use HasFactory;
 
     protected $table = 'permintaan_magang';
-
     protected $primaryKey = 'id_permintaan';
 
     protected $fillable = [

@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 class AbsensiController extends ApiCrudController
 {
     protected string $modelClass = Absensi::class;
-
     protected array $with = [
         'peserta.user',
     ];
@@ -30,7 +29,6 @@ class AbsensiController extends ApiCrudController
                 'numeric',
                 'between:-90,90',
             ],
-
             'longitude' => [
                 'required',
                 'numeric',
@@ -42,7 +40,6 @@ class AbsensiController extends ApiCrudController
     public function absen(Request $request): JsonResponse
     {
         $data = $request->validate($this->rules());
-
         $peserta = PesertaMagang::query()
             ->where('user_id', $request->user()->id_user)
             ->where('status', 'aktif')
@@ -78,16 +75,8 @@ class AbsensiController extends ApiCrudController
             ], 422);
         }
 
-        /*
-         * Koordinat lokasi kantor.
-         * Lebih baik nantinya disimpan di tabel pengaturan perusahaan.
-         */
         $latitudeKantor = -6.732000;
         $longitudeKantor = 108.552000;
-
-        /*
-         * Radius maksimal dalam meter.
-         */
         $radiusMaksimal = 100;
 
         $jarak = $this->hitungJarak(
@@ -107,7 +96,6 @@ class AbsensiController extends ApiCrudController
         }
 
         $jamSekarang = now()->format('H:i:s');
-
         $statusKehadiran =
             $jamSekarang > $jamOperasional->jam_mulai
                 ? 'terlambat'
@@ -171,7 +159,6 @@ class AbsensiController extends ApiCrudController
             $field=>$path,
             'keterangan'=>$data['keterangan'],
         ]);
-
         return response()->json(['success'=>true,'message'=>'Pengajuan '.$status.' berhasil dikirim.','data'=>$absensi],201);
     }
 
@@ -189,7 +176,6 @@ class AbsensiController extends ApiCrudController
         $selisihLat = deg2rad(
             $latitudeKantor - $latitudePeserta
         );
-
         $selisihLong = deg2rad(
             $longitudeKantor - $longitudePeserta
         );

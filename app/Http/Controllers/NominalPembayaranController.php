@@ -9,11 +9,8 @@ use Illuminate\Http\JsonResponse;
 class NominalPembayaranController extends ApiCrudController
 {
     protected string $modelClass = NominalPembayaran::class;
-
     protected array $with = [];
-
     protected array $files = [];
-
     protected function rules(?Model $model = null): array
     {
         return [

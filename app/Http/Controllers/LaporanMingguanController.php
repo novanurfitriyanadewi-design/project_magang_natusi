@@ -12,11 +12,9 @@ use Illuminate\Support\Carbon;
 class LaporanMingguanController extends ApiCrudController
 {
     protected string $modelClass = LaporanMingguan::class;
-
     protected array $with = [
         'peserta.user',
     ];
-
     protected array $files = [
         'laporan' => 'laporan-mingguan',
     ];

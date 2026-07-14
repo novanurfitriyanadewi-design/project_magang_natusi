@@ -1,258 +1,363 @@
-<!DOCTYPE html><html class="light" lang="en" style=""><head>
-<meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport">
-<title>Register | CV Natusi Intern Portal</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "on-primary-fixed-variant": "#004b71",
-                        "on-surface": "#0b1c30",
-                        "error": "#ba1a1a",
-                        "surface-container": "#e5eeff",
-                        "on-secondary-fixed-variant": "#93000d",
-                        "surface-dim": "#cbdbf5",
-                        "on-primary-container": "#fcfcff",
-                        "outline": "#6f7881",
-                        "on-tertiary-container": "#fdfcff",
-                        "on-surface-variant": "#3f4850",
-                        "surface-container-low": "#eff4ff",
-                        "primary": "#006191",
-                        "on-secondary": "#ffffff",
-                        "on-error": "#ffffff",
-                        "primary-container": "#007bb6",
-                        "tertiary-fixed-dim": "#b7c8de",
-                        "tertiary": "#4d5d70",
-                        "inverse-surface": "#213145",
-                        "tertiary-container": "#65768a",
-                        "error-container": "#ffdad6",
-                        "on-primary-fixed": "#001e30",
-                        "inverse-primary": "#8fcdff",
-                        "surface-container-highest": "#d3e4fe",
-                        "on-secondary-container": "#fffbff",
-                        "secondary-container": "#e41f25",
-                        "on-tertiary": "#ffffff",
-                        "secondary-fixed-dim": "#ffb4ab",
-                        "background": "#f8f9ff",
-                        "primary-fixed-dim": "#8fcdff",
-                        "on-secondary-fixed": "#410002",
-                        "inverse-on-surface": "#eaf1ff",
-                        "on-tertiary-fixed-variant": "#38485a",
-                        "on-error-container": "#93000a",
-                        "surface-container-high": "#dce9ff",
-                        "tertiary-fixed": "#d2e4fb",
-                        "secondary": "#bb0014",
-                        "outline-variant": "#bec7d2",
-                        "surface-bright": "#f8f9ff",
-                        "on-tertiary-fixed": "#0b1d2d",
-                        "secondary-fixed": "#ffdad6",
-                        "primary-fixed": "#cbe6ff",
-                        "surface-tint": "#006495",
-                        "surface": "#f8f9ff",
-                        "on-background": "#0b1c30",
-                        "surface-variant": "#d3e4fe",
-                        "surface-container-lowest": "#ffffff",
-                        "on-primary": "#ffffff"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "stack-lg": "24px",
-                        "gutter": "12px",
-                        "container-padding": "20px",
-                        "unit": "4px",
-                        "stack-sm": "8px",
-                        "stack-md": "16px"
-                    },
-                    "fontFamily": {
-                        "body-lg": ["Inter"],
-                        "label-sm": ["Inter"],
-                        "headline-lg-mobile": ["Manrope"],
-                        "label-bold": ["Inter"],
-                        "headline-lg": ["Manrope"],
-                        "headline-md": ["Manrope"],
-                        "body-md": ["Inter"]
-                    },
-                    "fontSize": {
-                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-                        "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "500"}],
-                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
-                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
-                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
-                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
-                    }
-                },
-            },
-        }
-    </script>
-<style>
-        body {
-            background-color: #f8f9ff;
-            font-family: 'Inter', sans-serif;
-        }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .card-accent {
-            position: relative;
-        }
-        .card-accent::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 16px;
-            bottom: 16px;
-            width: 4px;
-            background-color: #006191;
-            border-radius: 0 4px 4px 0;
-        }
-        @media (max-width: 768px) {
-            .safe-bottom {
-                padding-bottom: env(safe-area-inset-bottom, 24px);
-            }
-        }
-    </style>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>Ajukan Magang | CV Natusi</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-background text-on-surface flex flex-col min-h-screen">
+<body class="min-h-screen bg-[#f7f9ff] font-['Inter'] text-slate-900 antialiased lg:h-dvh lg:overflow-hidden">
+    @php
+        $registerRole = $registerRole ?? session('register_role', 'pelamar');
+        $isEmployee = $registerRole === 'karyawan';
+    @endphp
 
-<header class="fixed top-0 w-full z-50 bg-surface flex items-center px-container-padding h-16 border-b border-outline-variant">
-<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors" onclick="window.history.back()">
-<span class="material-symbols-outlined text-primary">arrow_back</span>
-</button>
-<span class="ml-4 font-headline-md text-headline-md font-bold text-primary">CV Natusi</span>
-</header>
+    <main class="relative min-h-screen overflow-hidden lg:h-dvh lg:min-h-0">
+        <section class="grid min-h-screen lg:h-dvh lg:min-h-0 lg:grid-cols-[1.04fr_0.96fr]">
+            {{-- Panel kiri --}}
+            <aside class="relative isolate hidden overflow-hidden bg-[#e7f0ff] px-8 py-8 lg:flex lg:h-dvh lg:min-h-0 lg:flex-col xl:px-12 xl:py-10">
+                <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+                    <div class="absolute right-[-110px] top-[15%] h-[380px] w-[380px] rounded-full border border-[#8dbde8]/35"></div>
+                    <div class="absolute right-[-45px] top-[22%] h-[300px] w-[300px] rounded-full border border-[#8dbde8]/30"></div>
+                    <div class="absolute left-[70px] top-[48%] h-[240px] w-[180px] rotate-[-14deg] rounded-[30px] border border-[#8dbde8]/35"></div>
+                    <div class="absolute left-[-120px] top-[-150px] h-[340px] w-[340px] rounded-full bg-white/35 blur-3xl"></div>
+                </div>
 
-<main class="flex-grow flex flex-col items-center justify-center pt-24 pb-12 px-container-padding">
-<div class="w-full max-w-[440px] flex flex-col gap-stack-lg">
-<div class="flex flex-col items-center text-center gap-stack-sm mb-4">
-<div class="w-20 h-20 bg-white rounded-xl shadow-sm p-2 flex items-center justify-center">
-<img alt="CV Natusi Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAf8WhcX4hC9Vvbn97FJx4mFga1hJ-bcZEXgdFqyMWtgGU0ihJmfTMfC-BThMzK80PlDOAiQ3nKnEkxnEO5TIFPzVxawxJYPnjheTN4LCNLgm3IyZAbvi34riwnaz3crf3OA-HooIuxGrEB996q6A5pG_aBWkvybi6CYmWI8ftZSWb1WnupGr8uM3nhh4UrapfW237mKe6zkxu8YlzxhCVFktlZ7ApJpsMO2ocKmjm0qotnaHYWX9s2CJ5ZY9PZuTmLg">
-</div>
-<div class="mt-4">
-<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">
-    {{ $registerRole === 'karyawan' ? 'Daftar Karyawan' : 'Ajukan Magang' }}
-</h1>
-<p class="font-body-md text-body-md text-on-surface-variant mt-2">
-    {{ $registerRole === 'karyawan'
-        ? 'Silakan isi formulir di bawah ini untuk mendaftar sebagai karyawan CV Natusi.'
-        : 'Silakan isi formulir di bawah ini untuk mengajukan permohonan magang/PKL di CV Natusi.' }}
-</p>
-</div>
-</div>
+                <a href="{{ route('login') }}" class="inline-flex w-fit items-center gap-3 text-[#075f8c] transition hover:opacity-80">
+                    <span class="grid h-11 w-11 place-items-center overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200/70">
+                        <img
+                            src="{{ asset('images/logo.jpeg') }}"
+                            alt="Logo CV Natusi"
+                            class="h-9 w-9 object-contain"
+                        >
+                    </span>
+                    <span class="font-['Manrope'] text-base font-bold">CV Natusi</span>
+                </a>
 
-@if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl shadow-sm">
-        {{ session('success') }}
-    </div>
-@endif
+                <div class="my-auto max-w-[560px] py-16">
+                    <h1 class="font-['Manrope'] text-3xl font-extrabold leading-[1.08] tracking-[-0.035em] text-slate-950 xl:text-[38px]">
+                        Ignite Your Career
+                        <span class="block text-[#006b9d]">With Strategic Internships.</span>
+                    </h1>
 
-<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg shadow-sm card-accent">
-<form action="{{ route('register.store') }}" method="POST" class="flex flex-col gap-stack-md">
-    @csrf
-    <input type="hidden" name="role" value="{{ $registerRole }}">
+                    <p class="mt-5 max-w-[510px] text-[15px] leading-7 text-slate-700 xl:text-base">
+                        Bergabunglah dengan portal eksklusif kami untuk terhubung dengan pemimpin industri,
+                        memperoleh pengalaman profesional, dan membangun jalur karier yang lebih terarah.
+                    </p>
 
-    <div class="flex flex-col gap-unit">
-        <label class="font-label-bold text-label-bold text-on-surface-variant" for="full_name">NAMA LENGKAP</label>
-        <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">person</span>
-            <input class="w-full pl-10 pr-4 py-3 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-md transition-all outline-none" id="full_name" name="full_name" value="{{ old('full_name') }}" placeholder="Masukkan nama lengkap Anda" type="text" required>
-        </div>
-        @error('full_name') <p class="text-error text-xs mt-1">{{ $message }}</p> @enderror
-    </div>
+                    <div class="mt-7 space-y-4">
+                        <div class="flex items-start gap-3">
+                            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#0879ad] text-white shadow-sm">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M12 3.2 18.2 6v5.2c0 4-2.4 7.1-6.2 8.8-3.8-1.7-6.2-4.8-6.2-8.8V6L12 3.2Z" stroke="currentColor" stroke-width="1.8"/>
+                                    <path d="m9.2 12 1.8 1.8 3.9-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <div>
+                                <h2 class="text-sm font-semibold text-slate-900">Institutional Reliability</h2>
+                                <p class="mt-0.5 text-xs leading-5 text-slate-600">
+                                    Kemitraan terpercaya dengan institusi pendidikan dan perusahaan profesional.
+                                </p>
+                            </div>
+                        </div>
 
-    <div class="flex flex-col gap-unit">
-        <label class="font-label-bold text-label-bold text-on-surface-variant" for="email">ALAMAT EMAIL</label>
-        <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">mail</span>
-            <input class="w-full pl-10 pr-4 py-3 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-md transition-all outline-none" id="email" name="email" value="{{ old('email') }}" placeholder="contoh@email.com" type="email" required>
-        </div>
-        @error('email') <p class="text-error text-xs mt-1">{{ $message }}</p> @enderror
-    </div>
+                        <div class="flex items-start gap-3">
+                            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#0879ad] text-white shadow-sm">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M5 16.5 9.2 12l3 2.8L19 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M15.5 7.5H19V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <div>
+                                <h2 class="text-sm font-semibold text-slate-900">Career Progression</h2>
+                                <p class="mt-0.5 text-xs leading-5 text-slate-600">
+                                    Jalur terstruktur untuk membantu peserta berkembang dari pelajar menjadi profesional.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="flex flex-col gap-unit">
-        <label class="font-label-bold text-label-bold text-on-surface-variant" for="university">ASAL SEKOLAH / UNIVERSITAS</label>
-        <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">school</span>
-            <input class="w-full pl-10 pr-4 py-3 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-md transition-all outline-none" id="university" name="university" value="{{ old('university') }}" placeholder="Nama Sekolah atau Universitas Anda" type="text" required>
-        </div>
-        @error('university') <p class="text-error text-xs mt-1">{{ $message }}</p> @enderror
-    </div>
+                <blockquote class="max-w-[570px] border-l-[3px] border-[#0879ad] pl-5 text-sm italic leading-6 text-slate-700">
+                    “CV Natusi menjadi jembatan antara dunia akademik dan dunia profesional. Sistem magangnya sangat membantu peserta berkembang.”
+                    <footer class="mt-2 text-[11px] font-semibold not-italic text-slate-900">
+                        — Tim Pengembangan SDM CV Natusi
+                    </footer>
+                </blockquote>
+            </aside>
 
-    <div class="flex flex-col gap-unit">
-        <label class="font-label-bold text-label-bold text-on-surface-variant" for="student_id">NIS / NIM</label>
-        <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">badge</span>
-            <input class="w-full pl-10 pr-4 py-3 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-md transition-all outline-none" id="student_id" name="student_id" value="{{ old('student_id') }}" placeholder="Masukkan NIS atau NIM Anda" type="text" required>
-        </div>
-        @error('student_id') <p class="text-error text-xs mt-1">{{ $message }}</p> @enderror
-    </div>
+            {{-- Panel kanan --}}
+            <section class="relative flex min-h-screen items-center justify-center bg-[#f8f9ff] px-5 py-8 sm:px-8 lg:h-dvh lg:min-h-0 lg:overflow-hidden lg:px-10 lg:py-4 xl:px-14">
+                <div class="pointer-events-none absolute right-[-120px] top-[-100px] h-72 w-72 rounded-full bg-blue-100/50 blur-3xl"></div>
 
-    <div class="flex flex-col gap-unit">
-        <label class="font-label-bold text-label-bold text-on-surface-variant" for="major">JURUSAN</label>
-        <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">school</span>
-            <input class="w-full pl-10 pr-4 py-3 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-md transition-all outline-none" id="major" name="major" value="{{ old('major') }}" placeholder="Masukkan jurusan Anda" type="text" required>
-        </div>
-        @error('major') <p class="text-error text-xs mt-1">{{ $message }}</p> @enderror
-    </div>
+                <div class="relative w-full max-w-[430px] lg:flex lg:h-full lg:min-h-0 lg:flex-col">
+                    <div class="mb-5 flex items-center gap-3 lg:hidden">
+                        <span class="grid h-11 w-11 place-items-center overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
+                            <img src="{{ asset('images/logo.jpeg') }}" alt="Logo CV Natusi" class="h-9 w-9 object-contain">
+                        </span>
+                        <span class="font-['Manrope'] text-base font-bold text-[#075f8c]">CV Natusi</span>
+                    </div>
 
-    <div class="flex flex-col gap-unit">
-        <label class="font-label-bold text-label-bold text-on-surface-variant" for="phone">NOMOR TELEPON</label>
-        <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">phone</span>
-            <input class="w-full pl-10 pr-4 py-3 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-md transition-all outline-none" id="phone" name="phone" value="{{ old('phone') }}" placeholder="Contoh: 081234567890" type="tel" required>
-        </div>
-        @error('phone') <p class="text-error text-xs mt-1">{{ $message }}</p> @enderror
-    </div>
+                    <header class="mb-4 shrink-0 lg:mb-3">
+                        <h1 class="font-['Manrope'] text-[28px] font-extrabold leading-tight tracking-[-0.035em] text-slate-950 sm:text-[32px]">
+                            {{ $isEmployee ? 'Daftar Karyawan' : 'Ajukan Magang' }}
+                        </h1>
+                        <p class="mt-1.5 text-[13px] leading-5 text-slate-600">
+                            {{ $isEmployee
+                                ? 'Lengkapi data berikut untuk mengajukan pendaftaran sebagai karyawan CV Natusi.'
+                                : 'Ajukan permohonan magang atau PKL Anda di CV Natusi.' }}
+                        </p>
+                    </header>
 
-    <div class="flex flex-col gap-unit">
-        <label class="font-label-bold text-label-bold text-on-surface-variant" for="description">DESKRIPSI / PERTANYAAN</label>
-        <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-4 text-outline text-[20px]">chat</span>
-            <textarea class="w-full pl-10 pr-4 py-3 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-body-md transition-all outline-none min-h-[100px]" id="description" name="description" placeholder="Tuliskan deskripsi singkat atau pertanyaan Anda mengenai magang/PKL...">{{ old('description') }}</textarea>
-        </div>
-        @error('description') <p class="text-error text-xs mt-1">{{ $message }}</p> @enderror
-    </div>
+                    @if (session('success'))
+                        <div class="mb-4 max-h-24 shrink-0 overflow-y-auto rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 lg:mb-3" role="status">
+                            {{ session('success') }}
+                        </div>
+                    @endif
 
-    <button class="mt-4 w-full bg-primary text-on-primary font-bold py-4 rounded-xl hover:bg-primary-container active:scale-[0.98] transition-all shadow-md flex items-center justify-center gap-2" type="submit">
-        <span>{{ $registerRole === 'karyawan' ? 'Daftar Karyawan' : 'Ajukan Magang' }}</span>
-        <span class="material-symbols-outlined text-[18px]">send</span>
-    </button>
-</form>
-</div>
+                    @if ($errors->any())
+                        <div class="mb-4 max-h-28 shrink-0 overflow-y-auto rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 lg:mb-3" role="alert">
+                            <p class="font-semibold">Periksa kembali data berikut:</p>
+                            <ul class="mt-1 list-inside list-disc space-y-0.5 text-xs leading-5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
 
-<div class="text-center safe-bottom">
-<p class="font-body-md text-body-md text-on-surface-variant">
-                    Sudah punya akun?
-                    <a class="text-primary font-semibold hover:underline decoration-2 underline-offset-4" href="{{ route('login') }}">Masuk di sini</a>
-</p>
-<p class="mt-8 text-[11px] text-on-surface-variant opacity-60 max-w-[300px] mx-auto leading-relaxed">Dengan mengklik {{ $registerRole === 'karyawan' ? 'Daftar Karyawan' : 'Ajukan Magang' }}, Anda menyetujui <a class="underline" href="#">Ketentuan Layanan</a> dan <a class="underline" href="#">Kebijakan Privasi</a> kami terkait data akademik Anda.</p>
-</div>
-</div>
-</main>
+                    <div class="rounded-xl border border-slate-300/90 bg-white p-5 shadow-[0_12px_32px_rgba(43,67,104,0.07)] sm:p-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden">
+                        <form
+                            method="POST"
+                            action="{{ route('register.store') }}"
+                            class="space-y-3.5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:pr-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 hover:[&::-webkit-scrollbar-thumb]:bg-slate-400"
+                        >
+                            @csrf
+                            <input type="hidden" name="role" value="{{ $registerRole }}">
 
-<div class="fixed top-20 right-[-5%] w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
-<div class="fixed bottom-0 left-[-10%] w-80 h-80 bg-secondary/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+                            {{-- Nama lengkap --}}
+                            <div>
+                                <label for="full_name" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
+                                    Nama Lengkap
+                                </label>
+                                <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
+                                    <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.8"/>
+                                        <path d="M4 20c.6-4 3.4-6 8-6s7.4 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    </svg>
+                                    <input
+                                        id="full_name"
+                                        name="full_name"
+                                        type="text"
+                                        value="{{ old('full_name') }}"
+                                        placeholder="Nama Lengkap Anda"
+                                        autocomplete="name"
+                                        required
+                                        autofocus
+                                        class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:border-0 focus:ring-0"
+                                    >
+                                </div>
+                                @error('full_name')
+                                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                @enderror
+                            </div>
 
-<script>
-    const inputs = document.querySelectorAll('input, textarea');
-    inputs.forEach(input => {
-        input.addEventListener('focus', () => {
-            input.parentElement.querySelector('.material-symbols-outlined').style.color = '#006191';
-        });
-        input.addEventListener('blur', () => {
-            input.parentElement.querySelector('.material-symbols-outlined').style.color = '#6f7881';
-        });
-    });
-</script>
-</body></html>
+                            {{-- Email --}}
+                            <div>
+                                <label for="email" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
+                                    Alamat Email
+                                </label>
+                                <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
+                                    <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                        <path d="m5 7 7 5 7-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        value="{{ old('email') }}"
+                                        placeholder="email@contoh.com"
+                                        autocomplete="email"
+                                        required
+                                        class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:border-0 focus:ring-0"
+                                    >
+                                </div>
+                                @error('email')
+                                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Sekolah / Universitas --}}
+                            <div>
+                                <label for="university" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
+                                    Asal Sekolah / Universitas
+                                </label>
+                                <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
+                                    <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="m3 9 9-5 9 5-9 5-9-5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                                        <path d="M6.5 11v5.5c3.7 2.2 7.3 2.2 11 0V11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                    </svg>
+                                    <input
+                                        id="university"
+                                        name="university"
+                                        type="text"
+                                        value="{{ old('university') }}"
+                                        placeholder="Nama Institusi"
+                                        autocomplete="organization"
+                                        required
+                                        class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:border-0 focus:ring-0"
+                                    >
+                                </div>
+                                @error('university')
+                                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- NIS / NIM --}}
+                            <div>
+                                <label for="student_id" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
+                                    NIS / NIM
+                                </label>
+                                <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
+                                    <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                        <path d="M9 5V3.5M15 5V3.5M8 10h8M8 14h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    </svg>
+                                    <input
+                                        id="student_id"
+                                        name="student_id"
+                                        type="text"
+                                        value="{{ old('student_id') }}"
+                                        placeholder="Masukkan NIS atau NIM Anda"
+                                        required
+                                        class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:border-0 focus:ring-0"
+                                    >
+                                </div>
+                                @error('student_id')
+                                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Jurusan --}}
+                            <div>
+                                <label for="major" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
+                                    Jurusan
+                                </label>
+                                <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
+                                    <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <rect x="4" y="7" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                        <path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7" stroke="currentColor" stroke-width="1.8"/>
+                                    </svg>
+                                    <input
+                                        id="major"
+                                        name="major"
+                                        type="text"
+                                        value="{{ old('major') }}"
+                                        placeholder="Masukkan Jurusan Anda"
+                                        required
+                                        class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:border-0 focus:ring-0"
+                                    >
+                                </div>
+                                @error('major')
+                                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Telepon --}}
+                            <div>
+                                <label for="phone" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
+                                    Nomor Telepon
+                                </label>
+                                <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
+                                    <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M7.2 4.5 9.4 8l-1.7 2a14.8 14.8 0 0 0 6.3 6.3l2-1.7 3.5 2.2-.8 3.2c-.2.7-.8 1.1-1.5 1.1C9.3 20.4 3.6 14.7 2.9 6.8c-.1-.7.4-1.3 1.1-1.5l3.2-.8Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <input
+                                        id="phone"
+                                        name="phone"
+                                        type="tel"
+                                        value="{{ old('phone') }}"
+                                        placeholder="0812..."
+                                        autocomplete="tel"
+                                        inputmode="tel"
+                                        required
+                                        class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:border-0 focus:ring-0"
+                                    >
+                                </div>
+                                @error('phone')
+                                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Deskripsi --}}
+                            <div>
+                                <label for="description" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
+                                    Deskripsi / Pertanyaan
+                                </label>
+                                <textarea
+                                    id="description"
+                                    name="description"
+                                    rows="3"
+                                    placeholder="Tanyakan ketersediaan magang atau jelaskan minat Anda..."
+                                    class="mt-1.5 block w-full resize-none rounded-lg border border-slate-300 bg-[#f8faff] px-3 py-2.5 text-sm leading-5 text-slate-800 placeholder:text-slate-400 transition focus:border-[#0879ad] focus:bg-white focus:ring-4 focus:ring-[#0879ad]/10"
+                                >{{ old('description') }}</textarea>
+                                @error('description')
+                                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Persetujuan --}}
+                            <label for="terms" class="flex cursor-pointer items-start gap-2.5 pt-0.5 text-[11px] leading-[1.55] text-slate-600">
+                                <input
+                                    id="terms"
+                                    name="terms"
+                                    type="checkbox"
+                                    value="1"
+                                    required
+                                    class="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#0879ad] focus:ring-[#0879ad]"
+                                >
+                                <span>
+                                    Saya setuju dengan
+                                    <a href="#" class="font-semibold text-[#006b9d] hover:underline">Syarat & Ketentuan</a>
+                                    dan
+                                    <a href="#" class="font-semibold text-[#006b9d] hover:underline">Kebijakan Privasi</a>.
+                                </span>
+                            </label>
+
+                            <button
+                                type="submit"
+                                class="inline-flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-gradient-to-b from-[#0879ad] to-[#066c9b] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(8,121,173,0.18)] transition hover:-translate-y-0.5 hover:brightness-95 hover:shadow-[0_11px_24px_rgba(8,121,173,0.24)] focus:outline-none focus:ring-4 focus:ring-[#0879ad]/25 active:translate-y-0"
+                            >
+                                <span>{{ $isEmployee ? 'Daftar Karyawan' : 'Ajukan Magang' }}</span>
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M5 12h13M13 7l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+
+                    <p class="mt-5 shrink-0 text-center text-xs text-slate-600 sm:text-sm lg:mt-3">
+                        Sudah punya akun?
+                        <a href="{{ route('login') }}" class="font-semibold text-[#006b9d] transition hover:underline">
+                            Masuk
+                            <span aria-hidden="true">↪</span>
+                        </a>
+                    </p>
+
+                    <p class="mt-7 shrink-0 text-center text-[9px] font-medium uppercase tracking-[0.12em] text-slate-500 lg:mt-3">
+                        © 2024 CV Natusi Corporation • Professional Excellence
+                    </p>
+                </div>
+            </section>
+        </section>
+    </main>
+</body>
+</html>

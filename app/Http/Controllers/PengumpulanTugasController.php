@@ -13,12 +13,10 @@ use Illuminate\Support\Carbon;
 class PengumpulanTugasController extends ApiCrudController
 {
     protected string $modelClass = PengumpulanTugas::class;
-
     protected array $with = [
         'tugas',
         'peserta.user',
     ];
-
     protected array $files = [
         'file_jawaban' => 'jawaban-tugas',
     ];
@@ -30,7 +28,6 @@ class PengumpulanTugasController extends ApiCrudController
                 'required',
                 'exists:tugas,id_tugas',
             ],
-
             'file_jawaban' => [
                 $model ? 'sometimes' : 'required',
                 'file',
@@ -43,7 +40,6 @@ class PengumpulanTugasController extends ApiCrudController
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate($this->rules());
-
         $tugas = Tugas::findOrFail($data['tugas_id']);
 
         $peserta = PesertaMagang::query()
@@ -55,7 +51,6 @@ class PengumpulanTugasController extends ApiCrudController
             ->where('tugas_id', $tugas->id_tugas)
             ->where('peserta_id', $peserta->id_peserta)
             ->exists();
-
         if ($sudahMengumpulkan) {
             return response()->json([
                 'success' => false,
@@ -68,7 +63,6 @@ class PengumpulanTugasController extends ApiCrudController
             ->store('jawaban-tugas', 'public');
 
         $status = 'terkumpul';
-
         if (
             $tugas->pengumpulan &&
             now()->greaterThan(Carbon::parse($tugas->pengumpulan))

@@ -9,65 +9,167 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
     public function create(): View
     {
-        // Terima role yang dipilih dari halaman login / session.
         $role = session('register_role', 'pelamar');
 
         return view('auth.register', [
-            'registerRole' => $role,
+            'registerRole' => in_array(
+                $role,
+                ['pelamar', 'karyawan'],
+                true,
+            )
+                ? $role
+                : 'pelamar',
         ]);
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws ValidationException
-     */
     public function store(Request $request): RedirectResponse
     {
-        // 1. Validasi input disesuaikan dengan form lowongan magang Anda
-        $request->validate([
-            'full_name'   => ['required', 'string', 'max:255'],
-            'email'       => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'university'  => ['required', 'string', 'max:255'],
-            'student_id'  => ['required', 'string', 'max:50'],
-            'major'       => ['required', 'string', 'max:255'],
-            'phone'       => ['required', 'string', 'max:20'],
-            'description' => ['nullable', 'string'],
-            // Karena di UI awal tidak ada input password, kita buat default password (misal: gabungan NIM & Nama) 
-            // ATAU Anda bisa menambahkan input password di UI. Di sini kita buat otomatis menggunakan student_id demi kemudahan.
-        ]);
+        $validated = $request->validate(
+            [
+                'full_name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
+                'email' => [
+                    'required',
+                    'string',
+                    'lowercase',
+                    'email',
+                    'max:255',
+                    Rule::unique('users', 'email'),
+                ],
+                'university' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
+                'student_id' => [
+                    'required',
+                    'string',
+                    'max:50',
+                ],
+                'major' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
+                'phone' => [
+                    'required',
+                    'string',
+                    'max:20',
+                ],
+                'description' => [
+                    'nullable',
+                    'string',
+                    'max:2000',
+                ],
+                'terms' => [
+                    'accepted',
+                ],
+            ],
+            [
+                'full_name.required' => 'Nama lengkap wajib diisi.',
+                'email.required' => 'Alamat email wajib diisi.',
+                'email.email' => 'Format alamat email tidak valid.',
+                'email.unique' => 'Alamat email sudah terdaftar.',
+                'university.required' => 'Asal sekolah atau universitas wajib diisi.',
+                'student_id.required' => 'Nomor induk wajib diisi.',
+                'major.required' => 'Jurusan wajib diisi.',
+                'phone.required' => 'Nomor telepon wajib diisi.',
+                'terms.accepted' => 'Anda harus menyetujui ketentuan pendaftaran.',
+            ],
+        );
 
-        // 2. Simpan data ke tabel Users (Pastikan field ini sudah ada di $fillable pada Model User)
-        $user = User::create([
-            'name'        => $request->full_name,
-            'email'       => $request->email,
-            'role'        => session('register_role', $request->input('role', 'pelamar')), 
-            'university'  => $request->university,
-            'student_id'  => $request->student_id,
-            'major'       => $request->major,
-            'phone'       => $request->phone,
-            'description' => $request->description,
-            // Menggunakan student_id sebagai password default jika form tidak menyediakan field password
-            'password'    => Hash::make($request->student_id),
+        $role = session(
+            'register_role',
+            $request->input('role', 'pelamar'),
+        );
+
+        if (! in_array($role, ['pelamar', 'karyawan'], true)) {
+            $role = 'pelamar';
+        }
+
+        $username = $this->makeUniqueUsername(
+            $validated['student_id'],
+            $validated['email'],
+        );
+
+        $user = User::query()->create([
+            'nama' => $validated['full_name'],
+            'username' => $username,
+            'email' => strtolower($validated['email']),
+            'role' => $role,
+            'university' => $validated['university'],
+            'student_id' => $validated['student_id'],
+            'major' => $validated['major'],
+            'phone' => $validated['phone'],
+            'description' => $validated['description'] ?? null,
+            'password' => Hash::make($validated['student_id']),
+            'wajib_ganti_password' => true,
         ]);
 
         event(new Registered($user));
-
-        // 3. Otomatis login setelah mendaftar
         Auth::login($user);
 
-        // 4. Redirect ke dashboard
-        return redirect(route('dashboard', absolute: false))->with('success', 'Pendaftaran magang berhasil diajukan!');
+        $request->session()->forget('register_role');
+
+        return redirect()
+            ->route('dashboard')
+            ->with(
+                'success',
+                'Pendaftaran berhasil. Silakan lengkapi proses berikutnya.',
+            );
+    }
+
+    private function makeUniqueUsername(
+        string $studentId,
+        string $email,
+    ): string {
+        $base = Str::of($studentId)
+            ->lower()
+            ->replaceMatches('/[^a-z0-9_-]+/', '')
+            ->limit(40, '')
+            ->toString();
+
+        if (mb_strlen($base) < 4) {
+            $base = Str::of(Str::before($email, '@'))
+                ->lower()
+                ->replaceMatches('/[^a-z0-9_-]+/', '')
+                ->limit(40, '')
+                ->toString();
+        }
+
+        if (mb_strlen($base) < 4) {
+            $base = 'user' . random_int(1000, 9999);
+        }
+
+        $candidate = $base;
+        $suffix = 1;
+
+        while (
+            User::query()
+                ->where('username', $candidate)
+                ->exists()
+        ) {
+            $suffixText = (string) $suffix;
+            $candidate = mb_substr(
+                $base,
+                0,
+                max(1, 50 - mb_strlen($suffixText)),
+            ) . $suffixText;
+
+            $suffix++;
+        }
+
+        return $candidate;
     }
 }

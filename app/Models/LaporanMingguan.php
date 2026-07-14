@@ -10,7 +10,6 @@ class LaporanMingguan extends Model
     use HasFactory;
 
     protected $table = 'laporan_mingguan';
-
     protected $primaryKey = 'id_laporan';
 
     protected $fillable = [

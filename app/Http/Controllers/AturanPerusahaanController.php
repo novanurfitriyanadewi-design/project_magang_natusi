@@ -6,14 +6,17 @@ use App\Models\AturanPerusahaan;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AturanPerusahaanController extends ApiCrudController
 {
     protected string $modelClass = AturanPerusahaan::class;
-
     protected array $with = [];
-
     protected array $files = [];
+    protected array $searchable = [
+        'nama',
+        'deskripsi',
+    ];
 
     protected function rules(?Model $model = null): array
     {
@@ -22,63 +25,46 @@ class AturanPerusahaanController extends ApiCrudController
                 'required',
                 'string',
                 'max:255',
+                Rule::unique(
+                    'aturan_perusahaan',
+                    'nama',
+                )->ignore(
+                    $model?->getKey(),
+                    $model?->getKeyName() ?? 'id_aturan',
+                ),
             ],
-
-            'kategori' => [
-                'required',
-                'string',
-                'max:100',
-            ],
-
             'deskripsi' => [
                 'required',
                 'string',
-            ],
-
-            'status' => [
-                'sometimes',
-                'in:aktif,nonaktif',
+                'min:20',
+                'max:10000',
             ],
         ];
     }
 
-    public function update(
+    protected function prepareDataForStore(
+        array $data,
         Request $request,
-        int|string $id
-    ): JsonResponse {
-        $aturanPerusahaan = AturanPerusahaan::findOrFail($id);
+    ): array {
+        $data['status'] = 'aktif';
 
-        $data = $request->validate(
-            $this->rules($aturanPerusahaan)
-        );
-
-        $aturanPerusahaan->update($data);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Aturan perusahaan berhasil diperbarui.',
-            'data' => $aturanPerusahaan->fresh(),
-        ]);
+        return $data;
     }
 
-    public function destroy(
-        int|string $id
-    ): JsonResponse {
-        $aturanPerusahaan = AturanPerusahaan::findOrFail($id);
+    protected function prepareDataForUpdate(
+        array $data,
+        Request $request,
+        Model $item,
+    ): array {
+        $data['status'] = 'aktif';
 
-        $aturanPerusahaan->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Aturan perusahaan berhasil dihapus.',
-        ]);
+        return $data;
     }
 
     public function aktif(): JsonResponse
     {
         $aturan = AturanPerusahaan::query()
             ->where('status', 'aktif')
-            ->orderBy('kategori')
             ->orderBy('nama')
             ->get();
 

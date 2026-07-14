@@ -16,8 +16,8 @@ class DatabaseSeeder extends Seeder
         User::updateOrCreate(
             ['username' => 'superadmin'],
             [
-                'nama' => 'Superadmin',
-                'email' => 'superadmin@admin.com',
+                'nama' => 'Super Admin',
+                'email' => 'superadmin@cvnatusi.com',
                 'password' => Hash::make('admin123'),
                 'role' => 'superadmin',
                 'wajib_ganti_password' => false,

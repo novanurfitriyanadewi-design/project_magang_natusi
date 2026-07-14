@@ -12,11 +12,9 @@ use Maatwebsite\Excel\Facades\Excel;
 class TugasController extends ApiCrudController
 {
     protected string $modelClass = Tugas::class;
-
     protected array $with = [
         'user',
     ];
-
     protected array $files = [
         'file_tugas' => 'tugas',
     ];

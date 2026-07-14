@@ -11,11 +11,8 @@ use Illuminate\Support\Facades\DB;
 class JamOperasionalController extends ApiCrudController
 {
     protected string $modelClass = JamOperasional::class;
-
     protected array $with = [];
-
     protected array $files = [];
-
     protected function rules(?Model $model = null): array
     {
         return [

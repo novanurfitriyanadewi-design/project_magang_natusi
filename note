@@ -1,16 +1,139 @@
-- Memasang package excel 
-    composer require maatwebsite/excel
+SUPER ADMIN CV NATUSI
+=====================
 
-php artisan config:clear
-php artisan key:generate
+Akun Superadmin:
+- Username : superadmin
+- Password : admin123
+- URL login: http://127.0.0.1:8000/login
 
-- Membersihkan cache lama
-    php artisan optimize:clear
-- Menghapus tabel dan data lama
-    php artisan migrate:fresh --seed
-- Membuat akses link upload
-    php artisan storage:link
-- Mengecek route API
-    php artisan route:list --path=api
-- Menjalankan Laravel
-    php artisan serve
+
+INSTALASI PROJECT 
+-----------------
+1. Salin .env.example menjadi .env dan atur koneksi database.
+
+2. Jalankan:
+   - instal composer : 
+      composer install
+
+   - generate key application : 
+      php artisan key:generate
+
+   - create table dan superadmin : 
+      php artisan migrate
+      php artisan db:seed
+
+   - instal library FE : 
+      npm install
+
+   - membersihkan cache laravel : 
+      php artisan optimize:clear
+   
+
+MENJALANKAN PROJECT
+-------------------
+Buka dua terminal pada folder project:
+
+Terminal 1 - Laravel:
+   php artisan serve
+
+Terminal 2 - Tailwind/Vite:
+   npm run dev
+
+Buka aplikasi:
+   http://127.0.0.1:8000
+
+NOTE : http://localhost:5173 => Port 5173 hanya dipakai oleh Vite untuk CSS dan JavaScript.
+
+Untuk membuat aset final:
+   npm run build
+
+
+SETELAH MENARIK PERUBAHAN DARI GIT
+----------------------------------
+Setelah menjalankan git pull, gunakan langkah aman berikut:
+
+   composer install
+   npm install
+   php artisan migrate
+   php artisan optimize:clear
+
+Kemudian jalankan lagi:
+   php artisan serve
+   npm run dev
+
+NOTE : 
+- composer install diperlukan jika composer.lock berubah.
+- npm install diperlukan jika package-lock.json berubah.
+- php artisan migrate aman digunakan karena hanya menjalankan migration yang belum pernah dijalankan.
+
+ATTN : 
+Jangan memakai perintah berikut jika database berisi data penting:
+   php artisan migrate:fresh
+
+Perintah migrate:fresh akan menghapus seluruh tabel dan data.
+
+
+STRUKTUR LAYOUT BERSAMA
+------------------------
+Layout portal untuk semua role berada di:
+   resources/views/layouts/portal.blade.php
+
+Sidebar bersama berada di:
+   resources/views/partials/sidebar.blade.php
+
+Header bersama berada di:
+   resources/views/partials/header.blade.php
+
+Halaman role cukup memakai:
+
+   @extends('layouts.portal')
+
+   @section('title', 'Judul Browser')
+   @section('page-title', 'Judul Header')
+
+   @section('content')
+       Isi halaman
+   @endsection
+
+Sidebar akan menyesuaikan role:
+- superadmin
+- admin
+- peserta/pelamar/karyawan
+
+Menu dengan label "Soon" berarti route/halamannya belum dibuat. Setelah route tersedia, menu otomatis dapat diklik apabila nama route pada sidebar sesuai.
+
+
+TROUBLESHOOTING CEPAT
+------------------------
+1. Route not defined:
+   php artisan route:clear
+   php artisan optimize:clear
+   php artisan route:list
+
+2. Tampilan lama masih muncul:
+   php artisan view:clear
+   php artisan optimize:clear
+   Ctrl + F5 di browser
+
+3. Tailwind tidak berubah:
+   Pastikan npm run dev masih menyala.
+   Jika untuk production, jalankan npm run build.
+
+4. APP_KEY kosong:
+   php artisan key:generate
+
+5. Database belum memiliki tabel:
+   php artisan migrate
+   php artisan db:seed
+
+6. Project setelah clone menampilkan error class/library tidak ditemukan:
+   composer install
+   npm install
+
+7. Konflik Git:
+   Jangan langsung menghapus kode teman.
+   Buka file yang bertanda konflik, selesaikan bagian:
+   <<<<<<<
+   =======
+   >>>>>>>
+   Setelah itu jalankan git add dan lanjutkan rebase/commit.

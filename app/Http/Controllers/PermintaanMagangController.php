@@ -16,14 +16,11 @@ use Illuminate\Support\Str;
 class PermintaanMagangController extends ApiCrudController
 {
     protected string $modelClass = PermintaanMagang::class;
-
     protected array $with = [
         'user',
         'peserta.user',
     ];
-
     protected array $files = [];
-
     protected array $searchable = [
         'nama_sekolah',
         'no_induk',
@@ -32,9 +29,6 @@ class PermintaanMagangController extends ApiCrudController
         'status',
     ];
 
-    /**
-     * Validasi CRUD permintaan magang.
-     */
     protected function rules(?Model $model = null): array
     {
         return [
@@ -92,9 +86,6 @@ class PermintaanMagangController extends ApiCrudController
         ];
     }
 
-    /**
-     * Status permintaan baru otomatis menunggu.
-     */
     protected function prepareDataForStore(
         array $data,
         Request $request
@@ -104,9 +95,7 @@ class PermintaanMagangController extends ApiCrudController
         return $data;
     }
 
-    /**
-     * Admin menyetujui permintaan magang.
-     */
+    // accept
     public function setujui(
         Request $request,
         int|string $id
@@ -161,21 +150,16 @@ class PermintaanMagangController extends ApiCrudController
         ]);
 
         $hasil = DB::transaction(function () use ($id, $data) {
-            /*
-             * Lock agar permintaan yang sama tidak disetujui
-             * dua kali secara bersamaan.
-             */
+            // duplikat permintaan
             $permintaanMagang = PermintaanMagang::query()
                 ->lockForUpdate()
                 ->findOrFail($id);
-
             if ($permintaanMagang->status === 'disetujui') {
                 abort(
                     422,
                     'Permintaan ini sudah pernah disetujui.'
                 );
             }
-
             if ($permintaanMagang->status === 'ditolak') {
                 abort(
                     422,
@@ -189,7 +173,6 @@ class PermintaanMagangController extends ApiCrudController
                     $permintaanMagang->id_permintaan
                 )
                 ->exists();
-
             if ($pesertaSudahAda) {
                 abort(
                     422,
@@ -201,9 +184,7 @@ class PermintaanMagangController extends ApiCrudController
                 $permintaanMagang->nama_pemohon,
                 $permintaanMagang->no_induk
             );
-
             $passwordAwal = Str::random(10);
-
             $email = $permintaanMagang->email;
 
             if (
@@ -257,9 +238,7 @@ class PermintaanMagangController extends ApiCrudController
 
             Notifikasi::create([
                 'user_id' => $userPeserta->id_user,
-
                 'judul' => 'Pengajuan Magang Diterima',
-
                 'pesan' =>
                     'Pengajuan magang Anda telah disetujui. '
                     . "Username: {$username}. "
@@ -267,9 +246,7 @@ class PermintaanMagangController extends ApiCrudController
                     . 'Silakan login dan segera mengganti password.',
 
                 'kategori' => 'akun',
-
                 'tipe' => 'sukses',
-
                 'referensi_id' =>
                     $permintaanMagang->id_permintaan,
 
@@ -279,11 +256,6 @@ class PermintaanMagangController extends ApiCrudController
             return [
                 'permintaan' => $permintaanMagang->fresh(),
                 'peserta' => $peserta->load('user'),
-
-                /*
-                 * Kredensial hanya dikembalikan saat akun dibuat.
-                 * Password di database tetap dalam bentuk hash.
-                 */
                 'akun' => [
                     'username' => $username,
                     'password_awal' => $passwordAwal,
@@ -297,9 +269,7 @@ class PermintaanMagangController extends ApiCrudController
         );
     }
 
-    /**
-     * Admin menolak permintaan magang.
-     */
+    // admin tolak magang
     public function tolak(
         Request $request,
         int|string $id
@@ -326,10 +296,7 @@ class PermintaanMagangController extends ApiCrudController
             'pesan' => $data['alasan'],
         ]);
 
-        /*
-         * Notifikasi hanya dapat dibuat jika pemohon
-         * sudah mempunyai akun user.
-         */
+        // notif
         if ($permintaanMagang->user_id) {
             Notifikasi::create([
                 'user_id' => $permintaanMagang->user_id,
@@ -351,21 +318,17 @@ class PermintaanMagangController extends ApiCrudController
         );
     }
 
-    /**
-     * Membuat username peserta yang unik.
-     */
+    // create username peserta
     private function buatUsername(
         string $namaPemohon,
         string $noInduk
     ): string {
         $nama = Str::slug($namaPemohon, '');
-
         $nama = Str::limit(
             strtolower($nama),
             12,
             ''
         );
-
         $nomorIndukBersih = preg_replace(
             '/[^a-zA-Z0-9]/',
             '',
@@ -375,14 +338,12 @@ class PermintaanMagangController extends ApiCrudController
         $nomorIndukBersih = strtolower(
             (string) $nomorIndukBersih
         );
-
         $nomorIndukAkhir = substr(
             $nomorIndukBersih,
             -5
         );
 
         $usernameDasar = $nama . $nomorIndukAkhir;
-
         if ($usernameDasar === '') {
             $usernameDasar = 'peserta';
         }

@@ -1,36 +1,230 @@
 <?php
 
+use App\Http\Controllers\PortalSearchController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Auth\RegisteredUserController; // <-- Tambahkan import ini di atas
+use App\Http\Controllers\Superadmin\AdminController as SuperadminAdminController;
+use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAturanPerusahaanController;
+use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
+use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
 
-// Halaman pertama langsung ke Login
+/*
+|--------------------------------------------------------------------------
+| Halaman Awal
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Registrasi
+|--------------------------------------------------------------------------
+*/
 
+Route::middleware('guest')->group(function () {
+    Route::get('/register/pelamar', function () {
+        session([
+            'register_role' => 'pelamar',
+        ]);
 
-Route::get('/register/pelamar', function (Request $request) {
-    session(['register_role' => 'pelamar']);
-    return redirect()->route('register');
-})->middleware('guest')->name('register.pelamar');
+        return redirect()->route('register');
+    })->name('register.pelamar');
 
-Route::get('/register/karyawan', function (Request $request) {
-    session(['register_role' => 'karyawan']);
-    return redirect()->route('register');
-})->middleware('guest')->name('register.karyawan');
+    Route::get('/register/karyawan', function () {
+        session([
+            'register_role' => 'karyawan',
+        ]);
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    // Jika Anda ingin mengubah profile menggunakan nama lengkap, dst:
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        return redirect()->route('register');
+    })->name('register.karyawan');
 });
 
-require __DIR__.'/auth.php';
+/*
+|--------------------------------------------------------------------------
+| Dashboard Umum
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/dashboard', function () {
+    $user = auth()->user();
+
+    if ($user?->role === 'superadmin') {
+        return redirect()->route('superadmin.dashboard');
+    }
+
+    return view('dashboard');
+})
+    ->middleware('auth')
+    ->name('dashboard');
+
+/*
+|--------------------------------------------------------------------------
+| Super Admin
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'role:superadmin'])
+    ->prefix('superadmin')
+    ->name('superadmin.')
+    ->group(function () {
+        Route::get(
+            '/dashboard',
+            SuperadminDashboardController::class
+        )->name('dashboard');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Kelola Admin
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            '/admin',
+            [SuperadminAdminController::class, 'index']
+        )->name('admin');
+
+        Route::post(
+            '/admin',
+            [SuperadminAdminController::class, 'store']
+        )->name('admin.store');
+
+        Route::put(
+            '/admin/{admin}',
+            [SuperadminAdminController::class, 'update']
+        )->name('admin.update');
+
+        Route::delete(
+            '/admin/{admin}',
+            [SuperadminAdminController::class, 'destroy']
+        )->name('admin.destroy');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Kelola Aturan Perusahaan
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            '/aturan',
+            [SuperadminAturanPerusahaanController::class, 'index']
+        )->name('aturan.index');
+
+        Route::post(
+            '/aturan',
+            [SuperadminAturanPerusahaanController::class, 'store']
+        )->name('aturan.store');
+
+        Route::put(
+            '/aturan/{aturan}',
+            [SuperadminAturanPerusahaanController::class, 'update']
+        )->name('aturan.update');
+
+        Route::delete(
+            '/aturan/{aturan}',
+            [SuperadminAturanPerusahaanController::class, 'destroy']
+        )->name('aturan.destroy');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Kelola Jam Absensi
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            '/jam-absensi',
+            [SuperadminJamAbsensiController::class, 'index']
+        )->name('jam-absensi.index');
+
+        Route::put(
+            '/jam-absensi',
+            [SuperadminJamAbsensiController::class, 'update']
+        )->name('jam-absensi.update');
+
+        Route::patch(
+            '/jam-absensi/reset',
+            [SuperadminJamAbsensiController::class, 'reset']
+        )->name('jam-absensi.reset');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Fitur Pengguna Terautentikasi
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | Pencarian Portal
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/search',
+        [PortalSearchController::class, 'index']
+    )->name('search.index');
+
+    Route::get(
+        '/search/suggestions',
+        [PortalSearchController::class, 'suggestions']
+    )->name('search.suggestions');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Profil
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/profile',
+        [ProfileController::class, 'edit']
+    )->name('profile.edit');
+
+    Route::patch(
+        '/profile',
+        [ProfileController::class, 'update']
+    )->name('profile.update');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Foto Profil
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/profile/photo',
+        [ProfileController::class, 'showPhoto']
+    )->name('profile.photo.show');
+
+    Route::patch(
+        '/profile/photo',
+        [ProfileController::class, 'updatePhoto']
+    )->name('profile.photo.update');
+
+    Route::delete(
+        '/profile/photo',
+        [ProfileController::class, 'destroyPhoto']
+    )->name('profile.photo.destroy');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hapus Akun
+    |--------------------------------------------------------------------------
+    */
+
+    Route::delete(
+        '/profile',
+        [ProfileController::class, 'destroy']
+    )->name('profile.destroy');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Authentication
+|--------------------------------------------------------------------------
+*/
+
+require __DIR__ . '/auth.php';

@@ -17,27 +17,19 @@ abstract class ApiCrudController extends Controller
     protected array $files = [];
     protected array $searchable = [];
 
-    //Jumlah data default per halaman.
     protected int $perPage = 15;
-
-    //Batas maksimal data per halaman.
     protected int $maxPerPage = 100;
 
-    //Aturan validasi dari masing-masing controller turunan.
     abstract protected function rules(?Model $model = null): array;
 
-    //Menampilkan daftar data.
     public function index(Request $request): JsonResponse
     {
         $query = $this->newQuery()
             ->with($this->with);
-
         $query = $this->applySearch($query, $request);
         $query = $this->applyFilters($query, $request);
         $query = $this->applySorting($query, $request);
-
         $perPage = $this->resolvePerPage($request);
-
         $items = $query
             ->paginate($perPage)
             ->withQueryString();
@@ -47,7 +39,6 @@ abstract class ApiCrudController extends Controller
         );
     }
 
-    //Menyimpan data baru.
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate(
@@ -55,7 +46,6 @@ abstract class ApiCrudController extends Controller
         );
 
         $storedFiles = [];
-
         try {
             $item = DB::transaction(function () use (
                 $request,
@@ -66,14 +56,11 @@ abstract class ApiCrudController extends Controller
                     $validated,
                     $request
                 );
-
                 [$data, $storedFiles] = $this->storeUploadedFiles(
                     request: $request,
                     data: $data
                 );
-
                 $item = $this->newQuery()->create($data);
-
                 $this->afterStore(
                     $item,
                     $request

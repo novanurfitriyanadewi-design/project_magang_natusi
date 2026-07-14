@@ -18,7 +18,6 @@ class AuthController extends Controller
         ]);
 
         $user = User::query()->where('username', $data['username'])->first();
-
         if (!$user || !Hash::check($data['password'], $user->password)) {
             return response()->json([
                 'success' => false,
@@ -30,7 +29,6 @@ class AuthController extends Controller
         $user->forceFill([
             'api_token' => hash('sha256', $plainToken),
         ])->save();
-
         return response()->json([
             'success' => true,
             'message' => 'Login berhasil.',
@@ -53,7 +51,6 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $request->user()->forceFill(['api_token' => null])->save();
-
         return response()->json([
             'success' => true,
             'message' => 'Logout berhasil.',
@@ -68,7 +65,6 @@ class AuthController extends Controller
         ]);
 
         $user = $request->user();
-
         if (!Hash::check($data['password_lama'], $user->password)) {
             return response()->json([
                 'success' => false,
@@ -80,7 +76,6 @@ class AuthController extends Controller
             'password' => Hash::make($data['password_baru']),
             'wajib_ganti_password' => false,
         ]);
-
         return response()->json([
             'success' => true,
             'message' => 'Password berhasil diganti.',

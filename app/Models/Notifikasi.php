@@ -10,7 +10,6 @@ class Notifikasi extends Model
     use HasFactory;
 
     protected $table = 'notifikasi';
-
     protected $primaryKey = 'id_notifikasi';
 
     protected $fillable = [

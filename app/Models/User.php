@@ -20,14 +20,21 @@ class User extends Authenticatable
         'username',
         'password',
         'role',
+        'university',
+        'student_id',
+        'major',
+        'phone',
+        'description',
         'wajib_ganti_password',
         'api_token',
+        'foto_profil',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
         'api_token',
+        'foto_profil',
     ];
 
     protected function casts(): array

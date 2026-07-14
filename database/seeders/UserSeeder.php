@@ -10,25 +10,15 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::create([
-            'name'     => 'Admin CV Natusi',
-            'email'    => 'admin@cvnatusi.com',
-            'role'     => 'admin',
-            'password' => Hash::make('password123'),
-        ]);
-
-        User::create([
-            'name'     => 'Nova Pelamar',
-            'email'    => 'pelamar@cvnatusi.com',
-            'role'     => 'pelamar',
-            'password' => Hash::make('password123'),
-        ]);
-
-        User::create([
-            'name'     => 'Karyawan Test',
-            'email'    => 'karyawan@cvnatusi.com',
-            'role'     => 'karyawan',
-            'password' => Hash::make('password123'),
-        ]);
+        User::updateOrCreate(
+            ['username' => 'adminnatusi'],
+            [
+                'nama' => 'Admin CV Natusi',
+                'email' => 'admin@cvnatusi.com',
+                'role' => 'admin',
+                'password' => Hash::make('password123'),
+                'wajib_ganti_password' => true,
+            ]
+        );
     }
 }

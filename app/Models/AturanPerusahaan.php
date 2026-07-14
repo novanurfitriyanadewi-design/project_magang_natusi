@@ -11,10 +11,8 @@ class AturanPerusahaan extends Model
 
     protected $table = 'aturan_perusahaan';
     protected $primaryKey = 'id_aturan';
-
     protected $fillable = [
         'nama',
-        'kategori',
         'deskripsi',
         'status',
     ];

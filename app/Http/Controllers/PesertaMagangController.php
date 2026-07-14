@@ -8,14 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class PesertaMagangController extends ApiCrudController
 {
     protected string $modelClass = PesertaMagang::class;
-
     protected array $with = [
         'user',
         'permintaan',
     ];
 
     protected array $files = [];
-
     protected function rules(?Model $model = null): array
     {
         return [
