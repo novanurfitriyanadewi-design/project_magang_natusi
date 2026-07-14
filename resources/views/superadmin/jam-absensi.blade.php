@@ -27,6 +27,16 @@
             clock: '',
             dateLabel: '',
             timer: null,
+            reloading: false,
+            serverActive: @js($isActive),
+            openMinutes: @js(
+                ((int) substr($openTime, 0, 2) * 60)
+                + (int) substr($openTime, 3, 2)
+            ),
+            closeMinutes: @js(
+                ((int) substr($closeTime, 0, 2) * 60)
+                + (int) substr($closeTime, 3, 2)
+            ),
 
             init() {
                 this.updateClock();
@@ -36,10 +46,54 @@
                 }, 1000);
             },
 
+            jakartaTimeParts() {
+                const formatter = new Intl.DateTimeFormat(
+                    'en-GB',
+                    {
+                        timeZone: 'Asia/Jakarta',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false,
+                    }
+                );
+
+                const parts = Object.fromEntries(
+                    formatter
+                        .formatToParts(new Date())
+                        .filter((part) => part.type !== 'literal')
+                        .map((part) => [part.type, part.value])
+                );
+
+                return {
+                    hour: Number(parts.hour),
+                    minute: Number(parts.minute),
+                    second: Number(parts.second),
+                };
+            },
+
+            isActiveNow(hour, minute) {
+                const currentMinutes = (hour * 60) + minute;
+
+                if (this.openMinutes === this.closeMinutes) {
+                    return false;
+                }
+
+                if (this.openMinutes < this.closeMinutes) {
+                    return currentMinutes >= this.openMinutes
+                        && currentMinutes < this.closeMinutes;
+                }
+
+                return currentMinutes >= this.openMinutes
+                    || currentMinutes < this.closeMinutes;
+            },
+
             updateClock() {
                 const now = new Date();
+                const parts = this.jakartaTimeParts();
 
                 this.clock = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Jakarta',
                     hour: '2-digit',
                     minute: '2-digit',
                     second: '2-digit',
@@ -47,10 +101,28 @@
                 }).format(now);
 
                 this.dateLabel = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Jakarta',
                     day: '2-digit',
                     month: 'long',
                     year: 'numeric',
                 }).format(now);
+
+                const liveActive = this.isActiveNow(
+                    parts.hour,
+                    parts.minute
+                );
+
+                /*
+                 * Ketika jam melewati batas buka/tutup, muat ulang
+                 * satu kali agar status dan input langsung berubah.
+                 */
+                if (
+                    liveActive !== this.serverActive
+                    && ! this.reloading
+                ) {
+                    this.reloading = true;
+                    window.location.reload();
+                }
             },
         }"
     >
