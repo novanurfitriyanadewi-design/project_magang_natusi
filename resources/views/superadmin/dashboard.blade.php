@@ -6,6 +6,16 @@
     @php
         $adminRoute = Route::has('superadmin.admin') ? route('superadmin.admin') : '#';
         $profileRoute = Route::has('profile.edit') ? route('profile.edit') : '#';
+        $rulesRoute = Route::has('superadmin.aturan.index') ? route('superadmin.aturan.index') : '#';
+        $attendanceRoute = Route::has('superadmin.jam-absensi.index') ? route('superadmin.jam-absensi.index') : '#';
+        $paymentRoute = Route::has('superadmin.metode-pembayaran.index') ? route('superadmin.metode-pembayaran.index') : '#';
+
+        $totalAdmins = $totalAdmins ?? 0;
+        $totalUsers = $totalUsers ?? 0;
+        $activeRules = $activeRules ?? 0;
+        $activeSchedule = $activeSchedule ?? null;
+        $latestAdmins = $latestAdmins ?? collect();
+
         $scheduleText = $activeSchedule
             ? substr((string) $activeSchedule->jam_mulai, 0, 5).' - '.substr((string) $activeSchedule->jam_selesai, 0, 5)
             : 'Belum diatur';
@@ -106,11 +116,11 @@
                 @forelse ($latestAdmins as $admin)
                     <div class="flex items-center gap-3 px-5 py-4 transition hover:bg-sky-50/50">
                         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-sky-100 to-blue-100 text-xs font-extrabold text-sky-700 ring-1 ring-sky-200">
-                            {{ strtoupper(mb_substr($admin->nama, 0, 2)) }}
+                            {{ strtoupper(mb_substr((string) ($admin->nama ?? 'AD'), 0, 2)) }}
                         </span>
                         <div class="min-w-0 flex-1">
-                            <p class="truncate text-sm font-bold text-slate-900">{{ $admin->nama }}</p>
-                            <p class="truncate text-xs text-slate-500">{{ $admin->email }}</p>
+                            <p class="truncate text-sm font-bold text-slate-900">{{ $admin->nama ?? 'Admin' }}</p>
+                            <p class="truncate text-xs text-slate-500">{{ $admin->email ?? '-' }}</p>
                         </div>
                         <span class="text-[10px] text-slate-400">{{ $admin->created_at?->diffForHumans() }}</span>
                     </div>
@@ -138,33 +148,55 @@
             </div>
 
             <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                <a href="{{ $adminRoute }}" x-show="matches('kelola admin tambah ubah cari hapus akun')" class="group relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-4 transition hover:-translate-y-1 hover:shadow-lg">
+                <a href="{{ $adminRoute }}"
+                   x-show="matches('kelola admin tambah ubah cari hapus akun')"
+                   aria-label="Buka menu Kelola Admin"
+                   class="group relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-4 transition hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">
                     <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-sky-100"></div>
                     <span class="relative grid h-10 w-10 place-items-center rounded-xl bg-sky-600 text-white"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M16 7.5h5M18.5 5v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
                     <h3 class="relative mt-4 font-bold text-slate-900">Kelola Admin</h3>
                     <p class="relative mt-1 text-sm leading-6 text-slate-500">Tambah, ubah, cari, dan hapus akun admin dengan hak akses yang sama.</p>
                 </a>
 
-                <a href="{{ $profileRoute }}" x-show="matches('kelola profil identitas email username keamanan')" class="group relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-4 transition hover:-translate-y-1 hover:shadow-lg">
+                <a href="{{ $profileRoute }}"
+                   x-show="matches('kelola profil identitas email username keamanan')"
+                   aria-label="Buka menu Kelola Profil"
+                   class="group relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-4 transition hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                     <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-indigo-100"></div>
                     <span class="relative grid h-10 w-10 place-items-center rounded-xl bg-indigo-600 text-white"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 19c.6-3.5 2.8-5.3 6.5-5.3s5.9 1.8 6.5 5.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
                     <h3 class="relative mt-4 font-bold text-slate-900">Kelola Profil</h3>
                     <p class="relative mt-1 text-sm leading-6 text-slate-500">Perbarui identitas, email, username, dan keamanan akun.</p>
                 </a>
 
-                <div x-show="matches('aturan perusahaan kebijakan')" class="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-4">
+                <a href="{{ $rulesRoute }}"
+                   x-show="matches('aturan perusahaan kebijakan')"
+                   aria-label="Buka menu Aturan Perusahaan"
+                   class="group relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-4 transition hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
                     <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-emerald-100"></div>
                     <span class="relative grid h-10 w-10 place-items-center rounded-xl bg-emerald-600 text-white"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M5 19h14M8 15l7-7 3 3-7 7H8v-3ZM13 6l3-3 3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                     <h3 class="relative mt-4 font-bold text-slate-900">Aturan Perusahaan</h3>
                     <p class="relative mt-1 text-sm leading-6 text-slate-500">Susun dan aktifkan kebijakan yang berlaku bagi seluruh pengguna portal.</p>
-                </div>
+                </a>
 
-                <div x-show="matches('jam absensi jadwal operasional')" class="relative overflow-hidden rounded-2xl border border-cyan-100 bg-gradient-to-br from-cyan-50 to-white p-4">
+                <a href="{{ $attendanceRoute }}"
+                   x-show="matches('jam absensi jadwal operasional')"
+                   aria-label="Buka menu Jam Absensi"
+                   class="group relative overflow-hidden rounded-2xl border border-cyan-100 bg-gradient-to-br from-cyan-50 to-white p-4 transition hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2">
                     <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-100"></div>
                     <span class="relative grid h-10 w-10 place-items-center rounded-xl bg-cyan-600 text-white"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
                     <h3 class="relative mt-4 font-bold text-slate-900">Jam Absensi</h3>
                     <p class="relative mt-1 text-sm leading-6 text-slate-500">Atur rentang waktu absensi agar jadwal operasional lebih terkontrol.</p>
-                </div>
+                </a>
+
+                <a href="{{ $paymentRoute }}"
+                   x-show="matches('metode pembayaran rekening bank nominal administrasi')"
+                   aria-label="Buka menu Metode Pembayaran"
+                   class="group relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-4 transition hover:-translate-y-1 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-blue-100"></div>
+                    <span class="relative grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M3 9h18M5 9V7l7-4 7 4v2M6 9v8M10 9v8M14 9v8M18 9v8M4 17h16M3 21h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <h3 class="relative mt-4 font-bold text-slate-900">Metode Pembayaran</h3>
+                    <p class="relative mt-1 text-sm leading-6 text-slate-500">Kelola nominal administrasi, rekening bank resmi, dan riwayat perubahannya.</p>
+                </a>
             </div>
         </article>
     </section>

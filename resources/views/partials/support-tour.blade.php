@@ -51,6 +51,14 @@
                 'Atur jam buka dan tutup absensi di sini. Saat absensi sedang berlangsung, pengaturannya otomatis dikunci.'
             );
 
+
+            $addTourStep(
+                'superadmin.metode-pembayaran.index',
+                '[data-tour="payment-methods"]',
+                'Metode Pembayaran',
+                'Atur nominal administrasi, rekening bank resmi, dan lihat riwayat perubahannya dari menu ini.'
+            );
+
             $addTourStep(
                 'profile.edit',
                 '[data-tour="profile"]',
