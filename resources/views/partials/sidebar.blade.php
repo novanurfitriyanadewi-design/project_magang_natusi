@@ -1,4 +1,3 @@
-
 @php
     $user = auth()->user();
     $role = $user?->role ?? 'peserta';
@@ -26,11 +25,18 @@
             ['label' => 'Kelola Tugas', 'route' => 'admin.tugas.index', 'match' => 'admin.tugas.*', 'icon' => 'tasks', 'tour' => 'manage-tasks'],
             ['label' => 'Pengumpulan Tugas', 'route' => 'admin.pengumpulan-tugas.index', 'match' => 'admin.pengumpulan-tugas.*', 'icon' => 'tasks', 'tour' => 'task-submissions'],
             ['label' => 'Metode Pembayaran', 'route' => 'admin.metode-pembayaran.index', 'match' => 'admin.metode-pembayaran.*', 'icon' => 'bank', 'tour' => 'payment-methods'],
-            ['label' => 'Data Pembayaran', 'route' => 'admin.pembayaran.index', 'match' => 'admin.pembayaran.*', 'icon' => 'bank', 'tour' => 'payment-data'],
-            ['label' => 'Laporan Peserta', 'route' => 'admin.laporan.peserta', 'match' => 'admin.laporan.peserta', 'icon' => 'rules', 'tour' => 'report-participants'],
-            ['label' => 'Laporan Absensi', 'route' => 'admin.laporan.absensi', 'match' => 'admin.laporan.absensi', 'icon' => 'rules', 'tour' => 'report-attendance'],
-            ['label' => 'Laporan Penugasan', 'route' => 'admin.laporan.penugasan', 'match' => 'admin.laporan.penugasan', 'icon' => 'rules', 'tour' => 'report-tasks'],
-            ['label' => 'Laporan Pembayaran', 'route' => 'admin.laporan.pembayaran', 'match' => 'admin.laporan.pembayaran', 'icon' => 'rules', 'tour' => 'report-payments'],
+            ['label' => 'Data Pembayaran', 'route' => Route::has('admin.pembayaran.index') ? 'admin.pembayaran.index' : 'admin.pembayaran', 'match' => 'admin.pembayaran.*', 'icon' => 'bank', 'tour' => 'payment-data'],
+            [
+                'label' => 'Laporan',
+                'icon' => 'rules',
+                'match' => 'admin.laporan.*',
+                'children' => [
+                    ['label' => 'Peserta', 'route' => 'admin.laporan-peserta.index', 'match' => 'admin.laporan-peserta.*', 'tour' => 'report-participants'],
+                    ['label' => 'Absensi', 'route' => 'admin.laporan.absensi', 'match' => 'admin.laporan.absensi', 'tour' => 'report-attendance'],
+                    ['label' => 'Penugasan', 'route' => 'admin.laporan.penugasan', 'match' => 'admin.laporan.penugasan', 'tour' => 'report-tasks'],
+                    ['label' => 'Pembayaran', 'route' => 'admin.laporan.pembayaran', 'match' => 'admin.laporan.pembayaran', 'tour' => 'report-payments'],
+                ],
+            ],
             ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
         default => [
@@ -45,6 +51,16 @@
     $homeRoute = $role === 'superadmin' && Route::has('superadmin.dashboard')
         ? route('superadmin.dashboard')
         : route('dashboard');
+
+    $openGroup = null;
+    foreach ($menus as $i => $menu) {
+        if (isset($menu['children'])) {
+            $childActive = collect($menu['children'])->contains(fn ($c) => request()->routeIs($c['match']));
+            if ($childActive) {
+                $openGroup = $i;
+            }
+        }
+    }
 @endphp
 
 <aside
@@ -78,70 +94,149 @@
             <p class="text-[9px] font-bold uppercase tracking-[0.22em] text-sky-100/55">Menu Utama</p>
         </div>
 
-        <nav class="mt-3 flex-1 space-y-1.5 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Menu utama">
-            @foreach ($menus as $menu)
-                @php
-                    $available = Route::has($menu['route']);
-                    $active = $available && request()->routeIs($menu['match']);
-                    $href = $available ? route($menu['route']) : '#';
-                @endphp
+        <nav
+            x-data="{ openGroup: {{ $openGroup !== null ? $openGroup : 'null' }} }"
+            class="mt-3 flex-1 space-y-1.5 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            aria-label="Menu utama"
+        >
+            @foreach ($menus as $i => $menu)
+                @if (isset($menu['children']))
+                    @php
+                        $groupActive = collect($menu['children'])->contains(fn ($c) => request()->routeIs($c['match']));
+                    @endphp
 
-                <a
-                    href="{{ $href }}"
-                    data-tour="{{ $menu['tour'] ?? '' }}"
-                    @if (! $available) aria-disabled="true" title="Halaman ini belum dibuat" @endif
-                    @click="sidebarOpen = false"
-                    @class([
-                        'group flex min-h-[48px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition duration-200',
-                        'bg-white font-semibold text-[#05658f] shadow-[0_10px_28px_rgba(0,32,58,0.22)]' => $active,
-                        'font-medium text-sky-50/85 hover:translate-x-0.5 hover:bg-white/10 hover:text-white' => ! $active && $available,
-                        'cursor-not-allowed text-sky-100/35' => ! $available,
-                    ])
-                >
-                    <span @class([
-                        'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition duration-200',
-                        'bg-gradient-to-br from-sky-100 to-cyan-50 text-[#0573a3] shadow-sm ring-1 ring-sky-100' => $active,
-                        'bg-white/10 text-white ring-1 ring-white/10 group-hover:bg-white/15' => ! $active && $available,
-                        'bg-white/[0.04] text-white/35' => ! $available,
-                    ])>
-                        @switch($menu['icon'])
-                            @case('dashboard')
-                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z" stroke="currentColor" stroke-width="1.7"/></svg>
-                                @break
-                            @case('users')
-                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M16 7.5h5M18.5 5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                                @break
-                            @case('profile')
-                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M18 8v6M15 11h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                                @break
-                            @case('rules')
+                    {{-- ITEM GROUP (dropdown) --}}
+                    <div>
+                        <button
+                            type="button"
+                            @click="openGroup = (openGroup === {{ $i }} ? null : {{ $i }})"
+                            @class([
+                                'group flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition duration-200',
+                                'bg-white font-semibold text-[#05658f] shadow-[0_10px_28px_rgba(0,32,58,0.22)]' => $groupActive,
+                                'font-medium text-sky-50/85 hover:translate-x-0.5 hover:bg-white/10 hover:text-white' => ! $groupActive,
+                            ])
+                        >
+                            <span @class([
+                                'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition duration-200',
+                                'bg-gradient-to-br from-sky-100 to-cyan-50 text-[#0573a3] shadow-sm ring-1 ring-sky-100' => $groupActive,
+                                'bg-white/10 text-white ring-1 ring-white/10 group-hover:bg-white/15' => ! $groupActive,
+                            ])>
                                 <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M5 19h14M8 15l7-7 3 3-7 7H8v-3ZM13 6l3-3 3 3-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                @break
-                            @case('clock')
-                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                                @break
-                            @case('bank')
-                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M3 9h18M5 9V7l7-4 7 4v2M6 9v8M10 9v8M14 9v8M18 9v8M4 17h16M3 21h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                @break
-                            @case('inbox')
-                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4V5Zm0 9h4l2 2h4l2-2h4" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
-                                @break
-                            @case('tasks')
-                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                @break
-                            @default
-                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M6 3h9l3 3v15H6V3Zm3 7h6M9 14h6M9 18h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        @endswitch
-                    </span>
+                            </span>
 
-                    <span class="min-w-0 flex-1 truncate">{{ $menu['label'] }}</span>
+                            <span class="min-w-0 flex-1 truncate text-left">{{ $menu['label'] }}</span>
 
-                    @if (! $available)
-                        <span class="ml-auto rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-1 text-[7px] font-bold uppercase tracking-wide text-white/40">Soon</span>
-                    @elseif ($active)
-                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.15)]"></span>
-                    @endif
-                </a>
+                            <svg
+                                class="h-4 w-4 shrink-0 transition-transform duration-200"
+                                :class="openGroup === {{ $i }} ? 'rotate-180' : ''"
+                                viewBox="0 0 24 24" fill="none"
+                            >
+                                <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+
+                        <div
+                            x-show="openGroup === {{ $i }}"
+                            x-collapse
+                            class="mt-1 space-y-1 pl-[18px]"
+                        >
+                            <div class="ml-[17px] space-y-1 border-l border-white/10 pl-3">
+                                @foreach ($menu['children'] as $child)
+                                    @php
+                                        $childAvailable = Route::has($child['route']);
+                                        $childActive = $childAvailable && request()->routeIs($child['match']);
+                                        $childHref = $childAvailable ? route($child['route']) : '#';
+                                    @endphp
+
+                                    <a
+                                        href="{{ $childHref }}"
+                                        data-tour="{{ $child['tour'] ?? '' }}"
+                                        @if (! $childAvailable) aria-disabled="true" title="Halaman ini belum dibuat" @endif
+                                        @click="sidebarOpen = false"
+                                        @class([
+                                            'flex min-h-[40px] items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition duration-200',
+                                            'bg-white/95 font-semibold text-[#05658f]' => $childActive,
+                                            'font-medium text-sky-50/70 hover:bg-white/10 hover:text-white' => ! $childActive && $childAvailable,
+                                            'cursor-not-allowed text-sky-100/30' => ! $childAvailable,
+                                        ])
+                                    >
+                                        <span class="min-w-0 flex-1 truncate">{{ $child['label'] }}</span>
+
+                                        @if (! $childAvailable)
+                                            <span class="ml-auto rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-1 text-[7px] font-bold uppercase tracking-wide text-white/40">Soon</span>
+                                        @elseif ($childActive)
+                                            <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.15)]"></span>
+                                        @endif
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    @php
+                        $available = Route::has($menu['route']);
+                        $active = $available && request()->routeIs($menu['match']);
+                        $href = $available ? route($menu['route']) : '#';
+                    @endphp
+
+                    {{-- ITEM BIASA (tanpa children) --}}
+                    <a
+                        href="{{ $href }}"
+                        data-tour="{{ $menu['tour'] ?? '' }}"
+                        @if (! $available) aria-disabled="true" title="Halaman ini belum dibuat" @endif
+                        @click="sidebarOpen = false"
+                        @class([
+                            'group flex min-h-[48px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition duration-200',
+                            'bg-white font-semibold text-[#05658f] shadow-[0_10px_28px_rgba(0,32,58,0.22)]' => $active,
+                            'font-medium text-sky-50/85 hover:translate-x-0.5 hover:bg-white/10 hover:text-white' => ! $active && $available,
+                            'cursor-not-allowed text-sky-100/35' => ! $available,
+                        ])
+                    >
+                        <span @class([
+                            'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition duration-200',
+                            'bg-gradient-to-br from-sky-100 to-cyan-50 text-[#0573a3] shadow-sm ring-1 ring-sky-100' => $active,
+                            'bg-white/10 text-white ring-1 ring-white/10 group-hover:bg-white/15' => ! $active && $available,
+                            'bg-white/[0.04] text-white/35' => ! $available,
+                        ])>
+                            @switch($menu['icon'])
+                                @case('dashboard')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z" stroke="currentColor" stroke-width="1.7"/></svg>
+                                    @break
+                                @case('users')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M16 7.5h5M18.5 5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                                    @break
+                                @case('profile')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M18 8v6M15 11h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                                    @break
+                                @case('rules')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M5 19h14M8 15l7-7 3 3-7 7H8v-3ZM13 6l3-3 3 3-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    @break
+                                @case('clock')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                                    @break
+                                @case('bank')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M3 9h18M5 9V7l7-4 7 4v2M6 9v8M10 9v8M14 9v8M18 9v8M4 17h16M3 21h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    @break
+                                @case('inbox')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4V5Zm0 9h4l2 2h4l2-2h4" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                                    @break
+                                @case('tasks')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    @break
+                                @default
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M6 3h9l3 3v15H6V3Zm3 7h6M9 14h6M9 18h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            @endswitch
+                        </span>
+
+                        <span class="min-w-0 flex-1 truncate">{{ $menu['label'] }}</span>
+
+                        @if (! $available)
+                            <span class="ml-auto rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-1 text-[7px] font-bold uppercase tracking-wide text-white/40">Soon</span>
+                        @elseif ($active)
+                            <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.15)]"></span>
+                        @endif
+                    </a>
+                @endif
             @endforeach
         </nav>
 
@@ -150,43 +245,14 @@
                 type="button"
                 data-tour-support
                 onclick="window.NatusiTour?.start()"
-                class="
-                    group flex w-full items-center gap-3
-                    rounded-xl px-3 py-2.5
-                    text-sm font-medium text-sky-50/80
-                    transition duration-200
-                    hover:bg-white/10 hover:text-white
-                "
+                class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sky-50/80 transition duration-200 hover:bg-white/10 hover:text-white"
             >
-                <span
-                    class="
-                        grid h-8 w-8 shrink-0 place-items-center
-                        rounded-lg bg-white/10 ring-1 ring-white/10
-                        transition group-hover:bg-white/15
-                    "
-                >
-                    <svg
-                        class="h-[18px] w-[18px]"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        aria-hidden="true"
-                    >
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="8"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                        />
-                        <path
-                            d="M9.7 9a2.4 2.4 0 0 1 4.6.9c0 1.8-2.3 2-2.3 3.6M12 17h.01"
-                            stroke="currentColor"
-                            stroke-width="1.7"
-                            stroke-linecap="round"
-                        />
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/10 ring-1 ring-white/10 transition group-hover:bg-white/15">
+                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/>
+                        <path d="M9.7 9a2.4 2.4 0 0 1 4.6.9c0 1.8-2.3 2-2.3 3.6M12 17h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
                     </svg>
                 </span>
-
                 <span>Support</span>
             </button>
 

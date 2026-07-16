@@ -8,24 +8,20 @@ use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardCo
 use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\PesertaMagangController as AdminPesertaMagangController;
+use App\Http\Controllers\Admin\LaporanPesertaController as AdminLaporanPesertaController;
+use App\Http\Controllers\Admin\LaporanPembayaranController as AdminLaporanPembayaranController;
+use App\Http\Controllers\Admin\LaporanAbsensiController as AdminLaporanAbsensiController;
+use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugasanController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Halaman Awal
-|--------------------------------------------------------------------------
-*/
+/* Halaman Awal */
 
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Registrasi
-|--------------------------------------------------------------------------
-*/
+/* Registrasi */
 
 Route::middleware('guest')->group(function () {
     Route::get('/register/pelamar', function () {
@@ -45,11 +41,7 @@ Route::middleware('guest')->group(function () {
     })->name('register.karyawan');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Dashboard Umum
-|--------------------------------------------------------------------------
-*/
+/* Dashboard Umum */
 
 Route::get('/dashboard', function () {
     $user = auth()->user();
@@ -67,11 +59,7 @@ Route::get('/dashboard', function () {
     ->middleware('auth')
     ->name('dashboard');
 
-/*
-|--------------------------------------------------------------------------
-| Super Admin
-|--------------------------------------------------------------------------
-*/
+/* Super Admin */
 
 Route::middleware(['auth', 'role:superadmin'])
     ->prefix('superadmin')
@@ -82,11 +70,7 @@ Route::middleware(['auth', 'role:superadmin'])
             SuperadminDashboardController::class
         )->name('dashboard');
 
-        /*
-        |--------------------------------------------------------------------------
-        | Kelola Admin
-        |--------------------------------------------------------------------------
-        */
+        /* Kelola Admin */
 
         Route::get(
             '/admin',
@@ -108,11 +92,7 @@ Route::middleware(['auth', 'role:superadmin'])
             [SuperadminAdminController::class, 'destroy']
         )->name('admin.destroy');
 
-        /*
-        |--------------------------------------------------------------------------
-        | Kelola Aturan Perusahaan
-        |--------------------------------------------------------------------------
-        */
+        /* Kelola Aturan Perusahaan */
 
         Route::get(
             '/aturan',
@@ -134,11 +114,7 @@ Route::middleware(['auth', 'role:superadmin'])
             [SuperadminAturanPerusahaanController::class, 'destroy']
         )->name('aturan.destroy');
 
-        /*
-        |--------------------------------------------------------------------------
-        | Kelola Jam Absensi
-        |--------------------------------------------------------------------------
-        */
+        /* Kelola Jam Absensi */
 
         Route::get(
             '/jam-absensi',
@@ -156,11 +132,7 @@ Route::middleware(['auth', 'role:superadmin'])
         )->name('jam-absensi.reset');
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Kelola Metode Pembayaran
-        |--------------------------------------------------------------------------
-        */
+        /* Kelola Metode Pembayaran */
 
         Route::get(
             '/metode-pembayaran',
@@ -188,11 +160,7 @@ Route::middleware(['auth', 'role:superadmin'])
         )->name('metode-pembayaran.bank.destroy');
     });
 
-/*
-|--------------------------------------------------------------------------
-| Admin
-|--------------------------------------------------------------------------
-*/
+/* Admin */
 
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
@@ -203,23 +171,29 @@ Route::middleware(['auth', 'role:admin'])
             AdminDashboardController::class
         )->name('dashboard');
 
-        /*
-        |--------------------------------------------------------------------------
-        | Kelola Data Peserta Magang
-        |--------------------------------------------------------------------------
-        */
+        /* Kelola Data Peserta Magang */
 
         Route::resource('peserta', AdminPesertaMagangController::class)
-            ->except(['create', 'show', 'edit']) // create & edit pakai modal di halaman index, bukan halaman terpisah
-            ->parameters(['peserta' => 'peserta_magang']); // biar {peserta} di URL nge-bind ke $pesertaMagang di controller
+            ->except(['create', 'show', 'edit']) 
+            ->parameters(['peserta' => 'peserta_magang']); 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Menu di bawah ini belum ada controller/view-nya.
-        | Sidebar otomatis tampil "Soon" sampai route-nya didaftarkan di sini,
-        | dengan nama route yang SAMA seperti di resources/views/partials/sidebar.blade.php
-        |--------------------------------------------------------------------------
-        */
+        
+        /* Kelola Laporan Peserta Magang */
+
+        Route::resource('laporan-peserta', AdminLaporanPesertaController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->parameters(['laporan-peserta' => 'peserta_magang']);
+
+        Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])
+            ->name('laporan.pembayaran');
+
+        Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])
+            ->name('laporan.penugasan');
+
+        Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])
+            ->name('laporan.absensi');
+
+        /* Menu Sementara / Placeholder Sidebar */
 
         Route::get('/permintaan', function () {
             return view('admin-permintaanmagang');
@@ -241,48 +215,16 @@ Route::middleware(['auth', 'role:admin'])
             return view('admin-metodepembayaran');
         })->name('metode-pembayaran.index');
 
+        // ROUTE DATA PEMBAYARAN (Baru ditambahkan agar tidak "Soon")
         Route::get('/pembayaran', function () {
             return view('admin-pembayaran');
         })->name('pembayaran.index');
-
-        Route::get('/laporan/peserta', function () {
-            return view('admin-laporanpeserta');
-        })->name('laporan.peserta');
-
-        Route::get('/laporan/absensi', function () {
-            return view('admin-laporanabsensi');
-        })->name('laporan.absensi');
-
-        Route::get('/laporan/penugasan', function () {
-            return view('admin-laporanpenugasan');
-        })->name('laporan.penugasan');
-
-        Route::get('/laporan/pembayaran', function () {
-            return view('admin-laporanpembayaran');
-        })->name('laporan.pembayaran');
-
-        /*
-        |--------------------------------------------------------------------------
-        | Catatan: closure di atas cuma placeholder biar menu sidebar aktif & bisa
-        | diklik (gak nampilin "Soon" lagi). Kalau controller & fitur aslinya
-        | sudah jadi, tinggal ganti masing-masing closure dengan:
-        | Route::resource('nama-menu', NamaController::class);
-        |--------------------------------------------------------------------------
-        */
     });
 
-/*
-|--------------------------------------------------------------------------
-| Fitur Pengguna Terautentikasi
-|--------------------------------------------------------------------------
-*/
+/* Fitur Pengguna Terautentikasi */
 
 Route::middleware('auth')->group(function () {
-    /*
-    |--------------------------------------------------------------------------
-    | Pencarian Portal
-    |--------------------------------------------------------------------------
-    */
+    /* Pencarian Portal */
 
     Route::get(
         '/search',
@@ -294,11 +236,7 @@ Route::middleware('auth')->group(function () {
         [PortalSearchController::class, 'suggestions']
     )->name('search.suggestions');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Profil
-    |--------------------------------------------------------------------------
-    */
+    /* Profil */
 
     Route::get(
         '/profile',
@@ -310,11 +248,7 @@ Route::middleware('auth')->group(function () {
         [ProfileController::class, 'update']
     )->name('profile.update');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Foto Profil
-    |--------------------------------------------------------------------------
-    */
+    /* Foto Profil */
 
     Route::get(
         '/profile/photo',
@@ -331,11 +265,7 @@ Route::middleware('auth')->group(function () {
         [ProfileController::class, 'destroyPhoto']
     )->name('profile.photo.destroy');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Hapus Akun
-    |--------------------------------------------------------------------------
-    */
+    /* Hapus Akun */
 
     Route::delete(
         '/profile',
@@ -343,10 +273,6 @@ Route::middleware('auth')->group(function () {
     )->name('profile.destroy');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Authentication
-|--------------------------------------------------------------------------
-*/
+/* Authentication */
 
 require __DIR__ . '/auth.php';
