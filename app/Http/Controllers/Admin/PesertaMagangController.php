@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PesertaMagang;
+use App\Models\PermintaanMagang;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -63,12 +65,19 @@ class PesertaMagangController extends Controller
 
         ];
 
+        // Data untuk dropdown di modal "Tambah Peserta"
+        $users = User::orderBy('nama')->get();
+
+        $permintaan = PermintaanMagang::orderBy('nama_pemohon')->get();
+
         return view(
             'admin.peserta_magang',
             compact(
                 'peserta',
                 'stats',
-                'search'
+                'search',
+                'users',
+                'permintaan'
             )
         );
     }
