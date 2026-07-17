@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\LaporanPesertaController as AdminLaporanPesertaCo
 use App\Http\Controllers\Admin\LaporanPembayaranController as AdminLaporanPembayaranController;
 use App\Http\Controllers\Admin\LaporanAbsensiController as AdminLaporanAbsensiController;
 use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugasanController;
+use App\Http\Controllers\Admin\DataAbsensiController as AdminDataAbsensiController;
+use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetodePembayaranController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
 use Illuminate\Support\Facades\Route;
 
@@ -174,10 +176,10 @@ Route::middleware(['auth', 'role:admin'])
         /* Kelola Data Peserta Magang */
 
         Route::resource('peserta', AdminPesertaMagangController::class)
-            ->except(['create', 'show', 'edit']) 
-            ->parameters(['peserta' => 'peserta_magang']); 
+            ->except(['create', 'show', 'edit'])
+            ->parameters(['peserta' => 'peserta_magang']);
 
-        
+
         /* Kelola Laporan Peserta Magang */
 
         Route::resource('laporan-peserta', AdminLaporanPesertaController::class)
@@ -193,15 +195,34 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])
             ->name('laporan.absensi');
 
+        /* Data Absensi (monitoring harian) */
+
+       /* Kelola Metode Pembayaran */
+
+Route::get('/metode-pembayaran', [AdminDataMetodePembayaranController::class, 'index'])
+    ->name('metode-pembayaran.index');
+
+Route::put('/metode-pembayaran/nominal', [AdminDataMetodePembayaranController::class, 'updateNominal'])
+    ->name('metode-pembayaran.nominal.update');
+
+Route::post('/metode-pembayaran/rekening', [AdminDataMetodePembayaranController::class, 'storeBank'])
+    ->name('metode-pembayaran.bank.store');
+
+Route::put('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'updateBank'])
+    ->name('metode-pembayaran.bank.update');
+
+Route::delete('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'destroyBank'])
+    ->name('metode-pembayaran.bank.destroy');
+        /* Data Metode Pembayaran (monitoring, read-only) */
+
+        Route::get('/metode-pembayaran', [AdminDataMetodePembayaranController::class, 'index'])
+            ->name('metode-pembayaran.index');
+
         /* Menu Sementara / Placeholder Sidebar */
 
         Route::get('/permintaan', function () {
             return view('admin-permintaanmagang');
         })->name('permintaan.index');
-
-        Route::get('/absensi', function () {
-            return view('admin-absensi');
-        })->name('absensi.index');
 
         Route::get('/tugas', function () {
             return view('admin-tugas');
@@ -210,10 +231,6 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/pengumpulan-tugas', function () {
             return view('admin-pengumpulantugas');
         })->name('pengumpulan-tugas.index');
-
-        Route::get('/metode-pembayaran', function () {
-            return view('admin-metodepembayaran');
-        })->name('metode-pembayaran.index');
 
         // ROUTE DATA PEMBAYARAN (Baru ditambahkan agar tidak "Soon")
         Route::get('/pembayaran', function () {
