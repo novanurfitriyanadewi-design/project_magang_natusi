@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\LaporanPesertaController as AdminLaporanPesertaCo
 use App\Http\Controllers\Admin\LaporanPembayaranController as AdminLaporanPembayaranController;
 use App\Http\Controllers\Admin\LaporanAbsensiController as AdminLaporanAbsensiController;
 use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugasanController;
+use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
+use App\Http\Controllers\Admin\TugasController as AdminTugasController;
 use App\Http\Controllers\Admin\PermintaanMagangController as AdminPermintaanMagangController;
 use App\Http\Controllers\Admin\DataAbsensiController as AdminDataAbsensiController;
 use App\Http\Controllers\Admin\DataPembayaranController as AdminDataPembayaranController;
@@ -113,6 +115,79 @@ Route::middleware(['auth', 'role:admin'])
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['laporan-peserta' => 'peserta_magang']);
 
+
+        Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])
+            ->name('laporan.pembayaran');
+
+        Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])
+            ->name('laporan.penugasan');
+
+        Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])
+            ->name('laporan.absensi');
+
+        /* Menu Sementara / Placeholder Sidebar */
+
+        Route::get('/permintaan', function () {
+            return view('admin-permintaanmagang');
+        })->name('permintaan.index');
+
+        Route::get('/absensi', function () {
+            return view('admin-absensi');
+        })->name('absensi.index');
+
+        /* Kelola Tugas Magang */
+
+        Route::get(
+            '/tugas',
+            [AdminTugasController::class, 'index']
+        )->name('tugas.index');
+
+        Route::post(
+            '/tugas',
+            [AdminTugasController::class, 'store']
+        )->name('tugas.store');
+
+        Route::put(
+            '/tugas/{tugas}',
+            [AdminTugasController::class, 'update']
+        )->name('tugas.update');
+
+        Route::delete(
+            '/tugas/{tugas}',
+            [AdminTugasController::class, 'destroy']
+        )->name('tugas.destroy');
+
+        Route::post(
+            '/tugas/upload',
+            [AdminTugasController::class, 'upload']
+        )->name('tugas.upload');
+
+        Route::get(
+            '/tugas/panduan/download',
+            [AdminTugasController::class, 'downloadPanduan']
+        )->name('tugas.panduan.download');
+
+        Route::get(
+            '/tugas/template/download',
+            [AdminTugasController::class, 'downloadTemplate']
+        )->name('tugas.template.download');
+
+
+        Route::get('/pengumpulan-tugas', function () {
+            return view('admin-pengumpulantugas');
+        })->name('pengumpulan-tugas.index');
+
+        Route::get('/metode-pembayaran', function () {
+            return view('admin-metodepembayaran');
+        })->name('metode-pembayaran.index');
+
+        
+
+        // ROUTE DATA PEMBAYARAN (Baru ditambahkan agar tidak "Soon")
+        Route::get('/pembayaran', function () {
+            return view('admin-pembayaran');
+        })->name('pembayaran.index');
+=======
         // Laporan
         Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])->name('laporan.pembayaran');
         Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])->name('laporan.penugasan');
@@ -136,6 +211,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/pembayaran', [AdminDataPembayaranController::class, 'index'])->name('pembayaran.index');
         Route::patch('/pembayaran/{pembayaran}/terima', [AdminDataPembayaranController::class, 'terima'])->name('pembayaran.terima');
         Route::patch('/pembayaran/{pembayaran}/tolak', [AdminDataPembayaranController::class, 'tolak'])->name('pembayaran.tolak');
+
     });
 
 /* Authentication */
