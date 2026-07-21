@@ -13,7 +13,9 @@ use App\Http\Controllers\Admin\LaporanPembayaranController as AdminLaporanPembay
 use App\Http\Controllers\Admin\LaporanAbsensiController as AdminLaporanAbsensiController;
 use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugasanController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
+use App\Http\Controllers\Admin\PermintaanMagangController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 
 /* Halaman Awal */
 
@@ -196,7 +198,7 @@ Route::middleware(['auth', 'role:admin'])
         /* Menu Sementara / Placeholder Sidebar */
 
         Route::get('/permintaan', function () {
-            return view('admin-permintaanmagang');
+            return view('admin.permintaan-magang');
         })->name('permintaan.index');
 
         Route::get('/absensi', function () {
@@ -223,56 +225,58 @@ Route::middleware(['auth', 'role:admin'])
 
 /* Fitur Pengguna Terautentikasi */
 
-Route::middleware('auth')->group(function () {
-    /* Pencarian Portal */
+// --- ROUTE ADMIN (Mulai Baris 228) ---
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
 
-    Route::get(
-        '/search',
-        [PortalSearchController::class, 'index']
-    )->name('search.index');
+    Route::get('/permintaan', function () {
+        $total_pendaftar = \Illuminate\Support\Facades\DB::table('permintaan_magang')->count();
+        $total_menunggu   = \Illuminate\Support\Facades\DB::table('permintaan_magang')->where('status', 'menunggu')->count();
+        $total_diterima   = \Illuminate\Support\Facades\DB::table('permintaan_magang')->where('status', 'diterima')->count();
 
-    Route::get(
-        '/search/suggestions',
-        [PortalSearchController::class, 'suggestions']
-    )->name('search.suggestions');
+        $query = \Illuminate\Support\Facades\DB::table('permintaan_magang');
 
-    /* Profil */
+        // Filter berdasarkan tombol status
+        if (request()->has('status') && request('status') !== 'all') {
+            $query->where('status', request('status'));
+        }
 
-    Route::get(
-        '/profile',
-        [ProfileController::class, 'edit']
-    )->name('profile.edit');
+        // Filter berdasarkan Pencarian (Nama / Institusi)
+        if (request()->filled('search')) {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('institusi', 'like', "%{$search}%");
+            });
+        }
 
-    Route::patch(
-        '/profile',
-        [ProfileController::class, 'update']
-    )->name('profile.update');
+        $permintaan_magang = $query->orderBy('id', 'desc')->paginate(10);
 
-    /* Foto Profil */
+        return view('admin.permintaan-magang', compact(
+            'permintaan_magang',
+            'total_pendaftar',
+            'total_menunggu',
+            'total_diterima'
+        ));
+    })->name('permintaan.index');
 
-    Route::get(
-        '/profile/photo',
-        [ProfileController::class, 'showPhoto']
-    )->name('profile.photo.show');
+    Route::post('/permintaan/action/{id}', function ($id) {
+        $action = request('action');
+        $pendaftar = \Illuminate\Support\Facades\DB::table('permintaan_magang')->where('id', $id)->first();
+        
+        if (!$pendaftar) {
+            return redirect()->back()->with('error', 'Data pendaftar tidak ditemukan.');
+        }
 
-    Route::patch(
-        '/profile/photo',
-        [ProfileController::class, 'updatePhoto']
-    )->name('profile.photo.update');
+        $statusBaru = ($action === 'accept') ? 'diterima' : 'ditolak';
+        $pesanText  = ($action === 'accept') ? 'DITERIMA' : 'DITOLAK';
 
-    Route::delete(
-        '/profile/photo',
-        [ProfileController::class, 'destroyPhoto']
-    )->name('profile.photo.destroy');
+        \Illuminate\Support\Facades\DB::table('permintaan_magang')
+            ->where('id', $id)
+            ->update(['status' => $statusBaru]);
 
-    /* Hapus Akun */
-
-    Route::delete(
-        '/profile',
-        [ProfileController::class, 'destroy']
-    )->name('profile.destroy');
-});
+        return redirect()->back()->with('success', "Akses pendaftaran {$pendaftar->nama} berhasil di-{$pesanText}.");
+    })->name('permintaan.action');
+}); // <--- Penutup group middleware admin
 
 /* Authentication */
-
 require __DIR__ . '/auth.php';
