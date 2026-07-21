@@ -12,10 +12,7 @@ use App\Http\Controllers\Admin\LaporanPesertaController as AdminLaporanPesertaCo
 use App\Http\Controllers\Admin\LaporanPembayaranController as AdminLaporanPembayaranController;
 use App\Http\Controllers\Admin\LaporanAbsensiController as AdminLaporanAbsensiController;
 use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugasanController;
-use App\Http\Controllers\Admin\DataAbsensiController as AdminDataAbsensiController;
-use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetodePembayaranController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
-use App\Http\Controllers\Admin\DataPembayaranController as AdminDataPembayaranController;
 use Illuminate\Support\Facades\Route;
 
 /* Halaman Awal */
@@ -163,82 +160,99 @@ Route::middleware(['auth', 'role:superadmin'])
         )->name('metode-pembayaran.bank.destroy');
     });
 
-/* Fitur Pengguna Terautentikasi */
-
-Route::middleware('auth')->group(function () {
-    /* Pencarian Portal */
-    Route::get('/search', [PortalSearchController::class, 'index'])->name('search.index');
-    Route::get('/search/suggestions', [PortalSearchController::class, 'suggestions'])->name('search.suggestions');
-
-    /* Profil */
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
-    /* Foto Profil */
-    Route::get('/profile/photo', [ProfileController::class, 'showPhoto'])->name('profile.photo.show');
-    Route::patch('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
-    Route::delete('/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.photo.destroy');
-
-    /* Hapus Akun */
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-}); // <--- INI PENUTUP UNTUK MIDDLEWARE AUTH
-
 /* Admin */
+
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::get('/dashboard', AdminDashboardController::class)->name('dashboard');
+        Route::get(
+            '/dashboard',
+            AdminDashboardController::class
+        )->name('dashboard');
 
         /* Kelola Data Peserta Magang */
-        Route::resource('peserta', AdminPesertaMagangController::class)
-            ->except(['create', 'show', 'edit'])
-            ->parameters(['peserta' => 'peserta_magang']);
 
+        Route::resource('peserta', AdminPesertaMagangController::class)
+            ->except(['create', 'show', 'edit']) 
+            ->parameters(['peserta' => 'peserta_magang']); 
+
+        
         /* Kelola Laporan Peserta Magang */
+
         Route::resource('laporan-peserta', AdminLaporanPesertaController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['laporan-peserta' => 'peserta_magang']);
 
-        Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])->name('laporan.pembayaran');
-        Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])->name('laporan.penugasan');
-        Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])->name('laporan.absensi');
+        Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])
+            ->name('laporan.pembayaran');
 
-        /* Data Absensi */
-        Route::get('/absensi', [AdminDataAbsensiController::class, 'index'])->name('absensi.index');
+        Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])
+            ->name('laporan.penugasan');
 
-        /* Kelola Metode Pembayaran */
-        Route::get('/metode-pembayaran', [AdminDataMetodePembayaranController::class, 'index'])->name('metode-pembayaran.index');
-        Route::put('/metode-pembayaran/nominal', [AdminDataMetodePembayaranController::class, 'updateNominal'])->name('metode-pembayaran.nominal.update');
-        Route::post('/metode-pembayaran/rekening', [AdminDataMetodePembayaranController::class, 'storeBank'])->name('metode-pembayaran.bank.store');
-        Route::put('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'updateBank'])->name('metode-pembayaran.bank.update');
-        Route::delete('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'destroyBank'])->name('metode-pembayaran.bank.destroy');
+        Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])
+            ->name('laporan.absensi');
 
-        /* Permintaan Magang */
-        Route::get('/permintaan', function () {
-            return view('admin-permintaanmagang');
-        })->name('permintaan.index');
+       
 
-        /* Kelola Tugas */
-        Route::get('/tugas', function () {
-            return view('admin-tugas');
-        })->name('tugas.index');
+        // ROUTE DATA PEMBAYARAN (Baru ditambahkan agar tidak "Soon")
+        Route::get('/pembayaran', function () {
+            return view('admin-pembayaran');
+        })->name('pembayaran.index');
+    });
 
-        /* Pengumpulan Tugas */
-        Route::get('/pengumpulan-tugas', function () {
-            return view('admin-pengumpulantugas');
-        })->name('pengumpulan-tugas.index');
+/* Fitur Pengguna Terautentikasi */
 
-        /* Data Pembayaran */
-        Route::get('/pembayaran', [AdminDataPembayaranController::class, 'index'])
-            ->name('pembayaran.index');
+Route::middleware('auth')->group(function () {
+    /* Pencarian Portal */
 
-        Route::patch('/pembayaran/{pembayaran}/terima', [AdminDataPembayaranController::class, 'terima'])
-            ->name('pembayaran.terima');
+    Route::get(
+        '/search',
+        [PortalSearchController::class, 'index']
+    )->name('search.index');
 
-        Route::patch('/pembayaran/{pembayaran}/tolak', [AdminDataPembayaranController::class, 'tolak'])
-            ->name('pembayaran.tolak');
-    }); // <--- INI PENUTUP UNTUK MIDDLEWARE ADMIN
+    Route::get(
+        '/search/suggestions',
+        [PortalSearchController::class, 'suggestions']
+    )->name('search.suggestions');
+
+    /* Profil */
+
+    Route::get(
+        '/profile',
+        [ProfileController::class, 'edit']
+    )->name('profile.edit');
+
+    Route::patch(
+        '/profile',
+        [ProfileController::class, 'update']
+    )->name('profile.update');
+
+    /* Foto Profil */
+
+    Route::get(
+        '/profile/photo',
+        [ProfileController::class, 'showPhoto']
+    )->name('profile.photo.show');
+
+    Route::patch(
+        '/profile/photo',
+        [ProfileController::class, 'updatePhoto']
+    )->name('profile.photo.update');
+
+    Route::delete(
+        '/profile/photo',
+        [ProfileController::class, 'destroyPhoto']
+    )->name('profile.photo.destroy');
+
+    /* Hapus Akun */
+
+    Route::delete(
+        '/profile',
+        [ProfileController::class, 'destroy']
+    )->name('profile.destroy');
+});
 
 /* Authentication */
+
 require __DIR__ . '/auth.php';
