@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\LaporanPembayaranController as AdminLaporanPembay
 use App\Http\Controllers\Admin\LaporanAbsensiController as AdminLaporanAbsensiController;
 use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugasanController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
+use App\Http\Controllers\Admin\TugasController as AdminTugasController;
 use Illuminate\Support\Facades\Route;
 
 /* Halaman Awal */
@@ -203,9 +204,43 @@ Route::middleware(['auth', 'role:admin'])
             return view('admin-absensi');
         })->name('absensi.index');
 
-        Route::get('/tugas', function () {
-            return view('admin-tugas');
-        })->name('tugas.index');
+        /* Kelola Tugas Magang */
+
+        Route::get(
+            '/tugas',
+            [AdminTugasController::class, 'index']
+        )->name('tugas.index');
+
+        Route::post(
+            '/tugas',
+            [AdminTugasController::class, 'store']
+        )->name('tugas.store');
+
+        Route::put(
+            '/tugas/{tugas}',
+            [AdminTugasController::class, 'update']
+        )->name('tugas.update');
+
+        Route::delete(
+            '/tugas/{tugas}',
+            [AdminTugasController::class, 'destroy']
+        )->name('tugas.destroy');
+
+        Route::post(
+            '/tugas/upload',
+            [AdminTugasController::class, 'upload']
+        )->name('tugas.upload');
+
+        Route::get(
+            '/tugas/panduan/download',
+            [AdminTugasController::class, 'downloadPanduan']
+        )->name('tugas.panduan.download');
+
+        Route::get(
+            '/tugas/template/download',
+            [AdminTugasController::class, 'downloadTemplate']
+        )->name('tugas.template.download');
+
 
         Route::get('/pengumpulan-tugas', function () {
             return view('admin-pengumpulantugas');
@@ -214,6 +249,8 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/metode-pembayaran', function () {
             return view('admin-metodepembayaran');
         })->name('metode-pembayaran.index');
+
+        
 
         // ROUTE DATA PEMBAYARAN (Baru ditambahkan agar tidak "Soon")
         Route::get('/pembayaran', function () {
