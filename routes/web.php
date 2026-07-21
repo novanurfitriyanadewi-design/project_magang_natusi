@@ -193,27 +193,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])
             ->name('laporan.absensi');
 
-        /* Menu Sementara / Placeholder Sidebar */
-
-        Route::get('/permintaan', function () {
-            return view('admin-permintaanmagang');
-        })->name('permintaan.index');
-
-        Route::get('/absensi', function () {
-            return view('admin-absensi');
-        })->name('absensi.index');
-
-        Route::get('/tugas', function () {
-            return view('admin-tugas');
-        })->name('tugas.index');
-
-        Route::get('/pengumpulan-tugas', function () {
-            return view('admin-pengumpulantugas');
-        })->name('pengumpulan-tugas.index');
-
-        Route::get('/metode-pembayaran', function () {
-            return view('admin-metodepembayaran');
-        })->name('metode-pembayaran.index');
+       
 
         // ROUTE DATA PEMBAYARAN (Baru ditambahkan agar tidak "Soon")
         Route::get('/pembayaran', function () {
