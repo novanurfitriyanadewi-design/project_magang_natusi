@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\PengumpulanTugas;
 
 class Tugas extends Model
 {
@@ -17,10 +18,10 @@ class Tugas extends Model
         'user_id',
         'judul',
         'materi',
-        'jenis_tugas',   // 'harian' | 'mingguan' | 'akhir'
+        'jenis_tugas',
         'file_tugas',
         'instansi',
-        'status',        // 'aktif' | 'nonaktif' | 'selesai'
+        'status',
     ];
 
     protected $casts = [
@@ -29,11 +30,18 @@ class Tugas extends Model
     ];
 
     /**
-     * Relasi ke user pembuat tugas (admin/pembimbing).
-     * Sesuaikan nama Model User & primary key-nya jika berbeda.
+     * Relasi ke user pembuat tugas
      */
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id_user');
+    }
+
+    /**
+     * Relasi ke data pengumpulan tugas
+     */
+    public function pengumpulanTugas()
+    {
+        return $this->hasMany(PengumpulanTugas::class, 'id_tugas', 'id_tugas');
     }
 }
