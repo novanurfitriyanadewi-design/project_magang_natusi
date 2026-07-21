@@ -97,15 +97,63 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('peserta', AdminPesertaMagangController::class)
             ->except(['create', 'show', 'edit'])
             ->parameters(['peserta' => 'peserta_magang']);
+        
+        /* Permintaan Magang */
+        Route::get('/permintaan', function () {
+            $total_pendaftar = DB::table('permintaan_magang')->count();
+            $total_menunggu   = DB::table('permintaan_magang')->where('status', 'menunggu')->count();
+            $total_diterima   = DB::table('permintaan_magang')->where('status', 'diterima')->count();
+
+            $query = DB::table('permintaan_magang');
+
+            if (request()->has('status') && request('status') !== 'all') {
+                $query->where('status', request('status'));
+            }
+
+            if (request()->filled('search')) {
+                $search = request('search');
+                $query->where(function($q) use ($search) {
+                    $q->where('nama', 'like', "%{$search}%")
+                      ->orWhere('institusi', 'like', "%{$search}%");
+                });
+            }
+
+            $permintaan_magang = $query->orderBy('id', 'desc')->paginate(10);
+
+            return view('admin.permintaan-magang', compact(
+                'permintaan_magang',
+                'total_pendaftar',
+                'total_menunggu',
+                'total_diterima'
+            ));
+        })->name('permintaan.index');
+
+        Route::post('/permintaan/action/{id}', function ($id) {
+            $action = request('action');
+            $pendaftar = DB::table('permintaan_magang')->where('id', $id)->first();
+
+            if (!$pendaftar) {
+                return redirect()->back()->with('error', 'Data pendaftar tidak ditemukan.');
+            }
+
+            $statusBaru = ($action === 'accept') ? 'diterima' : 'ditolak';
+            $pesanText  = ($action === 'accept') ? 'DITERIMA' : 'DITOLAK';
+
+            DB::table('permintaan_magang')
+                ->where('id', $id)
+                ->update(['status' => $statusBaru]);
+
+            return redirect()->back()->with('success', "Akses pendaftaran {$pendaftar->nama} berhasil di-{$pesanText}.");
+        })->name('permintaan.action');
 
         /* Kelola Laporan Peserta Magang */
         Route::resource('laporan-peserta', AdminLaporanPesertaController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['laporan-peserta' => 'peserta_magang']);
-
         Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])->name('laporan.pembayaran');
         Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])->name('laporan.penugasan');
         Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])->name('laporan.absensi');
+        
 
         /* PERMINTAAN MAGANG (Disatukan & Diberi Akses DB Real) */
         Route::get('/permintaan', function () {
@@ -171,6 +219,15 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/metode-pembayaran', function () {
             return view('admin-metodepembayaran');
         })->name('metode-pembayaran.index');
+
+        Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])
+            ->name('laporan.pembayaran');
+
+        Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])
+            ->name('laporan.penugasan');
+
+        Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])
+            ->name('laporan.absensi');
 
         Route::get('/pembayaran', function () {
             return view('admin-pembayaran');
