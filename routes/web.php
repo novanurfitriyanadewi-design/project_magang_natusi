@@ -12,12 +12,12 @@ use App\Http\Controllers\Admin\LaporanPesertaController as AdminLaporanPesertaCo
 use App\Http\Controllers\Admin\LaporanPembayaranController as AdminLaporanPembayaranController;
 use App\Http\Controllers\Admin\LaporanAbsensiController as AdminLaporanAbsensiController;
 use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugasanController;
-use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
 use App\Http\Controllers\Admin\TugasController as AdminTugasController;
 use App\Http\Controllers\Admin\PermintaanMagangController as AdminPermintaanMagangController;
 use App\Http\Controllers\Admin\DataAbsensiController as AdminDataAbsensiController;
 use App\Http\Controllers\Admin\DataPembayaranController as AdminDataPembayaranController;
 use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetodePembayaranController;
+use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTugasController;
 use Illuminate\Support\Facades\Route;
 
 /* Halaman Awal & Registrasi */
@@ -115,103 +115,37 @@ Route::middleware(['auth', 'role:admin'])
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['laporan-peserta' => 'peserta_magang']);
 
-
-        Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])
-            ->name('laporan.pembayaran');
-
-        Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])
-            ->name('laporan.penugasan');
-
-        Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])
-            ->name('laporan.absensi');
-
-        /* Menu Sementara / Placeholder Sidebar */
-
-        Route::get('/permintaan', function () {
-            return view('admin-permintaanmagang');
-        })->name('permintaan.index');
-
-        Route::get('/absensi', function () {
-            return view('admin-absensi');
-        })->name('absensi.index');
-
-        /* Kelola Tugas Magang */
-
-        Route::get(
-            '/tugas',
-            [AdminTugasController::class, 'index']
-        )->name('tugas.index');
-
-        Route::post(
-            '/tugas',
-            [AdminTugasController::class, 'store']
-        )->name('tugas.store');
-
-        Route::put(
-            '/tugas/{tugas}',
-            [AdminTugasController::class, 'update']
-        )->name('tugas.update');
-
-        Route::delete(
-            '/tugas/{tugas}',
-            [AdminTugasController::class, 'destroy']
-        )->name('tugas.destroy');
-
-        Route::post(
-            '/tugas/upload',
-            [AdminTugasController::class, 'upload']
-        )->name('tugas.upload');
-
-        Route::get(
-            '/tugas/panduan/download',
-            [AdminTugasController::class, 'downloadPanduan']
-        )->name('tugas.panduan.download');
-
-        Route::get(
-            '/tugas/template/download',
-            [AdminTugasController::class, 'downloadTemplate']
-        )->name('tugas.template.download');
-
-
-        Route::get('/pengumpulan-tugas', function () {
-            return view('admin-pengumpulantugas');
-        })->name('pengumpulan-tugas.index');
-
-        Route::get('/metode-pembayaran', function () {
-            return view('admin-metodepembayaran');
-        })->name('metode-pembayaran.index');
-
-        
-
-        // ROUTE DATA PEMBAYARAN (Baru ditambahkan agar tidak "Soon")
-        Route::get('/pembayaran', function () {
-            return view('admin-pembayaran');
-        })->name('pembayaran.index');
-=======
         // Laporan
         Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])->name('laporan.pembayaran');
         Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])->name('laporan.penugasan');
         Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])->name('laporan.absensi');
 
-        // Data Absensi (pakai controller yang sudah ada: DataAbsensiController)
+        /* Kelola Tugas Magang */
+        Route::get('/tugas', [AdminTugasController::class, 'index'])->name('tugas.index');
+        Route::post('/tugas', [AdminTugasController::class, 'store'])->name('tugas.store');
+        Route::put('/tugas/{tugas}', [AdminTugasController::class, 'update'])->name('tugas.update');
+        Route::delete('/tugas/{tugas}', [AdminTugasController::class, 'destroy'])->name('tugas.destroy');
+        Route::post('/tugas/upload', [AdminTugasController::class, 'upload'])->name('tugas.upload');
+        Route::get('/tugas/panduan/download', [AdminTugasController::class, 'downloadPanduan'])->name('tugas.panduan.download');
+        Route::get('/tugas/template/download', [AdminTugasController::class, 'downloadTemplate'])->name('tugas.template.download');
+
+        /* Pengumpulan Tugas */
+        Route::get('/pengumpulan-tugas', [AdminPengumpulanTugasController::class, 'index'])->name('pengumpulan-tugas.index');
+
+        // Data Absensi
         Route::get('/absensi', [AdminDataAbsensiController::class, 'index'])->name('absensi.index');
 
-        // Tugas (placeholder — buat controller/view kalau sudah siap)
-        Route::get('/tugas', fn () => view('admin.tugas.index'))->name('tugas.index');
-        Route::get('/pengumpulan-tugas', fn () => view('admin.pengumpulan-tugas.index'))->name('pengumpulan-tugas.index');
-
-        // Metode Pembayaran (pakai controller yang sudah ada: DataMetodePembayaranController)
+        // Metode Pembayaran
         Route::get('/metode-pembayaran', [AdminDataMetodePembayaranController::class, 'index'])->name('metode-pembayaran.index');
         Route::put('/metode-pembayaran/nominal', [AdminDataMetodePembayaranController::class, 'updateNominal'])->name('metode-pembayaran.nominal.update');
         Route::post('/metode-pembayaran/rekening', [AdminDataMetodePembayaranController::class, 'storeBank'])->name('metode-pembayaran.bank.store');
         Route::put('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'updateBank'])->name('metode-pembayaran.bank.update');
         Route::delete('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'destroyBank'])->name('metode-pembayaran.bank.destroy');
 
-        // Data Pembayaran (pakai controller yang sudah ada: DataPembayaranController)
+        // Data Pembayaran
         Route::get('/pembayaran', [AdminDataPembayaranController::class, 'index'])->name('pembayaran.index');
         Route::patch('/pembayaran/{pembayaran}/terima', [AdminDataPembayaranController::class, 'terima'])->name('pembayaran.terima');
         Route::patch('/pembayaran/{pembayaran}/tolak', [AdminDataPembayaranController::class, 'tolak'])->name('pembayaran.tolak');
-
     });
 
 /* Authentication */
