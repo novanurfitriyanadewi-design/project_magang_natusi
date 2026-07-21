@@ -13,13 +13,12 @@ use App\Http\Controllers\Admin\LaporanPembayaranController as AdminLaporanPembay
 use App\Http\Controllers\Admin\LaporanAbsensiController as AdminLaporanAbsensiController;
 use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugasanController;
 use App\Http\Controllers\Admin\PermintaanMagangController as AdminPermintaanMagangController;
-use App\Http\Controllers\Admin\AbsensiController as AdminAbsensiController;
-use App\Http\Controllers\Admin\PembayaranController as AdminPembayaranController;
+use App\Http\Controllers\Admin\DataAbsensiController as AdminDataAbsensiController;
+use App\Http\Controllers\Admin\DataPembayaranController as AdminDataPembayaranController;
+use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetodePembayaranController;
 use Illuminate\Support\Facades\Route;
 
-/* ==========================================================
- | Halaman Awal & Registrasi
- * ========================================================== */
+/* Halaman Awal & Registrasi */
 
 Route::get('/', fn () => redirect()->route('login'));
 
@@ -35,9 +34,7 @@ Route::middleware('guest')->group(function () {
     })->name('register.karyawan');
 });
 
-/* ==========================================================
- | Dashboard Umum (redirect sesuai role)
- * ========================================================== */
+/* Dashboard Umum (redirect sesuai role) */
 
 Route::middleware('auth')->get('/dashboard', function () {
     $user = auth()->user();
@@ -49,9 +46,7 @@ Route::middleware('auth')->get('/dashboard', function () {
     };
 })->name('dashboard');
 
-/* ==========================================================
- | Kelola Profil (semua role yang sudah login)
- * ========================================================== */
+/* Kelola Profil (semua role yang sudah login) */
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -63,9 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/photo', [ProfileController::class, 'showPhoto'])->name('profile.photo.show');
 });
 
-/* ==========================================================
- | SUPER ADMIN — /superadmin/*
- * ========================================================== */
+/* SUPER ADMIN */
 
 Route::middleware(['auth', 'role:superadmin'])
     ->prefix('superadmin')
@@ -90,7 +83,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::put('/jam-absensi', [SuperadminJamAbsensiController::class, 'update'])->name('jam-absensi.update');
         Route::patch('/jam-absensi/reset', [SuperadminJamAbsensiController::class, 'reset'])->name('jam-absensi.reset');
 
-        // Kelola Metode Pembayaran
+        // Kelola Metode Pembayaran (controller khusus superadmin)
         Route::get('/metode-pembayaran', [SuperadminMetodePembayaranController::class, 'index'])->name('metode-pembayaran.index');
         Route::put('/metode-pembayaran/nominal', [SuperadminMetodePembayaranController::class, 'updateNominal'])->name('metode-pembayaran.nominal.update');
         Route::post('/metode-pembayaran/rekening', [SuperadminMetodePembayaranController::class, 'storeBank'])->name('metode-pembayaran.bank.store');
@@ -98,9 +91,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::delete('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'destroyBank'])->name('metode-pembayaran.bank.destroy');
     });
 
-/* ==========================================================
- | ADMIN — /admin/*
- * ========================================================== */
+/* ADMIN */
 
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
@@ -127,24 +118,24 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])->name('laporan.penugasan');
         Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])->name('laporan.absensi');
 
-        // Data Absensi
-        Route::get('/absensi', [AdminAbsensiController::class, 'index'])->name('absensi.index');
+        // Data Absensi (pakai controller yang sudah ada: DataAbsensiController)
+        Route::get('/absensi', [AdminDataAbsensiController::class, 'index'])->name('absensi.index');
 
         // Tugas (placeholder — buat controller/view kalau sudah siap)
         Route::get('/tugas', fn () => view('admin.tugas.index'))->name('tugas.index');
         Route::get('/pengumpulan-tugas', fn () => view('admin.pengumpulan-tugas.index'))->name('pengumpulan-tugas.index');
 
-        // Metode Pembayaran (reuse controller superadmin)
-        Route::get('/metode-pembayaran', [SuperadminMetodePembayaranController::class, 'index'])->name('metode-pembayaran.index');
-        Route::put('/metode-pembayaran/nominal', [SuperadminMetodePembayaranController::class, 'updateNominal'])->name('metode-pembayaran.nominal.update');
-        Route::post('/metode-pembayaran/rekening', [SuperadminMetodePembayaranController::class, 'storeBank'])->name('metode-pembayaran.bank.store');
-        Route::put('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'updateBank'])->name('metode-pembayaran.bank.update');
-        Route::delete('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'destroyBank'])->name('metode-pembayaran.bank.destroy');
+        // Metode Pembayaran (pakai controller yang sudah ada: DataMetodePembayaranController)
+        Route::get('/metode-pembayaran', [AdminDataMetodePembayaranController::class, 'index'])->name('metode-pembayaran.index');
+        Route::put('/metode-pembayaran/nominal', [AdminDataMetodePembayaranController::class, 'updateNominal'])->name('metode-pembayaran.nominal.update');
+        Route::post('/metode-pembayaran/rekening', [AdminDataMetodePembayaranController::class, 'storeBank'])->name('metode-pembayaran.bank.store');
+        Route::put('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'updateBank'])->name('metode-pembayaran.bank.update');
+        Route::delete('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'destroyBank'])->name('metode-pembayaran.bank.destroy');
 
-        // Data Pembayaran
-        Route::get('/pembayaran', [AdminPembayaranController::class, 'index'])->name('pembayaran.index');
-        Route::patch('/pembayaran/{pembayaran}/terima', [AdminPembayaranController::class, 'terima'])->name('pembayaran.terima');
-        Route::patch('/pembayaran/{pembayaran}/tolak', [AdminPembayaranController::class, 'tolak'])->name('pembayaran.tolak');
+        // Data Pembayaran (pakai controller yang sudah ada: DataPembayaranController)
+        Route::get('/pembayaran', [AdminDataPembayaranController::class, 'index'])->name('pembayaran.index');
+        Route::patch('/pembayaran/{pembayaran}/terima', [AdminDataPembayaranController::class, 'terima'])->name('pembayaran.terima');
+        Route::patch('/pembayaran/{pembayaran}/tolak', [AdminDataPembayaranController::class, 'tolak'])->name('pembayaran.tolak');
     });
 
 /* Authentication */
