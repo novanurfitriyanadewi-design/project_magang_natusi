@@ -1,28 +1,27 @@
 <?php
 
-use App\Http\Controllers\PortalSearchController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Superadmin\AdminController as SuperadminAdminController;
 use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAturanPerusahaanController;
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
+use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\PesertaMagangController as AdminPesertaMagangController;
 use App\Http\Controllers\Admin\LaporanPesertaController as AdminLaporanPesertaController;
 use App\Http\Controllers\Admin\LaporanPembayaranController as AdminLaporanPembayaranController;
 use App\Http\Controllers\Admin\LaporanAbsensiController as AdminLaporanAbsensiController;
 use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugasanController;
-use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
+use App\Http\Controllers\Admin\PermintaanMagangController as AdminPermintaanMagangController;
+use App\Http\Controllers\Admin\AbsensiController as AdminAbsensiController;
+use App\Http\Controllers\Admin\PembayaranController as AdminPembayaranController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
 
-/* Halaman Awal */
+/* ==========================================================
+ | Halaman Awal & Registrasi
+ * ========================================================== */
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
-
-/* Registrasi */
+Route::get('/', fn () => redirect()->route('login'));
 
 Route::middleware('guest')->group(function () {
     Route::get('/register/pelamar', function () {
@@ -36,23 +35,37 @@ Route::middleware('guest')->group(function () {
     })->name('register.karyawan');
 });
 
-/* Dashboard Umum */
+/* ==========================================================
+ | Dashboard Umum (redirect sesuai role)
+ * ========================================================== */
 
-Route::get('/dashboard', function () {
+Route::middleware('auth')->get('/dashboard', function () {
     $user = auth()->user();
 
-    if ($user?->role === 'superadmin') {
-        return redirect()->route('superadmin.dashboard');
-    }
+    return match ($user?->role) {
+        'superadmin' => redirect()->route('superadmin.dashboard'),
+        'admin'      => redirect()->route('admin.dashboard'),
+        default      => view('dashboard'),
+    };
+})->name('dashboard');
 
-    if ($user?->role === 'admin') {
-        return redirect()->route('admin.dashboard');
-    }
+/* ==========================================================
+ | Kelola Profil (semua role yang sudah login)
+ * ========================================================== */
 
-    return view('dashboard');
-})->middleware('auth')->name('dashboard');
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-/* Super Admin */
+    Route::patch('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
+    Route::delete('/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.photo.destroy');
+    Route::get('/profile/photo', [ProfileController::class, 'showPhoto'])->name('profile.photo.show');
+});
+
+/* ==========================================================
+ | SUPER ADMIN — /superadmin/*
+ * ========================================================== */
 
 Route::middleware(['auth', 'role:superadmin'])
     ->prefix('superadmin')
@@ -60,24 +73,24 @@ Route::middleware(['auth', 'role:superadmin'])
     ->group(function () {
         Route::get('/dashboard', SuperadminDashboardController::class)->name('dashboard');
 
-        /* Kelola Admin */
+        // Kelola Admin
         Route::get('/admin', [SuperadminAdminController::class, 'index'])->name('admin');
         Route::post('/admin', [SuperadminAdminController::class, 'store'])->name('admin.store');
         Route::put('/admin/{admin}', [SuperadminAdminController::class, 'update'])->name('admin.update');
         Route::delete('/admin/{admin}', [SuperadminAdminController::class, 'destroy'])->name('admin.destroy');
 
-        /* Kelola Aturan Perusahaan */
+        // Kelola Aturan Perusahaan
         Route::get('/aturan', [SuperadminAturanPerusahaanController::class, 'index'])->name('aturan.index');
         Route::post('/aturan', [SuperadminAturanPerusahaanController::class, 'store'])->name('aturan.store');
         Route::put('/aturan/{aturan}', [SuperadminAturanPerusahaanController::class, 'update'])->name('aturan.update');
         Route::delete('/aturan/{aturan}', [SuperadminAturanPerusahaanController::class, 'destroy'])->name('aturan.destroy');
 
-        /* Kelola Jam Absensi */
+        // Kelola Jam Absensi
         Route::get('/jam-absensi', [SuperadminJamAbsensiController::class, 'index'])->name('jam-absensi.index');
         Route::put('/jam-absensi', [SuperadminJamAbsensiController::class, 'update'])->name('jam-absensi.update');
         Route::patch('/jam-absensi/reset', [SuperadminJamAbsensiController::class, 'reset'])->name('jam-absensi.reset');
 
-        /* Kelola Metode Pembayaran */
+        // Kelola Metode Pembayaran
         Route::get('/metode-pembayaran', [SuperadminMetodePembayaranController::class, 'index'])->name('metode-pembayaran.index');
         Route::put('/metode-pembayaran/nominal', [SuperadminMetodePembayaranController::class, 'updateNominal'])->name('metode-pembayaran.nominal.update');
         Route::post('/metode-pembayaran/rekening', [SuperadminMetodePembayaranController::class, 'storeBank'])->name('metode-pembayaran.bank.store');
@@ -85,7 +98,9 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::delete('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'destroyBank'])->name('metode-pembayaran.bank.destroy');
     });
 
-/* Admin */
+/* ==========================================================
+ | ADMIN — /admin/*
+ * ========================================================== */
 
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
@@ -93,145 +108,43 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::get('/dashboard', AdminDashboardController::class)->name('dashboard');
 
-        /* Kelola Data Peserta Magang */
+        // Kelola Data Peserta Magang
         Route::resource('peserta', AdminPesertaMagangController::class)
             ->except(['create', 'show', 'edit'])
             ->parameters(['peserta' => 'peserta_magang']);
-        
-        /* Permintaan Magang */
-        Route::get('/permintaan', function () {
-            $total_pendaftar = DB::table('permintaan_magang')->count();
-            $total_menunggu   = DB::table('permintaan_magang')->where('status', 'menunggu')->count();
-            $total_diterima   = DB::table('permintaan_magang')->where('status', 'diterima')->count();
 
-            $query = DB::table('permintaan_magang');
+        // Permintaan Magang
+        Route::get('/permintaan', [AdminPermintaanMagangController::class, 'index'])->name('permintaan.index');
+        Route::post('/permintaan/action/{id}', [AdminPermintaanMagangController::class, 'action'])->name('permintaan.action');
 
-            if (request()->has('status') && request('status') !== 'all') {
-                $query->where('status', request('status'));
-            }
-
-            if (request()->filled('search')) {
-                $search = request('search');
-                $query->where(function($q) use ($search) {
-                    $q->where('nama', 'like', "%{$search}%")
-                      ->orWhere('institusi', 'like', "%{$search}%");
-                });
-            }
-
-            $permintaan_magang = $query->orderBy('id', 'desc')->paginate(10);
-
-            return view('admin.permintaan-magang', compact(
-                'permintaan_magang',
-                'total_pendaftar',
-                'total_menunggu',
-                'total_diterima'
-            ));
-        })->name('permintaan.index');
-
-        Route::post('/permintaan/action/{id}', function ($id) {
-            $action = request('action');
-            $pendaftar = DB::table('permintaan_magang')->where('id', $id)->first();
-
-            if (!$pendaftar) {
-                return redirect()->back()->with('error', 'Data pendaftar tidak ditemukan.');
-            }
-
-            $statusBaru = ($action === 'accept') ? 'diterima' : 'ditolak';
-            $pesanText  = ($action === 'accept') ? 'DITERIMA' : 'DITOLAK';
-
-            DB::table('permintaan_magang')
-                ->where('id', $id)
-                ->update(['status' => $statusBaru]);
-
-            return redirect()->back()->with('success', "Akses pendaftaran {$pendaftar->nama} berhasil di-{$pesanText}.");
-        })->name('permintaan.action');
-
-        /* Kelola Laporan Peserta Magang */
+        // Kelola Laporan Peserta Magang
         Route::resource('laporan-peserta', AdminLaporanPesertaController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['laporan-peserta' => 'peserta_magang']);
+
+        // Laporan
         Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])->name('laporan.pembayaran');
         Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])->name('laporan.penugasan');
         Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])->name('laporan.absensi');
-        
 
-        /* PERMINTAAN MAGANG (Disatukan & Diberi Akses DB Real) */
-        Route::get('/permintaan', function () {
-            $total_pendaftar = DB::table('permintaan_magang')->count();
-            $total_menunggu   = DB::table('permintaan_magang')->where('status', 'menunggu')->count();
-            $total_diterima   = DB::table('permintaan_magang')->where('status', 'diterima')->count();
+        // Data Absensi
+        Route::get('/absensi', [AdminAbsensiController::class, 'index'])->name('absensi.index');
 
-            $query = DB::table('permintaan_magang');
+        // Tugas (placeholder — buat controller/view kalau sudah siap)
+        Route::get('/tugas', fn () => view('admin.tugas.index'))->name('tugas.index');
+        Route::get('/pengumpulan-tugas', fn () => view('admin.pengumpulan-tugas.index'))->name('pengumpulan-tugas.index');
 
-            if (request()->has('status') && request('status') !== 'all') {
-                $query->where('status', request('status'));
-            }
+        // Metode Pembayaran (reuse controller superadmin)
+        Route::get('/metode-pembayaran', [SuperadminMetodePembayaranController::class, 'index'])->name('metode-pembayaran.index');
+        Route::put('/metode-pembayaran/nominal', [SuperadminMetodePembayaranController::class, 'updateNominal'])->name('metode-pembayaran.nominal.update');
+        Route::post('/metode-pembayaran/rekening', [SuperadminMetodePembayaranController::class, 'storeBank'])->name('metode-pembayaran.bank.store');
+        Route::put('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'updateBank'])->name('metode-pembayaran.bank.update');
+        Route::delete('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'destroyBank'])->name('metode-pembayaran.bank.destroy');
 
-            if (request()->filled('search')) {
-                $search = request('search');
-                $query->where(function($q) use ($search) {
-                    $q->where('nama', 'like', "%{$search}%")
-                      ->orWhere('institusi', 'like', "%{$search}%");
-                });
-            }
-
-            $permintaan_magang = $query->orderBy('id', 'desc')->paginate(10);
-
-            return view('admin.permintaan-magang', compact(
-                'permintaan_magang',
-                'total_pendaftar',
-                'total_menunggu',
-                'total_diterima'
-            ));
-        })->name('permintaan.index');
-
-        Route::post('/permintaan/action/{id}', function ($id) {
-            $action = request('action');
-            $pendaftar = DB::table('permintaan_magang')->where('id', $id)->first();
-
-            if (!$pendaftar) {
-                return redirect()->back()->with('error', 'Data pendaftar tidak ditemukan.');
-            }
-
-            $statusBaru = ($action === 'accept') ? 'diterima' : 'ditolak';
-            $pesanText  = ($action === 'accept') ? 'DITERIMA' : 'DITOLAK';
-
-            DB::table('permintaan_magang')
-                ->where('id', $id)
-                ->update(['status' => $statusBaru]);
-
-            return redirect()->back()->with('success', "Akses pendaftaran {$pendaftar->nama} berhasil di-{$pesanText}.");
-        })->name('permintaan.action');
-
-        /* Placeholder Menu Lainnya */
-        Route::get('/absensi', function () {
-            return view('admin-absensi');
-        })->name('absensi.index');
-
-        Route::get('/tugas', function () {
-            return view('admin-tugas');
-        })->name('tugas.index');
-
-        Route::get('/pengumpulan-tugas', function () {
-            return view('admin-pengumpulantugas');
-        })->name('pengumpulan-tugas.index');
-
-        Route::get('/metode-pembayaran', function () {
-            return view('admin-metodepembayaran');
-        })->name('metode-pembayaran.index');
-
-        Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])
-            ->name('laporan.pembayaran');
-
-        Route::get('/laporan/penugasan', [AdminLaporanPenugasanController::class, 'index'])
-            ->name('laporan.penugasan');
-
-        Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])
-            ->name('laporan.absensi');
-
-        Route::get('/pembayaran', function () {
-            return view('admin-pembayaran');
-        })->name('pembayaran.index');
+        // Data Pembayaran
+        Route::get('/pembayaran', [AdminPembayaranController::class, 'index'])->name('pembayaran.index');
+        Route::patch('/pembayaran/{pembayaran}/terima', [AdminPembayaranController::class, 'terima'])->name('pembayaran.terima');
+        Route::patch('/pembayaran/{pembayaran}/tolak', [AdminPembayaranController::class, 'tolak'])->name('pembayaran.tolak');
     });
 
 /* Authentication */
