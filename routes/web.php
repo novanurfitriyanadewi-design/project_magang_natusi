@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetode
 use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTugasController;
 use App\Http\Controllers\PesertaMagang\DashboardController as PesertaMagangDashboardController;
 use App\Http\Controllers\PesertaMagang\AbsensiController as PesertaMagangAbsensiController;
+use App\Http\Controllers\PesertaMagang\PenugasanController as PesertaMagangPenugasanController;
 use Illuminate\Support\Facades\Route;
 
 /* Halaman Awal & Registrasi */
@@ -30,7 +31,7 @@ Route::middleware('auth')->get('/dashboard', function () {
     return match ($user?->role) {
         'superadmin' => redirect()->route('superadmin.dashboard'),
         'admin'      => redirect()->route('admin.dashboard'),
-        'peserta'    => redirect()->route('peserta-magang.dashboard'), // tambahkan ini
+        'peserta'    => redirect()->route('peserta-magang.dashboard'),
         default      => view('dashboard'),
     };
 })->name('dashboard');
@@ -88,9 +89,9 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
         Route::get('/dashboard', AdminDashboardController::class)->name('dashboard');
 
-        // Kelola Data Peserta Magang
+        // Kelola Data Peserta Magang (Hapus except jika butuh show & edit, atau cukup kecualikan create saja)
         Route::resource('peserta', AdminPesertaMagangController::class)
-            ->except(['create', 'show', 'edit'])
+            ->except(['create']) 
             ->parameters(['peserta' => 'peserta_magang']);
 
         // Permintaan Magang
@@ -135,7 +136,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::patch('/pembayaran/{pembayaran}/tolak', [AdminDataPembayaranController::class, 'tolak'])->name('pembayaran.tolak');
     });
 
-    /* PESERTA MAGANG */
+/* PESERTA MAGANG */
 
 Route::middleware(['auth', 'role:peserta'])
     ->prefix('peserta-magang')
@@ -147,6 +148,10 @@ Route::middleware(['auth', 'role:peserta'])
         // Absensi
         Route::get('/absensi', [PesertaMagangAbsensiController::class, 'index'])->name('absensi.index');
         Route::post('/absensi', [PesertaMagangAbsensiController::class, 'store'])->name('absensi.store');
+
+        // Penugasan
+        Route::get('/penugasan', [PesertaMagangPenugasanController::class, 'index'])->name('penugasan.index');
+        Route::post('/penugasan/{id_tugas}/kumpul', [PesertaMagangPenugasanController::class, 'store'])->name('penugasan.store');
     });
 
 /* Authentication */

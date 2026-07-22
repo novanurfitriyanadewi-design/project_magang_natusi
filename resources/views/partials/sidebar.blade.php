@@ -54,8 +54,8 @@
             ],
             [
                 'label' => 'Penugasan',
-                'route' => 'peserta-magang.tugas.index',
-                'match' => 'peserta-magang.tugas.*',
+                'route' => 'peserta-magang.penugasan.index',
+                'match' => 'peserta-magang.penugasan.*',
                 'icon' => 'assignment',
             ],
             [
