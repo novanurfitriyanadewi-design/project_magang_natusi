@@ -42,6 +42,11 @@ class Tugas extends Model
      */
     public function pengumpulanTugas()
     {
-        return $this->hasMany(PengumpulanTugas::class, 'id_tugas', 'id_tugas');
+        return $this->hasMany(PengumpulanTugas::class, 'tugas_id', 'id_tugas');
+    }
+
+    public function penugasanPeserta()
+    {
+        return $this->hasMany(PenugasanPeserta::class, 'tugas_id', 'id_tugas');
     }
 }
