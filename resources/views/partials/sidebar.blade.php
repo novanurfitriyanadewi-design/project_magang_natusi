@@ -5,7 +5,7 @@
     $portal = match ($role) {
         'superadmin' => ['name' => 'Natusi Admin', 'subtitle' => 'SUPER ADMIN PORTAL'],
         'admin' => ['name' => 'Natusi Admin', 'subtitle' => 'ADMIN PORTAL'],
-        default => ['name' => 'Natusi Magang', 'subtitle' => 'PESERTA MAGANG PORTAL'],
+        default => ['name' => 'CV Natusi', 'subtitle' => 'INTERNSHIP PORTAL'],
     };
 
     $menus = match ($role) {
@@ -40,42 +40,51 @@
             ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
         default => [
-    [
-        'label' => 'Dashboard',
-        'route' => 'peserta-magang.dashboard',
-        'match' => 'peserta-magang.dashboard',
-        'icon' => 'dashboard',
-    ],
-
-    [
-        'label' => 'Tugas',
-        'route' => 'peserta-magang.tugas.index',
-        'match' => 'peserta-magang.tugas.*',
-        'icon' => 'tasks',
-    ],
-
-    [
-        'label' => 'Absensi',
-        'route' => 'peserta-magang.absensi.index',
-        'match' => 'peserta-magang.absensi.*',
-        'icon' => 'clock',
-    ],
-
-    [
-        'label' => 'Laporan Mingguan',
-        'route' => 'peserta-magang.laporan.index',
-        'match' => 'peserta-magang.laporan.*',
-        'icon' => 'report',
-    ],
-
-    [
-        'label' => 'Kelola Profil',
-        'route' => 'profile.edit',
-        'match' => 'profile.*',
-        'icon' => 'profile',
-    ],
-],
+            [
+                'label' => 'Dashboard',
+                'route' => 'peserta-magang.dashboard',
+                'match' => 'peserta-magang.dashboard',
+                'icon' => 'dashboard',
+            ],
+            [
+                'label' => 'Absensi',
+                'route' => 'peserta-magang.absensi.index',
+                'match' => 'peserta-magang.absensi.*',
+                'icon' => 'attendance-user',
+            ],
+            [
+                'label' => 'Penugasan',
+                'route' => 'peserta-magang.tugas.index',
+                'match' => 'peserta-magang.tugas.*',
+                'icon' => 'assignment',
+            ],
+            [
+                'label' => 'Laporan Mingguan',
+                'route' => 'peserta-magang.laporan.index',
+                'match' => 'peserta-magang.laporan.*',
+                'icon' => 'report',
+            ],
+            [
+                'label' => 'Pembayaran',
+                'route' => 'peserta-magang.pembayaran.index',
+                'match' => 'peserta-magang.pembayaran.*',
+                'icon' => 'payment',
+            ],
+            [
+                'label' => 'Aturan Perusahaan',
+                'route' => 'peserta-magang.aturan.index',
+                'match' => 'peserta-magang.aturan.*',
+                'icon' => 'rules',
+            ],
+            [
+                'label' => 'Profile',
+                'route' => 'profile.edit',
+                'match' => 'profile.*',
+                'icon' => 'profile',
+            ],
+        ],
     };
+
     $homeRoute = $role === 'superadmin' && Route::has('superadmin.dashboard')
         ? route('superadmin.dashboard')
         : route('dashboard');
@@ -230,11 +239,23 @@
                                 @case('dashboard')
                                     <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z" stroke="currentColor" stroke-width="1.7"/></svg>
                                     @break
+                                @case('attendance-user')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.7"/><path d="m16 11 2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    @break
+                                @case('assignment')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-3 9h4m-4 4h4m-6-4h.01M10 18h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    @break
+                                @case('report')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    @break
+                                @case('payment')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="2" stroke="currentColor" stroke-width="1.7"/><path d="M6 12h.01M18 12h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                    @break
                                 @case('users')
                                     <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M16 7.5h5M18.5 5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
                                     @break
                                 @case('profile')
-                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M18 8v6M15 11h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M6 20v-1a6 6 0 0 1 12 0v1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
                                     @break
                                 @case('rules')
                                     <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M5 19h14M8 15l7-7 3 3-7 7H8v-3ZM13 6l3-3 3 3-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
