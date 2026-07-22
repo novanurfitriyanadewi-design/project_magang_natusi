@@ -60,8 +60,8 @@
             ],
             [
                 'label' => 'Laporan Mingguan',
-                'route' => 'peserta-magang.laporan.index',
-                'match' => 'peserta-magang.laporan.*',
+                'route' => 'peserta-magang.laporan-mingguan.index',
+                'match' => 'peserta-magang.laporan-mingguan.*',
                 'icon' => 'report',
             ],
             [
@@ -350,6 +350,6 @@
             </form>
         </div>
 
-        <p class="mt-4 text-center text-[8px] font-medium tracking-[0.13em] text-white/25">CV NATUSI PORTAL • V1.0</p>
+        <p class="mt-4 text-center text-[8px] font-medium tracking-[0.13em] text-white/25">CV NATUSI PORTAL ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ V1.0</p>
     </div>
 </aside>

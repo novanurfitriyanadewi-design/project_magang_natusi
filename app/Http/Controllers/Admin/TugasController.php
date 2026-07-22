@@ -63,11 +63,23 @@ class TugasController extends Controller
         $validated['status'] = $validated['status'] ?? 'aktif';
         $validated['instansi'] = strtolower($validated['instansi']);
 
-        Tugas::create($validated);
+        $tugas = Tugas::create($validated);
+
+        // Auto-assign ke semua peserta magang yang aktif
+        $pesertaAktifIds = \App\Models\PesertaMagang::where('status', 'aktif')->pluck('id_peserta');
+
+        $rows = $pesertaAktifIds->map(fn ($pesertaId) => [
+            'tugas_id'   => $tugas->id_tugas,
+            'peserta_id' => $pesertaId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ])->all();
+
+        \App\Models\PenugasanPeserta::insert($rows);
 
         return redirect()
             ->route('admin.tugas.index')
-            ->with('success', 'Tugas baru berhasil ditambahkan.');
+            ->with('success', 'Tugas baru berhasil ditambahkan dan diberikan ke ' . count($rows) . ' peserta aktif.');
     }
 
     public function update(Request $request, Tugas $tugas)
