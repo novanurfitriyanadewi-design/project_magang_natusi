@@ -2,169 +2,145 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\TemplatePesertaMagangExport;
 use App\Http\Controllers\Controller;
+use App\Imports\PesertaMagangImport;
 use App\Models\PesertaMagang;
-use App\Models\PermintaanMagang;
-use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PesertaMagangController extends Controller
 {
-    /**
-     * Daftar peserta magang.
-     */
     public function index(Request $request): View
     {
-        $search = $request->get('search');
+        $search = trim($request->string('search')->toString());
+        $status = $request->string('status', 'semua')->toString();
 
-        $query = PesertaMagang::with([
-            'user',
-            'permintaan'
-        ]);
+        $query = PesertaMagang::query()
+            ->with(['user', 'permintaan']);
 
-        // Search berdasarkan data user dan permintaan
-        if ($search) {
-
-            $query->where(function ($q) use ($search) {
-
-                $q->whereHas('user', function ($user) use ($search) {
-
-                    $user->where('nama', 'like', "%{$search}%")
-                         ->orWhere('email', 'like', "%{$search}%");
-
-                })
-
-                ->orWhereHas('permintaan', function ($permintaan) use ($search) {
-
-                    $permintaan->where('nama_pemohon', 'like', "%{$search}%")
-                               ->orWhere('nama_sekolah', 'like', "%{$search}%")
-                               ->orWhere('jurusan', 'like', "%{$search}%");
-
-                });
-
+        if ($search !== '') {
+            $query->where(function ($query) use ($search) {
+                $query
+                    ->where('alamat', 'like', "%{$search}%")
+                    ->orWhere('tingkat_pendidikan', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery
+                            ->where('nama', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('username', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('permintaan', function ($applicationQuery) use ($search) {
+                        $applicationQuery
+                            ->where('nama_sekolah', 'like', "%{$search}%")
+                            ->orWhere('jurusan', 'like', "%{$search}%")
+                            ->orWhere('no_induk', 'like', "%{$search}%");
+                    });
             });
+        }
 
+        if ($status === 'aktif') {
+            $query->where('status', 'aktif');
+        } elseif ($status === 'nonaktif') {
+            $query->where('status', '!=', 'aktif');
         }
 
         $peserta = $query
-            ->latest()
+            ->latest('id_peserta')
             ->paginate(10)
             ->withQueryString();
 
         $stats = [
-
-            'total' => PesertaMagang::count(),
-
-            'aktif' => PesertaMagang::where('status', 'aktif')->count(),
-
-            'selesai' => PesertaMagang::where('status', 'selesai')->count(),
-
-            'dibatalkan' => PesertaMagang::where('status', 'dibatalkan')->count(),
-
+            'total' => PesertaMagang::query()->count(),
+            'aktif' => PesertaMagang::query()->where('status', 'aktif')->count(),
+            'nonaktif' => PesertaMagang::query()->where('status', '!=', 'aktif')->count(),
         ];
 
-        // Data untuk dropdown di modal "Tambah Peserta"
-        $users = User::orderBy('nama')->get();
-
-        $permintaan = PermintaanMagang::orderBy('nama_pemohon')->get();
-
-        return view(
-            'admin.peserta_magang',
-            compact(
-                'peserta',
-                'stats',
-                'search',
-                'users',
-                'permintaan'
-            )
-        );
+        return view('admin.peserta_magang', compact(
+            'peserta',
+            'stats',
+            'search',
+            'status',
+        ));
     }
 
-    /**
-     * Simpan peserta.
-     */
-    public function store(Request $request): RedirectResponse
+    public function import(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-
-            'user_id' => 'required|exists:users,id_user',
-
-            'permintaan_id' => 'nullable|exists:permintaan_magang,id_permintaan',
-
-            'alamat' => 'required|string',
-
-            'tingkat_pendidikan' => 'required|string|max:100',
-
-            'kelas' => 'nullable|string|max:100',
-
-            'tgl_mulai' => 'nullable|date',
-
-            'tgl_selesai' => 'nullable|date|after_or_equal:tgl_mulai',
-
-            'durasi_magang' => 'nullable|string|max:100',
-
-            'nama_guru' => 'nullable|string|max:255',
-
-            'no_hpguru' => 'nullable|string|max:20',
-
-            'status' => 'required|in:aktif,selesai,dibatalkan',
-
+        $request->validate([
+            'file_excel' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+        ], [
+            'file_excel.required' => 'Pilih file Excel terlebih dahulu.',
+            'file_excel.mimes' => 'File harus berformat XLSX, XLS, atau CSV.',
+            'file_excel.max' => 'Ukuran file Excel maksimal 10 MB.',
         ]);
 
-        PesertaMagang::create($validated);
+        $import = new PesertaMagangImport();
+
+        try {
+            DB::transaction(function () use ($import, $request) {
+                Excel::import($import, $request->file('file_excel'));
+            });
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Import gagal. Pastikan struktur kolom sesuai template dan tidak ada data yang bertabrakan.');
+        }
 
         return redirect()
             ->route('admin.peserta.index')
-            ->with('success', 'Peserta magang berhasil ditambahkan.');
+            ->with(
+                'success',
+                "Import selesai: {$import->importedCount()} peserta baru ditambahkan, {$import->updatedCount()} data diperbarui, dan {$import->skippedCount()} baris kosong/rusak dilewati."
+            );
     }
 
-    /**
-     * Detail peserta.
-     */
-    public function show(PesertaMagang $pesertaMagang): View
+    public function downloadTemplate(): BinaryFileResponse
     {
-        $pesertaMagang->load([
-            'user',
-            'permintaan',
-            'absensi',
-            'laporanMingguan',
-            'pembayaran',
-            'pengumpulanTugas'
-        ]);
-
-        return view(
-            'admin.peserta.show',
-            compact('pesertaMagang')
+        return Excel::download(
+            new TemplatePesertaMagangExport(),
+            'template_import_peserta_magang_cv_natusi.xlsx'
         );
     }
 
-    /**
-     * Update peserta.
-     */
+    public function updateStatus(Request $request, PesertaMagang $pesertaMagang): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', Rule::in(['aktif', 'nonaktif'])],
+        ]);
+
+        $pesertaMagang->update([
+            'status' => $validated['status'] === 'aktif' ? 'aktif' : 'selesai',
+        ]);
+
+        return back()->with(
+            'success',
+            $validated['status'] === 'aktif'
+                ? 'Peserta berhasil diaktifkan.'
+                : 'Peserta berhasil dinonaktifkan.'
+        );
+    }
+
     public function update(Request $request, PesertaMagang $pesertaMagang): RedirectResponse
     {
         $validated = $request->validate([
-
-            'alamat' => 'required|string',
-
-            'tingkat_pendidikan' => 'required|string|max:100',
-
-            'kelas' => 'nullable|string|max:100',
-
-            'tgl_mulai' => 'nullable|date',
-
-            'tgl_selesai' => 'nullable|date|after_or_equal:tgl_mulai',
-
-            'durasi_magang' => 'nullable|string|max:100',
-
-            'nama_guru' => 'nullable|string|max:255',
-
-            'no_hpguru' => 'nullable|string|max:20',
-
-            'status' => 'required|in:aktif,selesai,dibatalkan',
-
+            'alamat' => ['required', 'string', 'max:1000'],
+            'tingkat_pendidikan' => ['required', Rule::in(['SMK', 'Universitas'])],
+            'kelas' => ['nullable', 'string', 'max:100'],
+            'tgl_mulai' => ['nullable', 'date'],
+            'tgl_selesai' => ['nullable', 'date', 'after_or_equal:tgl_mulai'],
+            'durasi_magang' => ['nullable', 'string', 'max:100'],
+            'nama_guru' => ['nullable', 'string', 'max:255'],
+            'no_hpguru' => ['nullable', 'string', 'max:20'],
+            'status' => ['required', Rule::in(['aktif', 'selesai', 'dibatalkan'])],
         ]);
 
         $pesertaMagang->update($validated);
@@ -174,9 +150,6 @@ class PesertaMagangController extends Controller
             ->with('success', 'Data peserta berhasil diperbarui.');
     }
 
-    /**
-     * Hapus peserta.
-     */
     public function destroy(PesertaMagang $pesertaMagang): RedirectResponse
     {
         $pesertaMagang->delete();
