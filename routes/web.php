@@ -1,11 +1,15 @@
 ﻿<?php
 
 use App\Http\Controllers\ProfileController;
+
+// Superadmin Controllers
 use App\Http\Controllers\Superadmin\AdminController as SuperadminAdminController;
 use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAturanPerusahaanController;
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
+
+// Admin Controllers
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\PesertaMagangController as AdminPesertaMagangController;
 use App\Http\Controllers\Admin\LaporanPesertaController as AdminLaporanPesertaController;
@@ -18,11 +22,14 @@ use App\Http\Controllers\Admin\DataAbsensiController as AdminDataAbsensiControll
 use App\Http\Controllers\Admin\DataPembayaranController as AdminDataPembayaranController;
 use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetodePembayaranController;
 use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTugasController;
+
+// Peserta Magang Controllers
 use App\Http\Controllers\PesertaMagang\DashboardController as PesertaMagangDashboardController;
 use App\Http\Controllers\PesertaMagang\AbsensiController as PesertaMagangAbsensiController;
+use App\Http\Controllers\PesertaMagang\PenugasanController as PesertaMagangPenugasanController;
 use App\Http\Controllers\PesertaMagang\PembayaranController as PesertaMagangPembayaranController;
 use App\Http\Controllers\PesertaMagang\LaporanMingguanController as PesertaMagangLaporanMingguanController;
-use App\Http\Controllers\PesertaMagang\TugasController as PesertaMagangTugasController;
+
 use Illuminate\Support\Facades\Route;
 
 /* Halaman Awal & Registrasi */
@@ -33,7 +40,7 @@ Route::middleware('auth')->get('/dashboard', function () {
     return match ($user?->role) {
         'superadmin' => redirect()->route('superadmin.dashboard'),
         'admin'      => redirect()->route('admin.dashboard'),
-        'peserta'    => redirect()->route('peserta-magang.dashboard'), // tambahkan ini
+        'peserta'    => redirect()->route('peserta-magang.dashboard'),
         default      => view('dashboard'),
     };
 })->name('dashboard');
@@ -93,7 +100,7 @@ Route::middleware(['auth', 'role:admin'])
 
         // Kelola Data Peserta Magang
         Route::resource('peserta', AdminPesertaMagangController::class)
-            ->except(['create', 'show', 'edit'])
+            ->except(['create']) 
             ->parameters(['peserta' => 'peserta_magang']);
 
         // Permintaan Magang
@@ -151,17 +158,17 @@ Route::middleware(['auth', 'role:peserta'])
         Route::get('/absensi', [PesertaMagangAbsensiController::class, 'index'])->name('absensi.index');
         Route::post('/absensi', [PesertaMagangAbsensiController::class, 'store'])->name('absensi.store');
 
+        // Penugasan
+        Route::get('/penugasan', [PesertaMagangPenugasanController::class, 'index'])->name('penugasan.index');
+        Route::post('/penugasan/{id_tugas}/kumpul', [PesertaMagangPenugasanController::class, 'store'])->name('penugasan.store');
+
         // Pembayaran
         Route::get('/pembayaran', [PesertaMagangPembayaranController::class, 'index'])->name('pembayaran.index');
         Route::post('/pembayaran', [PesertaMagangPembayaranController::class, 'store'])->name('pembayaran.store');
 
         // Laporan Mingguan
-        Route::get('/laporan', [PesertaMagangLaporanMingguanController::class, 'index'])->name('laporan.index');
-        Route::post('/laporan', [PesertaMagangLaporanMingguanController::class, 'store'])->name('laporan.store');
-
-        // Penugasan
-        Route::get('/tugas', [PesertaMagangTugasController::class, 'index'])->name('tugas.index');
-        Route::post('/tugas/{tugas}', [PesertaMagangTugasController::class, 'store'])->name('tugas.store');
+        Route::get('/laporan-mingguan', [PesertaMagangLaporanMingguanController::class, 'index'])->name('laporan-mingguan.index');
+        Route::post('/laporan-mingguan', [PesertaMagangLaporanMingguanController::class, 'store'])->name('laporan-mingguan.store');
     });
 
 /* Authentication */
