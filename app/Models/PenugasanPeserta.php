@@ -11,6 +11,9 @@ class PenugasanPeserta extends Model
     use HasFactory;
 
     protected $table = 'penugasan_peserta';
+
+    // Gunakan primary key yang sesuai dengan skema database kamu
+    // (Ubah ke 'id_penugasan_peserta' jika di database namanya demikian)
     protected $primaryKey = 'id_penugasan';
 
     protected $fillable = [
