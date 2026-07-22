@@ -70,35 +70,63 @@
                 'dashboard',
                 '[data-tour="dashboard"]',
                 'Dashboard Admin',
-                'Di sini kamu bisa lihat ringkasan aktivitas dan hal penting yang perlu segera ditangani.'
+                'Lihat ringkasan aktivitas, statistik peserta, absensi, tugas, pembayaran, dan informasi yang perlu segera ditindaklanjuti.'
             );
 
             $addTourStep(
                 'admin.permintaan.index',
                 '[data-tour="internship-requests"]',
                 'Permintaan Magang',
-                'Cek permintaan magang baru, lihat data pelamar, lalu tentukan langkah selanjutnya dari menu ini.'
+                'Periksa pengajuan magang yang masuk, buka detail pendaftar, lalu tentukan apakah pengajuan disetujui atau masih menunggu.'
             );
 
             $addTourStep(
                 'admin.peserta.index',
                 '[data-tour="internship-participants"]',
                 'Peserta Magang',
-                'Semua data peserta magang bisa kamu lihat dan kelola dari menu ini.'
+                'Kelola data peserta aktif dari SMK TKJ, SMK RPL, dan Universitas, termasuk informasi profil serta periode magangnya.'
+            );
+
+            $addTourStep(
+                'admin.absensi.index',
+                '[data-tour="attendance-data"]',
+                'Data Absensi',
+                'Pantau catatan kehadiran peserta, waktu masuk dan pulang, serta status absensi pada setiap tanggal.'
             );
 
             $addTourStep(
                 'admin.tugas.index',
                 '[data-tour="manage-tasks"]',
                 'Kelola Tugas',
-                'Bikin tugas, atur deadline, dan pantau progres peserta magang dari sini.'
+                'Unduh dan unggah template penugasan, kelola template laporan, serta atur jadwal tugas mingguan peserta.'
+            );
+
+            $addTourStep(
+                'admin.pengumpulan-tugas.index',
+                '[data-tour="task-submissions"]',
+                'Pengumpulan Tugas',
+                'Lihat peserta yang mengumpulkan, terlambat, atau belum mengumpulkan tugas dan kirim pengingat bila diperlukan.'
+            );
+
+            $addTourStep(
+                'admin.pembayaran.index',
+                '[data-tour="payment-data"]',
+                'Data Pembayaran',
+                'Periksa bukti pembayaran peserta, buka detail transaksi, lalu terima pembayaran untuk mengubah statusnya menjadi lunas.'
+            );
+
+            $addTourStep(
+                'admin.laporan-peserta.index',
+                '[data-tour="reports"]',
+                'Laporan',
+                'Akses laporan peserta, absensi, penugasan, dan pembayaran melalui satu kelompok menu laporan.'
             );
 
             $addTourStep(
                 'profile.edit',
                 '[data-tour="profile"]',
                 'Kelola Profil',
-                'Di sini kamu bisa memperbarui identitas, email, foto profil, dan keamanan akun.'
+                'Perbarui nama, email, foto profil, dan kata sandi akun admin dari menu ini.'
             );
         } else {
             $addTourStep(
@@ -616,6 +644,42 @@
                     calculateCardPosition(rect);
                 };
 
+                const revealSidebarTarget = (target) => {
+                    const nav = sidebarNav();
+
+                    if (!nav || !nav.contains(target)) {
+                        positionTour();
+                        return;
+                    }
+
+                    const navRect = nav.getBoundingClientRect();
+                    const targetRect = target.getBoundingClientRect();
+                    const padding = 14;
+                    const isVisible = (
+                        targetRect.top >= navRect.top + padding
+                        && targetRect.bottom <= navRect.bottom - padding
+                    );
+
+                    if (isVisible) {
+                        positionTour();
+                        return;
+                    }
+
+                    const nextScrollTop = Math.max(
+                        0,
+                        nav.scrollTop
+                        + (targetRect.top - navRect.top)
+                        - ((nav.clientHeight - targetRect.height) / 2)
+                    );
+
+                    nav.scrollTo({
+                        top: nextScrollTop,
+                        behavior: 'smooth',
+                    });
+
+                    window.setTimeout(positionTour, 260);
+                };
+
                 const findAvailableStep = (
                     startIndex,
                     direction = 1
@@ -678,7 +742,7 @@
 
                     renderDots(currentIndex);
 
-                    positionTour();
+                    revealSidebarTarget(currentTarget);
 
                     actionLocked = false;
                 };

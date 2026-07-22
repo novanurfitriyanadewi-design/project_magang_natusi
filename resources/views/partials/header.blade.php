@@ -71,6 +71,21 @@
             . '?v='
             . ($user?->updated_at?->timestamp ?? 1)
         : null;
+
+
+    $headerNotifications = collect();
+    $unreadNotificationCount = 0;
+
+    if ($showNotification && $user) {
+        $headerNotifications = $user->notifikasi()
+            ->latest('id_notifikasi')
+            ->limit(8)
+            ->get();
+
+        $unreadNotificationCount = $user->notifikasi()
+            ->where('dibaca', false)
+            ->count();
+    }
 @endphp
 
 <header
@@ -240,53 +255,155 @@
 
             @if ($showNotification)
                 <div
-                    class="
-                        flex items-center
-                        rounded-2xl border border-slate-200/80
-                        bg-slate-50/80 p-1 shadow-sm
-                    "
+                    x-data="{ notificationOpen: false }"
+                    class="relative"
                 >
-                    <button
-                        type="button"
+                    <div
                         class="
-                            group relative grid h-10 w-10 place-items-center
-                            rounded-xl text-slate-500
-                            transition duration-200
-                            hover:bg-white hover:text-sky-700 hover:shadow-sm
-                            focus:outline-none focus:ring-2 focus:ring-sky-200
+                            flex items-center
+                            rounded-2xl border border-slate-200/80
+                            bg-slate-50/80 p-1 shadow-sm
                         "
-                        aria-label="Notifikasi"
                     >
-                        <svg
-                            class="h-[20px] w-[20px]"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            aria-hidden="true"
-                        >
-                            <path
-                                d="M18 8.5a6 6 0 0 0-12 0v3.8c0 1.5-.5 2.9-1.5 4.2h15a6.9 6.9 0 0 1-1.5-4.2V8.5Z"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                            <path
-                                d="M9.8 19a2.4 2.4 0 0 0 4.4 0"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                stroke-linecap="round"
-                            />
-                        </svg>
-
-                        <span
+                        <button
+                            type="button"
                             class="
-                                absolute right-[7px] top-[6px]
-                                h-[9px] w-[9px]
-                                rounded-full bg-rose-500
-                                ring-[2px] ring-white
+                                group relative grid h-10 w-10 place-items-center
+                                rounded-xl text-slate-500
+                                transition duration-200
+                                hover:bg-white hover:text-sky-700 hover:shadow-sm
+                                focus:outline-none focus:ring-2 focus:ring-sky-200
                             "
-                        ></span>
-                    </button>
+                            @click.stop="notificationOpen = !notificationOpen"
+                            :aria-expanded="notificationOpen"
+                            aria-haspopup="menu"
+                            aria-label="Notifikasi"
+                        >
+                            <svg
+                                class="h-[20px] w-[20px]"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M18 8.5a6 6 0 0 0-12 0v3.8c0 1.5-.5 2.9-1.5 4.2h15a6.9 6.9 0 0 1-1.5-4.2V8.5Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <path
+                                    d="M9.8 19a2.4 2.4 0 0 0 4.4 0"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+
+                            @if($unreadNotificationCount > 0)
+                                <span
+                                    class="absolute -right-1 -top-1 inline-grid min-h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white ring-2 ring-white"
+                                >
+                                    {{ $unreadNotificationCount > 99 ? '99+' : $unreadNotificationCount }}
+                                </span>
+                            @endif
+                        </button>
+                    </div>
+
+                    <div
+                        x-cloak
+                        x-show="notificationOpen"
+                        x-transition.origin.top.right
+                        @click.outside="notificationOpen = false"
+                        class="absolute right-0 top-[54px] z-50 w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_22px_55px_rgba(15,23,42,0.20)]"
+                        role="menu"
+                    >
+                        <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3.5">
+                            <div>
+                                <p class="text-sm font-extrabold text-slate-900">Notifikasi</p>
+                                <p class="mt-0.5 text-[11px] text-slate-500">{{ $unreadNotificationCount }} belum dibaca</p>
+                            </div>
+
+                            @if($unreadNotificationCount > 0 && Route::has('notifikasi.read-all'))
+                                <form method="POST" action="{{ route('notifikasi.read-all') }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="text-xs font-extrabold text-sky-700 transition hover:text-sky-800">
+                                        Tandai semua dibaca
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+
+                        <div class="max-h-[420px] overflow-y-auto">
+                            @forelse($headerNotifications as $notification)
+                                @php
+                                    $notificationTone = match ($notification->tipe) {
+                                        'peringatan' => [
+                                            'icon' => 'notification_important',
+                                            'icon_class' => 'bg-amber-100 text-amber-700',
+                                        ],
+                                        'sukses' => [
+                                            'icon' => 'task_alt',
+                                            'icon_class' => 'bg-emerald-100 text-emerald-700',
+                                        ],
+                                        default => [
+                                            'icon' => 'info',
+                                            'icon_class' => 'bg-sky-100 text-sky-700',
+                                        ],
+                                    };
+                                @endphp
+
+                                <div @class([
+                                    'border-b border-slate-100 px-4 py-3.5 last:border-b-0',
+                                    'bg-sky-50/45' => ! $notification->dibaca,
+                                    'bg-white' => $notification->dibaca,
+                                ])>
+                                    <div class="flex gap-3">
+                                        <div class="grid h-9 w-9 shrink-0 place-items-center rounded-xl {{ $notificationTone['icon_class'] }}">
+                                            <span class="material-symbols-outlined text-[20px]">{{ $notificationTone['icon'] }}</span>
+                                        </div>
+
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-start justify-between gap-3">
+                                                <p class="text-xs font-extrabold leading-5 text-slate-900">{{ $notification->judul }}</p>
+                                                @if(! $notification->dibaca)
+                                                    <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-sky-500"></span>
+                                                @endif
+                                            </div>
+                                            <p class="mt-1 text-xs leading-5 text-slate-600">{{ $notification->pesan }}</p>
+                                            <div class="mt-2 flex items-center justify-between gap-3">
+                                                <span class="text-[10px] font-semibold text-slate-400">{{ $notification->created_at?->diffForHumans() }}</span>
+
+                                                @if(! $notification->dibaca && Route::has('notifikasi.read'))
+                                                    <form method="POST" action="{{ route('notifikasi.read', $notification) }}">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit" class="text-[10px] font-extrabold text-sky-700 transition hover:text-sky-800">
+                                                            Tandai dibaca
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="px-6 py-10 text-center">
+                                    <span class="material-symbols-outlined text-[42px] text-slate-300">notifications_off</span>
+                                    <p class="mt-3 text-sm font-extrabold text-slate-700">Belum ada notifikasi</p>
+                                    <p class="mt-1 text-xs text-slate-500">Notifikasi terbaru akan tampil di sini.</p>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        @if($user?->role === 'peserta' && Route::has('peserta.tugas.index'))
+                            <a href="{{ route('peserta.tugas.index') }}" class="flex items-center justify-center gap-2 border-t border-slate-100 bg-slate-50 px-4 py-3 text-xs font-extrabold text-sky-700 transition hover:bg-sky-50">
+                                Lihat tugas saya
+                                <span class="material-symbols-outlined text-[17px]">arrow_forward</span>
+                            </a>
+                        @endif
+                    </div>
                 </div>
 
                 <div

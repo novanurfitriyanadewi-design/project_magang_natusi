@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\PengumpulanTugas;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tugas extends Model
 {
@@ -16,17 +17,32 @@ class Tugas extends Model
 
     protected $fillable = [
         'user_id',
+        'kode_tugas',
         'judul',
         'materi',
+        'kategori_tugas',
         'jenis_tugas',
+        'minggu_ke',
         'file_tugas',
+        'pengumpulan',
         'instansi',
+        'target_peserta',
+        'hari_tampil',
+        'hari_deadline',
+        'jam_deadline',
+        'rilis_hari_ke',
+        'deadline_hari_ke',
+        'hari_mulai',
+        'keterangan',
+        'template_batch',
         'status',
     ];
 
     protected $casts = [
         'pengumpulan' => 'datetime',
-        'minggu_ke'   => 'integer',
+        'minggu_ke' => 'integer',
+        'rilis_hari_ke' => 'integer',
+        'deadline_hari_ke' => 'integer',
     ];
 
     /**
@@ -42,6 +58,11 @@ class Tugas extends Model
      */
     public function pengumpulanTugas()
     {
-        return $this->hasMany(PengumpulanTugas::class, 'id_tugas', 'id_tugas');
+        return $this->hasMany(PengumpulanTugas::class, 'tugas_id', 'id_tugas');
+    }
+
+    public function penugasanPeserta(): HasMany
+    {
+        return $this->hasMany(PenugasanPeserta::class, 'tugas_id', 'id_tugas');
     }
 }
