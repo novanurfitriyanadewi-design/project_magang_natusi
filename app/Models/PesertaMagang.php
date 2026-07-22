@@ -82,4 +82,13 @@ class PesertaMagang extends Model
             'id_peserta'
         );
     }
+
+    public function penugasanPeserta(): HasMany
+    {
+        return $this->hasMany(
+            PenugasanPeserta::class,
+            'peserta_id',
+            'id_peserta'
+        );
+    }
 }

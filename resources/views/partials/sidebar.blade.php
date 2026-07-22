@@ -24,12 +24,12 @@
             ['label' => 'Data Absensi', 'route' => 'admin.absensi.index', 'match' => 'admin.absensi.*', 'icon' => 'clock', 'tour' => 'attendance-data'],
             ['label' => 'Kelola Tugas', 'route' => 'admin.tugas.index', 'match' => 'admin.tugas.*', 'icon' => 'tasks', 'tour' => 'manage-tasks'],
             ['label' => 'Pengumpulan Tugas', 'route' => 'admin.pengumpulan-tugas.index', 'match' => 'admin.pengumpulan-tugas.*', 'icon' => 'tasks', 'tour' => 'task-submissions'],
-            ['label' => 'Metode Pembayaran', 'route' => 'admin.metode-pembayaran.index', 'match' => 'admin.metode-pembayaran.*', 'icon' => 'bank', 'tour' => 'payment-methods'],
             ['label' => 'Data Pembayaran', 'route' => Route::has('admin.pembayaran.index') ? 'admin.pembayaran.index' : 'admin.pembayaran', 'match' => 'admin.pembayaran.*', 'icon' => 'bank', 'tour' => 'payment-data'],
             [
                 'label' => 'Laporan',
                 'icon' => 'rules',
                 'match' => 'admin.laporan.*',
+                'tour' => 'reports',
                 'children' => [
                     ['label' => 'Peserta', 'route' => 'admin.laporan-peserta.index', 'match' => 'admin.laporan-peserta.*', 'tour' => 'report-participants'],
                     ['label' => 'Absensi', 'route' => 'admin.laporan.absensi', 'match' => 'admin.laporan.absensi', 'tour' => 'report-attendance'],
@@ -62,6 +62,39 @@
         }
     }
 @endphp
+
+<style>
+    /* Scrollbar menu sidebar: tetap terlihat agar pengguna mengetahui menu dapat digulir. */
+    .natusi-sidebar-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(186, 230, 253, 0.82) rgba(255, 255, 255, 0.10);
+        scrollbar-gutter: stable;
+        overscroll-behavior: contain;
+    }
+
+    .natusi-sidebar-scrollbar::-webkit-scrollbar {
+        width: 7px;
+    }
+
+    .natusi-sidebar-scrollbar::-webkit-scrollbar-track {
+        margin-block: 4px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.10);
+    }
+
+    .natusi-sidebar-scrollbar::-webkit-scrollbar-thumb {
+        min-height: 42px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 9999px;
+        background: rgba(186, 230, 253, 0.76);
+        background-clip: padding-box;
+    }
+
+    .natusi-sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(224, 242, 254, 0.96);
+        background-clip: padding-box;
+    }
+</style>
 
 <aside
     class="fixed inset-y-0 left-0 z-50 flex w-[245px] -translate-x-full flex-col overflow-hidden border-r border-white/10 bg-gradient-to-b from-[#073b60] via-[#075f89] to-[#062f50] px-3 py-5 shadow-[12px_0_40px_rgba(4,47,78,0.20)] transition-transform duration-300 lg:translate-x-0"
@@ -96,7 +129,7 @@
 
         <nav
             x-data="{ openGroup: {{ $openGroup !== null ? $openGroup : 'null' }} }"
-            class="mt-3 flex-1 space-y-1.5 overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            class="natusi-sidebar-scrollbar mt-3 flex-1 space-y-1.5 overflow-y-auto pr-2"
             aria-label="Menu utama"
         >
             @foreach ($menus as $i => $menu)
@@ -109,6 +142,7 @@
                     <div>
                         <button
                             type="button"
+                            data-tour="{{ $menu['tour'] ?? '' }}"
                             @click="openGroup = (openGroup === {{ $i }} ? null : {{ $i }})"
                             @class([
                                 'group flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition duration-200',

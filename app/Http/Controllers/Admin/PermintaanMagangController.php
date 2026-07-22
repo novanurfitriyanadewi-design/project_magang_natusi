@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -10,50 +11,96 @@ class PermintaanMagangController extends Controller
 {
     public function index(Request $request)
     {
-        $total_pendaftar = DB::table('permintaan_magang')->count();
-        $total_menunggu   = DB::table('permintaan_magang')->where('status', 'menunggu')->count();
-        $total_diterima   = DB::table('permintaan_magang')->where('status', 'diterima')->count();
+        $total_pendaftar = DB::table('permintaan_magang')
+            ->where('status', '!=', 'ditolak')
+            ->count();
 
-        $query = DB::table('permintaan_magang');
+        $total_disetujui = DB::table('permintaan_magang')
+            ->where('status', 'disetujui')
+            ->count();
 
-        if ($request->has('status') && $request->input('status') !== 'all') {
-            $query->where('status', $request->input('status'));
+        $query = DB::table('permintaan_magang as pm')
+            ->leftJoin('peserta_magang as ps', 'ps.permintaan_id', '=', 'pm.id_permintaan')
+            ->where('pm.status', '!=', 'ditolak')
+            ->select([
+                'pm.*',
+                'ps.alamat',
+            ]);
+
+        $status = $request->string('status')->toString();
+
+        if (in_array($status, ['menunggu', 'disetujui'], true)) {
+            $query->where('pm.status', $status);
         }
 
         if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('institusi', 'like', "%{$search}%");
+            $search = trim($request->string('search')->toString());
+
+            $query->where(function ($subQuery) use ($search) {
+                $subQuery
+                    ->where('pm.nama_pemohon', 'like', "%{$search}%")
+                    ->orWhere('pm.email', 'like', "%{$search}%")
+                    ->orWhere('pm.nama_sekolah', 'like', "%{$search}%")
+                    ->orWhere('pm.no_induk', 'like', "%{$search}%")
+                    ->orWhere('pm.jurusan', 'like', "%{$search}%")
+                    ->orWhere('pm.no_hp', 'like', "%{$search}%");
             });
         }
 
-        $permintaan_magang = $query->orderBy('id', 'desc')->paginate(10);
+        $permintaan_magang = $query
+            ->orderByDesc('pm.created_at')
+            ->orderByDesc('pm.id_permintaan')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.permintaan-magang', compact(
             'permintaan_magang',
             'total_pendaftar',
-            'total_menunggu',
-            'total_diterima'
+            'total_disetujui'
         ));
     }
 
-    public function action(Request $request, int $id)
+    public function action(Request $request, int $id): RedirectResponse
     {
-        $action = $request->input('action');
-        $pendaftar = DB::table('permintaan_magang')->where('id', $id)->first();
+        $validated = $request->validate([
+            'action' => ['required', 'in:approve,reject,accept'],
+        ]);
+
+        $pendaftar = DB::table('permintaan_magang')
+            ->where('id_permintaan', $id)
+            ->first();
 
         if (! $pendaftar) {
-            return redirect()->back()->with('error', 'Data pendaftar tidak ditemukan.');
+            return back()->with('error', 'Data pengajuan magang tidak ditemukan.');
         }
 
-        $statusBaru = ($action === 'accept') ? 'diterima' : 'ditolak';
-        $pesanText  = ($action === 'accept') ? 'DITERIMA' : 'DITOLAK';
+        if (($pendaftar->status ?? 'menunggu') !== 'menunggu') {
+            return back()->with('error', 'Pengajuan magang ini sudah pernah diproses.');
+        }
+
+        $disetujui = in_array($validated['action'], ['approve', 'accept'], true);
+
+        if (! $disetujui) {
+            DB::table('permintaan_magang')
+                ->where('id_permintaan', $id)
+                ->delete();
+
+            return back()->with(
+                'success',
+                "Pengajuan magang atas nama {$pendaftar->nama_pemohon} berhasil ditolak dan dihapus."
+            );
+        }
 
         DB::table('permintaan_magang')
-            ->where('id', $id)
-            ->update(['status' => $statusBaru]);
+            ->where('id_permintaan', $id)
+            ->update([
+                'status' => 'disetujui',
+                'updated_at' => now(),
+            ]);
 
-        return redirect()->back()->with('success', "Akses pendaftaran {$pendaftar->nama} berhasil di-{$pesanText}.");
+        return back()->with(
+            'success',
+            "Pengajuan magang atas nama {$pendaftar->nama_pemohon} berhasil disetujui."
+        );
     }
 }
