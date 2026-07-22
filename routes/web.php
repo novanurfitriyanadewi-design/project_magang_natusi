@@ -72,18 +72,9 @@ Route::middleware('auth')->get('/dashboard', function () {
 
     return match ($user?->role) {
         'superadmin' => redirect()->route('superadmin.dashboard'),
-
         'admin'      => redirect()->route('admin.dashboard'),
         'peserta'    => redirect()->route('peserta-magang.dashboard'),
         default      => view('dashboard'),
-
-        'admin' => redirect()->route('admin.dashboard'),
-        default => view('dashboard'),
-
-        'admin'      => redirect()->route('admin.dashboard'),
-        'peserta'    => redirect()->route('peserta-magang.dashboard'),
-        default      => view('dashboard'),
-
     };
 })->name('dashboard');
 
@@ -210,22 +201,9 @@ Route::middleware(['auth', 'role:admin'])
         Route::patch('/peserta/{peserta_magang}/status', [AdminPesertaMagangController::class, 'updateStatus'])
             ->name('peserta.status');
 
-
-
         // Kelola Data Peserta Magang (Hapus except jika butuh show & edit, atau cukup kecualikan create saja)
-        Route::resource('peserta', AdminPesertaMagangController::class)
-            ->except(['create']) 
-        Route::resource('peserta', AdminPesertaMagangController::class)
-            ->only(['index', 'update', 'destroy'])
-
-        // Kelola Data Peserta Magang (Hapus except jika butuh show & edit, atau cukup kecualikan create saja)
-        Route::resource('peserta', AdminPesertaMagangController::class)
-            ->except(['create']) 
-            ->only(['index', 'update', 'destroy'])
-
         Route::resource('peserta', AdminPesertaMagangController::class)
             ->except(['create'])
-
             ->parameters(['peserta' => 'peserta_magang']);
 
         /* Permintaan magang. */
@@ -326,9 +304,6 @@ Route::middleware(['auth', 'role:admin'])
             ->name('pembayaran.tolak');
     });
 
-
-
-
 /*
 |--------------------------------------------------------------------------
 | Peserta Magang
@@ -351,15 +326,11 @@ Route::middleware(['auth', 'role:peserta'])
         Route::get('/penugasan', [PesertaMagangPenugasanController::class, 'index'])->name('penugasan.index');
         Route::post('/penugasan/{id_tugas}/kumpul', [PesertaMagangPenugasanController::class, 'store'])->name('penugasan.store');
 
-
-/* Authentication */
-
         // Fitur penugasan alternatif dari main branch
         Route::get('/tugas', [PesertaTugasController::class, 'index'])->name('tugas.index');
         Route::get('/tugas/{penugasan}/file', [PesertaTugasController::class, 'downloadTask'])->name('tugas.file.download');
         Route::get('/tugas/{penugasan}/template-laporan', [PesertaTugasController::class, 'downloadReportTemplate'])->name('tugas.template-laporan.download');
         Route::post('/tugas/{penugasan}/kumpulkan', [PesertaTugasController::class, 'submit'])->name('tugas.submit');
-
 
         // Pembayaran
         Route::get('/pembayaran', [PesertaMagangPembayaranController::class, 'index'])->name('pembayaran.index');
