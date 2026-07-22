@@ -11,11 +11,29 @@ class PenugasanPeserta extends Model
     use HasFactory;
 
     protected $table = 'penugasan_peserta';
-    protected $primaryKey = 'id_penugasan_peserta';
+
+    // Gunakan primary key yang sesuai dengan skema database kamu
+    // (Ubah ke 'id_penugasan_peserta' jika di database namanya demikian)
+    protected $primaryKey = 'id_penugasan';
+
     protected $fillable = [
         'tugas_id',
         'peserta_id',
+        'template_laporan_id',
+        'tersedia_pada',
+        'deadline',
+        'status',
+        'keterangan',
+        'ketentuan_laporan',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'tersedia_pada' => 'datetime',
+            'deadline' => 'datetime',
+        ];
+    }
 
     public function tugas(): BelongsTo
     {
@@ -25,5 +43,14 @@ class PenugasanPeserta extends Model
     public function peserta(): BelongsTo
     {
         return $this->belongsTo(PesertaMagang::class, 'peserta_id', 'id_peserta');
+    }
+
+    public function templateLaporan(): BelongsTo
+    {
+        return $this->belongsTo(
+            TemplateLaporan::class,
+            'template_laporan_id',
+            'id_template_laporan'
+        );
     }
 }

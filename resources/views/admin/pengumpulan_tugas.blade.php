@@ -1,247 +1,341 @@
 @extends('layouts.portal')
 
-@section('title', 'Data Pengumpulan Tugas - CV Natusi')
+@section('title', 'Data Pengumpulan Tugas')
 
 @section('content')
-<div class="p-6">
+@php
+    $groupLabels = [
+        'smk_tkj' => 'SMK TKJ',
+        'smk_rpl' => 'SMK RPL',
+        'universitas' => 'Universitas',
+    ];
 
-    {{-- Page Header --}}
-    <section class="mb-6">
-        <span class="inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-sky-700">
-            <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
-            Pengumpulan Tugas
-        </span>
-        <h2 class="mt-3 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">Data Pengumpulan Tugas</h2>
-        <p class="mt-1 text-sm leading-6 text-slate-500">Pantau progres pengerjaan tugas oleh peserta magang secara real-time.</p>
+    $rawStats = is_array($stats ?? null) ? $stats : [];
+    $stats = array_merge($rawStats, [
+        'mengumpulkan' => (int) ($rawStats['mengumpulkan']
+            ?? $rawStats['tugas_terkumpul']
+            ?? $rawStats['tugas_selesai']
+            ?? 0),
+        'terlambat' => (int) ($rawStats['terlambat']
+            ?? $rawStats['tugas_terlambat']
+            ?? 0),
+        'tidak_mengumpulkan' => (int) ($rawStats['tidak_mengumpulkan']
+            ?? $rawStats['belum_mengumpulkan']
+            ?? 0),
+    ]);
+
+    $jenjang = $jenjang ?? request('jenjang', 'semua');
+    $daftarTugas = $daftarTugas ?? collect();
+
+    if (!isset($submitted)) {
+        $submitted = $submissions ?? new \Illuminate\Pagination\LengthAwarePaginator(
+            [],
+            0,
+            10,
+            1,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+    }
+
+    if (!isset($pending)) {
+        $pending = new \Illuminate\Pagination\LengthAwarePaginator(
+            [],
+            0,
+            10,
+            1,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+    }
+
+    $participantName = static fn ($item) => $item->peserta?->user?->nama
+        ?? $item->peserta?->nama_peserta
+        ?? $item->peserta?->permintaan?->nama_pemohon
+        ?? 'Peserta tidak ditemukan';
+
+    $participantEmail = static fn ($item) => $item->peserta?->user?->email
+        ?? $item->peserta?->permintaan?->email
+        ?? '-';
+
+    $groupLabel = static function ($item) use ($groupLabels): string {
+        $target = $item->tugas?->target_peserta;
+        if ($target && isset($groupLabels[$target])) {
+            return $groupLabels[$target];
+        }
+
+        $education = mb_strtolower((string) ($item->peserta?->tingkat_pendidikan ?? ''));
+        $major = mb_strtolower((string) ($item->peserta?->permintaan?->jurusan ?? ''));
+
+        if (str_contains($major, 'tkj')) {
+            return 'SMK TKJ';
+        }
+        if (str_contains($major, 'rpl')) {
+            return 'SMK RPL';
+        }
+        if (str_contains($education, 'universitas') || str_contains($education, 'kuliah')) {
+            return 'Universitas';
+        }
+
+        return $education !== '' ? mb_strtoupper($education) : '-';
+    };
+
+    $taskTitle = static fn ($item) => $item->tugas?->judul
+        ?? $item->tugas?->judul_tugas
+        ?? '-';
+
+    $activeJenjangLabel = [
+        'semua' => 'Semua Jenjang',
+        'smk-tkj' => 'SMK TKJ',
+        'smk-rpl' => 'SMK RPL',
+        'universitas' => 'Universitas',
+    ][$jenjang] ?? 'Semua Jenjang';
+@endphp
+
+<div class="space-y-6">
+    <section>
+        <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
+            Data Pengumpulan Tugas
+        </h1>
+        <p class="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
+            Pantau peserta yang mengumpulkan, terlambat, dan belum mengerjakan tugas magang.
+        </p>
+        <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] font-medium text-slate-400">
+            <span>Diperbarui {{ now()->translatedFormat('d M Y, H:i') }}</span>
+            <span class="hidden h-1 w-1 rounded-full bg-slate-300 sm:block"></span>
+            <span>Data mengikuti jadwal penugasan aktif peserta</span>
+        </div>
     </section>
 
-    {{-- Stats Grid --}}
-    <section class="grid grid-cols-1 gap-4 mb-6 md:grid-cols-4">
-        {{-- Total Peserta --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 border-l-4 border-l-sky-600 shadow-sm transition-shadow hover:shadow-md">
-            <div class="mb-2 flex items-start justify-between">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Peserta</span>
-                <div class="rounded-lg bg-sky-50 p-2 text-sky-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M17 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10 9v-1a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    @if(session('success'))
+        <div class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm">
+            <span class="material-symbols-outlined text-[21px]">check_circle</span>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 shadow-sm">
+            <span class="material-symbols-outlined text-[21px]">error</span>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
+    {{-- Card statistik memakai bentuk yang sama dengan dashboard admin. --}}
+    <section class="grid gap-4 md:grid-cols-3">
+        <article class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-600 to-red-500 p-5 text-white shadow-[0_16px_36px_rgba(225,29,72,0.18)] transition duration-200 hover:-translate-y-0.5">
+            <div class="absolute -bottom-12 -right-8 h-36 w-36 rounded-full border-[22px] border-white/10"></div>
+            <div class="relative flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-rose-100">Terlambat</p>
+                    <p class="mt-3 text-4xl font-extrabold">{{ number_format($stats['terlambat']) }}</p>
+                    <p class="mt-1 text-sm text-rose-100">Dikumpulkan setelah deadline</p>
                 </div>
-            </div>
-            <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-extrabold text-slate-950">{{ $stats['total_peserta'] }}</span>
-                <span class="flex items-center gap-0.5 text-xs font-bold text-emerald-600">
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><path d="m3 17 6-6 4 4 8-8M15 7h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    {{ $stats['peserta_trend'] }}%
+                <span class="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/20 transition group-hover:scale-105">
+                    <span class="material-symbols-outlined text-[26px]">running_with_errors</span>
                 </span>
             </div>
-            <p class="mt-2 text-xs text-slate-500">Aktif periode ini</p>
-        </div>
+        </article>
 
-        {{-- Tugas Terkumpul --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 border-l-4 border-l-sky-600 shadow-sm transition-shadow hover:shadow-md">
-            <div class="mb-2 flex items-start justify-between">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tugas Terkumpul</span>
-                <div class="rounded-lg bg-emerald-50 p-2 text-emerald-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="m9 12 2 2 4-4M5 5h14v14H5V5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <article class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-500 p-5 text-white shadow-[0_16px_36px_rgba(5,150,105,0.18)] transition duration-200 hover:-translate-y-0.5">
+            <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full border-[18px] border-white/10"></div>
+            <div class="relative flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-emerald-100">Mengumpulkan</p>
+                    <p class="mt-3 text-4xl font-extrabold">{{ number_format($stats['mengumpulkan']) }}</p>
+                    <p class="mt-1 text-sm text-emerald-100">Terkumpul sesuai batas waktu</p>
                 </div>
+                <span class="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/20 transition group-hover:scale-105">
+                    <span class="material-symbols-outlined text-[26px]">task_alt</span>
+                </span>
             </div>
-            <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-extrabold text-slate-950">{{ $stats['tugas_terkumpul'] }}</span>
-                <div class="ml-2 h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
-                    <div class="h-full bg-emerald-500" style="width: {{ min($stats['persentase_berhasil'], 100) }}%"></div>
-                </div>
-            </div>
-            <p class="mt-2 text-xs text-slate-500">{{ $stats['persentase_berhasil'] }}% tingkat keberhasilan</p>
-        </div>
+        </article>
 
-        {{-- Tugas Terlambat --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 border-l-4 border-l-rose-500 shadow-sm transition-shadow hover:shadow-md">
-            <div class="mb-2 flex items-start justify-between">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tugas Terlambat</span>
-                <div class="rounded-lg bg-rose-50 p-2 text-rose-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.3 3.9 2.7 17.1a1.6 1.6 0 0 0 1.4 2.4h15.8a1.6 1.6 0 0 0 1.4-2.4L13.7 3.9a1.6 1.6 0 0 0-2.8 0Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <article class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 p-5 text-white shadow-[0_16px_36px_rgba(245,158,11,0.20)] transition duration-200 hover:-translate-y-0.5">
+            <div class="absolute -bottom-20 left-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
+            <div class="relative flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-amber-50">Tidak Mengumpulkan</p>
+                    <p class="mt-3 text-4xl font-extrabold">{{ number_format($stats['tidak_mengumpulkan']) }}</p>
+                    <p class="mt-1 text-sm text-amber-50">Tugas aktif belum dikerjakan</p>
                 </div>
+                <span class="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/20 transition group-hover:scale-105">
+                    <span class="material-symbols-outlined text-[26px]">notification_important</span>
+                </span>
             </div>
-            <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-extrabold text-slate-950">{{ $stats['tugas_terlambat'] }}</span>
-                <span class="text-xs font-bold text-rose-600">Melewati batas waktu</span>
-            </div>
-            <p class="mt-2 text-xs text-slate-500">Perlu tindak lanjut segera</p>
-        </div>
-
-        {{-- Belum Mengumpulkan --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 border-l-4 border-l-amber-500 shadow-sm transition-shadow hover:shadow-md">
-            <div class="mb-2 flex items-start justify-between">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Belum Mengumpulkan</span>
-                <div class="rounded-lg bg-amber-50 p-2 text-amber-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l2.5 2.5M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-            </div>
-            <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-extrabold text-slate-950">{{ $stats['belum_mengumpulkan'] }}</span>
-                <span class="text-xs font-bold text-slate-500">Menunggu respon</span>
-            </div>
-            <p class="mt-2 text-xs text-slate-500">Dalam batas waktu normal</p>
-        </div>
+        </article>
     </section>
 
-    {{-- Filter Form --}}
-    <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <form action="{{ route('pengumpulan-tugas.index') }}" method="GET" id="filterForm">
-            @if(request('search'))
-                <input type="hidden" name="search" value="{{ request('search') }}">
-            @endif
+    {{-- DATA 1: peserta yang sudah mengumpulkan. Header, menu, filter, dan tabel berada dalam satu card. --}}
+    <section class="overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[0_18px_45px_rgba(15,52,94,0.08)] backdrop-blur">
+        <header class="flex flex-col gap-3 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div>
+                <h2 class="text-xl font-extrabold tracking-tight text-slate-950">Data Peserta yang Mengumpulkan Tugas</h2>
+                <p class="mt-1 text-sm text-slate-500">Gunakan Show Detail untuk melihat seluruh data dan bukti file peserta.</p>
+            </div>
+            <span class="w-fit rounded-xl bg-white px-4 py-2 text-xs font-extrabold text-sky-700 shadow-sm ring-1 ring-sky-100">
+                {{ number_format($submitted->total()) }} data
+            </span>
+        </header>
 
-            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div class="flex flex-wrap items-center gap-3">
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-bold text-slate-600">Kategori</label>
-                        <select name="kategori" onchange="this.form.submit()" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm focus:border-sky-500 focus:ring-sky-500">
-                            <option value="Semua Kategori" {{ request('kategori') == 'Semua Kategori' ? 'selected' : '' }}>Semua Kategori</option>
-                            <option value="Universitas" {{ request('kategori') == 'Universitas' ? 'selected' : '' }}>Universitas</option>
-                            <option value="SMK" {{ request('kategori') == 'SMK' ? 'selected' : '' }}>SMK</option>
-                        </select>
-                    </div>
+        <div class="border-b border-sky-100 bg-white px-5 py-5 sm:px-6">
+            <nav class="flex flex-wrap items-center gap-2" aria-label="Filter jenjang peserta">
+                @foreach([
+                    'semua' => 'Semua',
+                    'smk-tkj' => 'SMK TKJ',
+                    'smk-rpl' => 'SMK RPL',
+                    'universitas' => 'Universitas',
+                ] as $value => $label)
+                    <a
+                        href="{{ route('admin.pengumpulan-tugas.index', array_filter([
+                            'jenjang' => $value,
+                            'search' => request('search'),
+                            'tugas_id' => request('tugas_id'),
+                        ])) }}"
+                        @class([
+                            'inline-flex min-w-24 items-center justify-center rounded-xl px-4 py-2.5 text-sm font-extrabold transition duration-200',
+                            'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-[0_8px_20px_rgba(14,165,233,0.24)]' => $jenjang === $value,
+                            'border border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700' => $jenjang !== $value,
+                        ])
+                    >
+                        {{ $label }}
+                    </a>
+                @endforeach
+            </nav>
+        </div>
 
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-bold text-slate-600">Status</label>
-                        <select name="status" onchange="this.form.submit()" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm focus:border-sky-500 focus:ring-sky-500">
-                            <option value="Semua Status" {{ request('status') == 'Semua Status' ? 'selected' : '' }}>Semua Status</option>
-                            <option value="Sudah Mengumpulkan" {{ request('status') == 'Sudah Mengumpulkan' ? 'selected' : '' }}>Sudah Mengumpulkan</option>
-                            <option value="Belum Mengumpulkan" {{ request('status') == 'Belum Mengumpulkan' ? 'selected' : '' }}>Belum Mengumpulkan</option>
-                            <option value="Terlambat" {{ request('status') == 'Terlambat' ? 'selected' : '' }}>Terlambat</option>
-                        </select>
-                    </div>
+        <div class="border-b border-slate-200 bg-slate-50/70 px-5 py-4 sm:px-6">
+            <form action="{{ route('admin.pengumpulan-tugas.index') }}" method="GET" class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <input type="hidden" name="jenjang" value="{{ $jenjang }}">
 
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-bold text-slate-600">Tugas</label>
-                        <select name="tugas_id" onchange="this.form.submit()" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm focus:border-sky-500 focus:ring-sky-500">
-                            <option value="Semua Tugas">Semua Tugas</option>
-                            @foreach($daftarTugas as $tugas)
-                                <option value="{{ $tugas->id_tugas }}" {{ request('tugas_id') == $tugas->id_tugas ? 'selected' : '' }}>
-                                    {{ $tugas->judul_tugas }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div class="relative w-full lg:max-w-md">
+                    <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-slate-400">search</span>
+                    <input
+                        type="search"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Cari nama peserta atau tugas..."
+                        class="w-full rounded-xl border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-700 shadow-sm focus:border-sky-400 focus:ring-sky-200"
+                    >
+                </div>
 
-                    @if(request()->hasAny(['kategori', 'status', 'tugas_id', 'search']))
-                        <div class="flex flex-col gap-1 self-end">
-                            <a href="{{ route('pengumpulan-tugas.index') }}" class="flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-200">
-                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.6M4 4v4.6h4.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                Reset
-                            </a>
-                        </div>
+                <div class="flex flex-col gap-2 sm:flex-row">
+                    <select name="tugas_id" class="min-w-56 rounded-xl border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 shadow-sm focus:border-sky-400 focus:ring-sky-200">
+                        <option value="">Semua tugas</option>
+                        @foreach($daftarTugas as $tugas)
+                            <option value="{{ $tugas->id_tugas }}" @selected((string) request('tugas_id') === (string) $tugas->id_tugas)>
+                                Minggu {{ $tugas->minggu_ke ?? '-' }} — {{ $tugas->judul }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-slate-800">
+                        <span class="material-symbols-outlined text-[19px]">filter_alt</span>
+                        Terapkan
+                    </button>
+
+                    @if(request()->filled('search') || request()->filled('tugas_id'))
+                        <a href="{{ route('admin.pengumpulan-tugas.index', ['jenjang' => $jenjang]) }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100">
+                            Reset
+                        </a>
                     @endif
                 </div>
-            </div>
-        </form>
-    </section>
+            </form>
+        </div>
 
-    {{-- Main Data Table --}}
-    <section class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div class="overflow-x-auto">
-            <table class="w-full border-collapse text-left">
+            <table class="min-w-[1260px] w-full border-collapse text-left">
                 <thead>
-                    <tr class="border-b border-slate-200 bg-slate-50">
-                        <th class="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Nama Peserta</th>
-                        <th class="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Instansi</th>
-                        <th class="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Judul Tugas</th>
-                        <th class="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Waktu Submit</th>
-                        <th class="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Status</th>
-                        <th class="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-500">Aksi</th>
+                    <tr class="border-b border-slate-200 bg-sky-50/70">
+                        <th class="px-6 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Nama</th>
+                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Jenjang</th>
+                        <th class="px-5 py-4 text-center text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Minggu Ke</th>
+                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Nama Tugas</th>
+                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Waktu Pengumpulan</th>
+                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Bukti Pengumpulan</th>
+                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Status</th>
+                        <th class="px-6 py-4 text-right text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    @forelse($submissions as $index => $item)
-                        <tr class="transition-colors hover:bg-slate-50">
-                            {{-- Nama Peserta --}}
+                    @forelse($submitted as $item)
+                        @php
+                            $name = $participantName($item);
+                            $initials = collect(preg_split('/\s+/', trim($name)) ?: [])
+                                ->filter()->take(2)
+                                ->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))
+                                ->implode('');
+                            $isLate = in_array((string) $item->status, ['telat', 'Terlambat'], true);
+                        @endphp
+                        <tr class="group transition hover:bg-sky-50/45">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    @if(!empty($item->peserta?->foto_profile))
-                                        <img class="h-10 w-10 rounded-full border border-slate-200 object-cover" src="{{ asset('storage/'.$item->peserta->foto_profile) }}" alt="{{ $item->peserta->nama_peserta }}">
-                                    @else
-                                        @php
-                                            $nama = $item->peserta->nama_peserta ?? 'NP';
-                                            $initials = collect(explode(' ', $nama))->map(fn($s) => mb_substr($s, 0, 1))->take(2)->join('');
-                                        @endphp
-                                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-600">
-                                            {{ strtoupper($initials) }}
-                                        </div>
-                                    @endif
-                                    <div>
-                                        <p class="font-bold text-slate-900">{{ $item->peserta->nama_peserta ?? 'Peserta Tidak Ditemukan' }}</p>
-                                        <p class="text-xs text-slate-500">{{ $item->peserta->posisi ?? 'Internship' }}</p>
+                                    <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-100 to-blue-100 text-xs font-black text-sky-700 ring-1 ring-sky-200">
+                                        {{ $initials ?: 'P' }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="max-w-52 truncate text-sm font-extrabold text-slate-900" title="{{ $name }}">{{ $name }}</p>
+                                        <p class="mt-0.5 max-w-52 truncate text-xs text-slate-500">{{ $participantEmail($item) }}</p>
                                     </div>
                                 </div>
                             </td>
-
-                            {{-- Instansi --}}
-                            <td class="px-6 py-4">
-                                <span class="text-sm text-slate-700">{{ $item->peserta->instansi ?? '-' }}</span>
+                            <td class="px-5 py-4">
+                                <span class="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">{{ $groupLabel($item) }}</span>
                             </td>
-
-                            {{-- Judul Tugas --}}
-                            <td class="px-6 py-4">
-                                <span class="block max-w-[200px] truncate text-sm text-slate-700" title="{{ $item->tugas->judul_tugas ?? '' }}">
-                                    {{ $item->tugas->judul_tugas ?? '-' }}
+                            <td class="px-5 py-4 text-center">
+                                <span class="inline-grid h-9 min-w-9 place-items-center rounded-xl bg-slate-100 px-2 text-sm font-extrabold text-slate-700">{{ $item->tugas?->minggu_ke ?? '-' }}</span>
+                            </td>
+                            <td class="px-5 py-4">
+                                <p class="max-w-64 text-sm font-bold leading-5 text-slate-800">{{ $taskTitle($item) }}</p>
+                                @if($item->tugas?->kode_tugas)
+                                    <p class="mt-1 text-xs text-slate-400">{{ $item->tugas->kode_tugas }}</p>
+                                @endif
+                            </td>
+                            <td class="px-5 py-4">
+                                @if($item->dikumpulkan_pada)
+                                    <p class="text-sm font-semibold text-slate-700">{{ $item->dikumpulkan_pada->translatedFormat('d M Y') }}</p>
+                                    <p class="mt-1 text-xs text-slate-500">{{ $item->dikumpulkan_pada->format('H:i') }} WIB</p>
+                                @else
+                                    <span class="text-sm italic text-slate-400">Waktu tidak tersedia</span>
+                                @endif
+                            </td>
+                            <td class="px-5 py-4">
+                                @if($item->file_jawaban)
+                                    <a href="{{ route('admin.pengumpulan-tugas.file', $item) }}" target="_blank" class="inline-flex max-w-52 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-sky-700 shadow-sm transition hover:border-sky-200 hover:bg-sky-50">
+                                        <span class="material-symbols-outlined text-[18px]">attach_file</span>
+                                        <span class="truncate">{{ basename($item->file_jawaban) }}</span>
+                                    </a>
+                                @else
+                                    <span class="text-sm italic text-slate-400">Tidak ada file</span>
+                                @endif
+                            </td>
+                            <td class="px-5 py-4">
+                                <span @class([
+                                    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-extrabold',
+                                    'border-rose-200 bg-rose-50 text-rose-700' => $isLate,
+                                    'border-emerald-200 bg-emerald-50 text-emerald-700' => !$isLate,
+                                ])>
+                                    <span @class([
+                                        'h-1.5 w-1.5 rounded-full',
+                                        'bg-rose-500' => $isLate,
+                                        'bg-emerald-500' => !$isLate,
+                                    ])></span>
+                                    {{ $isLate ? 'Terlambat' : 'Mengumpulkan' }}
                                 </span>
                             </td>
-
-                            {{-- Waktu Submit --}}
-                            <td class="px-6 py-4">
-                                @if($item->dikumpulkan_pada)
-                                    <div class="flex flex-col">
-                                        <span class="text-sm text-slate-700">{{ $item->dikumpulkan_pada->translatedFormat('d M Y') }}</span>
-                                        <span class="text-xs text-slate-500">{{ $item->dikumpulkan_pada->format('H:i') }} WIB</span>
-                                    </div>
-                                @else
-                                    <span class="italic text-slate-400">Belum Mengumpulkan</span>
-                                @endif
-                            </td>
-
-                            {{-- Status Badge --}}
-                            <td class="px-6 py-4">
-                                @if($item->status === 'Sudah Mengumpulkan')
-                                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
-                                        Sudah Mengumpulkan
-                                    </span>
-                                @elseif($item->status === 'Terlambat')
-                                    <span class="inline-flex items-center rounded-full border border-rose-300 bg-rose-50 px-2.5 py-0.5 text-xs font-bold text-rose-600">
-                                        Terlambat
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">
-                                        Belum Mengumpulkan
-                                    </span>
-                                @endif
-                            </td>
-
-                            {{-- Aksi --}}
-                            <td class="px-6 py-4">
-                                @if($item->file_jawaban)
-                                    <a href="{{ asset('storage/' . $item->file_jawaban) }}" target="_blank" class="flex items-center gap-1.5 text-sm font-bold text-sky-700 transition-all hover:text-sky-800">
-                                        <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
-                                        Lihat File
-                                    </a>
-                                @elseif($item->status === 'Terlambat')
-                                    <button type="button" class="flex items-center gap-1.5 text-sm font-bold text-rose-600 transition-all hover:text-rose-700">
-                                        <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M10.3 3.9 2.7 17.1a1.6 1.6 0 0 0 1.4 2.4h15.8a1.6 1.6 0 0 0 1.4-2.4L13.7 3.9a1.6 1.6 0 0 0-2.8 0Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        Kirim Pengingat
-                                    </button>
-                                @else
-                                    <button type="button" class="flex items-center gap-1.5 text-sm font-bold text-slate-500 transition-all hover:text-sky-700">
-                                        <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v16H4V4Zm0 2 8 7 8-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        Hubungi
-                                    </button>
-                                @endif
+                            <td class="px-6 py-4 text-right">
+                                <a href="{{ route('admin.pengumpulan-tugas.show', $item) }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-[0_8px_18px_rgba(14,165,233,0.22)] transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-sky-200">
+                                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                    Show Detail
+                                </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-14 text-center">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <svg class="h-12 w-12 text-slate-300" viewBox="0 0 24 24" fill="none"><path d="M4 9h16M6 9V6h12v3M5 9v10h14V9M8 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    <p class="font-bold text-slate-700">Data pengumpulan tugas tidak ditemukan.</p>
+                            <td colspan="8" class="px-6 py-16 text-center">
+                                <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-slate-400">
+                                    <span class="material-symbols-outlined text-[30px]">inventory_2</span>
                                 </div>
+                                <p class="mt-4 font-extrabold text-slate-700">Belum ada data pengumpulan.</p>
+                                <p class="mt-1 text-sm text-slate-500">Data akan muncul setelah peserta mengunggah bukti tugas.</p>
                             </td>
                         </tr>
                     @endforelse
@@ -249,27 +343,122 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
-        <div class="flex flex-col gap-4 border-t border-slate-200 bg-white px-6 py-4 md:flex-row md:items-center md:justify-between">
-            <p class="text-xs text-slate-500">
-                Menampilkan {{ $submissions->firstItem() ?? 0 }} - {{ $submissions->lastItem() ?? 0 }} dari {{ $submissions->total() }} peserta
-            </p>
-            <div>
-                {{ $submissions->links() }}
+        @if($submitted->hasPages())
+            <footer class="border-t border-slate-100 bg-white px-6 py-4">
+                {{ $submitted->links() }}
+            </footer>
+        @endif
+    </section>
+
+    {{-- DATA 2: peserta yang belum mengumpulkan, dikembalikan sebagai card terpisah. --}}
+    <section class="overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[0_18px_45px_rgba(15,52,94,0.08)] backdrop-blur">
+        <header class="flex flex-col gap-3 border-b border-amber-100 bg-gradient-to-r from-amber-50 to-orange-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div class="flex items-center gap-3">
+                <span class="grid h-11 w-11 place-items-center rounded-2xl bg-white text-amber-600 shadow-sm ring-1 ring-amber-100">
+                    <span class="material-symbols-outlined text-[23px]">pending_actions</span>
+                </span>
+                <div>
+                    <h2 class="text-xl font-extrabold tracking-tight text-slate-950">Data Peserta yang Belum Mengumpulkan Tugas</h2>
+                    <p class="mt-1 text-sm text-slate-500">Peserta dapat diperingatkan agar segera menyelesaikan tugas yang masih tertunda.</p>
+                </div>
             </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-xl bg-white px-4 py-2 text-xs font-bold text-slate-600 shadow-sm ring-1 ring-slate-200">{{ $activeJenjangLabel }}</span>
+                <span class="rounded-xl bg-white px-4 py-2 text-xs font-extrabold text-amber-700 shadow-sm ring-1 ring-amber-100">{{ number_format($pending->total()) }} data</span>
+            </div>
+        </header>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-[980px] w-full border-collapse text-left">
+                <thead>
+                    <tr class="border-b border-slate-200 bg-amber-50/70">
+                        <th class="px-6 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Nama</th>
+                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Jenjang</th>
+                        <th class="px-5 py-4 text-center text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Minggu Ke</th>
+                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Tugas yang Belum Dikerjakan</th>
+                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Deadline</th>
+                        <th class="px-6 py-4 text-right text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($pending as $item)
+                        @php
+                            $name = $participantName($item);
+                            $initials = collect(preg_split('/\s+/', trim($name)) ?: [])
+                                ->filter()->take(2)
+                                ->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))
+                                ->implode('');
+                            $overdue = $item->deadline && now()->greaterThan($item->deadline);
+                        @endphp
+                        <tr class="transition hover:bg-amber-50/45">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-xs font-black text-amber-700 ring-1 ring-amber-200">{{ $initials ?: 'P' }}</div>
+                                    <div class="min-w-0">
+                                        <p class="max-w-56 truncate text-sm font-extrabold text-slate-900" title="{{ $name }}">{{ $name }}</p>
+                                        <p class="mt-0.5 max-w-56 truncate text-xs text-slate-500">{{ $participantEmail($item) }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-5 py-4">
+                                <span class="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">{{ $groupLabel($item) }}</span>
+                            </td>
+                            <td class="px-5 py-4 text-center">
+                                <span class="inline-grid h-9 min-w-9 place-items-center rounded-xl bg-slate-100 px-2 text-sm font-extrabold text-slate-700">{{ $item->tugas?->minggu_ke ?? '-' }}</span>
+                            </td>
+                            <td class="px-5 py-4">
+                                <p class="max-w-80 text-sm font-bold leading-5 text-slate-800">{{ $taskTitle($item) }}</p>
+                                @if($item->tugas?->kode_tugas)
+                                    <p class="mt-1 text-xs text-slate-400">{{ $item->tugas->kode_tugas }}</p>
+                                @endif
+                            </td>
+                            <td class="px-5 py-4">
+                                @if($item->deadline)
+                                    <span @class([
+                                        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold',
+                                        'bg-rose-50 text-rose-700 ring-1 ring-rose-100' => $overdue,
+                                        'bg-slate-100 text-slate-600 ring-1 ring-slate-200' => !$overdue,
+                                    ])>
+                                        <span class="material-symbols-outlined text-[16px]">schedule</span>
+                                        {{ $item->deadline->translatedFormat('d M Y, H:i') }} WIB
+                                    </span>
+                                    @if($overdue)
+                                        <p class="mt-1 text-xs font-extrabold text-rose-600">Melewati deadline</p>
+                                    @endif
+                                @else
+                                    <span class="text-sm italic text-slate-400">Belum ditentukan</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <form method="POST" action="{{ route('admin.pengumpulan-tugas.remind', $item) }}" class="inline-block" onsubmit="return confirm('Kirim notifikasi peringatan kepada peserta ini?')">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3.5 py-2 text-xs font-extrabold text-white shadow-[0_8px_18px_rgba(245,158,11,0.24)] transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-amber-200">
+                                        <span class="material-symbols-outlined text-[18px]">notifications_active</span>
+                                        Peringati Peserta
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-16 text-center">
+                                <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-50 text-emerald-500">
+                                    <span class="material-symbols-outlined text-[30px]">done_all</span>
+                                </div>
+                                <p class="mt-4 font-extrabold text-slate-700">Tidak ada tugas yang tertunda.</p>
+                                <p class="mt-1 text-sm text-slate-500">Seluruh tugas aktif pada filter ini sudah dikumpulkan.</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
+
+        @if($pending->hasPages())
+            <footer class="border-t border-slate-100 bg-white px-6 py-4">
+                {{ $pending->links() }}
+            </footer>
+        @endif
     </section>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const cards = document.querySelectorAll('.border-l-4');
-        cards.forEach(card => {
-            card.addEventListener('mouseenter', () => card.classList.add('-translate-y-0.5'));
-            card.addEventListener('mouseleave', () => card.classList.remove('-translate-y-0.5'));
-        });
-    });
-</script>
-@endpush

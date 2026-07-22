@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PengumpulanTugas;
 use App\Models\PesertaMagang;
+use App\Models\PenugasanPeserta;
 use App\Models\Tugas;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -47,6 +48,25 @@ class PengumpulanTugasController extends ApiCrudController
             ->where('status', 'aktif')
             ->firstOrFail();
 
+        $penugasan = PenugasanPeserta::query()
+            ->where('tugas_id', $tugas->id_tugas)
+            ->where('peserta_id', $peserta->id_peserta)
+            ->firstOrFail();
+
+        if ($penugasan->status === 'dilewati') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tugas ini dilewati berdasarkan tanggal mulai magang peserta.',
+            ], 422);
+        }
+
+        if ($penugasan->tersedia_pada && now()->lessThan($penugasan->tersedia_pada)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tugas belum tersedia.',
+            ], 422);
+        }
+
         $sudahMengumpulkan = PengumpulanTugas::query()
             ->where('tugas_id', $tugas->id_tugas)
             ->where('peserta_id', $peserta->id_peserta)
@@ -64,8 +84,8 @@ class PengumpulanTugasController extends ApiCrudController
 
         $status = 'terkumpul';
         if (
-            $tugas->pengumpulan &&
-            now()->greaterThan(Carbon::parse($tugas->pengumpulan))
+            $penugasan->deadline &&
+            now()->greaterThan(Carbon::parse($penugasan->deadline))
         ) {
             $status = 'telat';
         }
@@ -77,6 +97,8 @@ class PengumpulanTugasController extends ApiCrudController
             'dikumpulkan_pada' => now(),
             'status' => $status,
         ]);
+
+        $penugasan->update(['status' => 'selesai']);
 
         return response()->json([
             'success' => true,

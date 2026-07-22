@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\PermintaanMagang;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +33,36 @@ class RegisteredUserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $role = session(
+            'register_role',
+            $request->input('role', 'pelamar'),
+        );
+
+        if (! in_array($role, ['pelamar', 'karyawan'], true)) {
+            $role = 'pelamar';
+        }
+
+        $permintaanMasihAktif = static fn ($query) => $query
+            ->whereIn('status', ['menunggu', 'disetujui']);
+
+        $emailUniqueRule = $role === 'pelamar'
+            ? Rule::unique('permintaan_magang', 'email')
+                ->where($permintaanMasihAktif)
+            : Rule::unique('users', 'email');
+
+        $studentIdRules = [
+            'required',
+            'string',
+            'max:50',
+        ];
+
+        if ($role === 'pelamar') {
+            $studentIdRules[] = Rule::unique(
+                'permintaan_magang',
+                'no_induk',
+            )->where($permintaanMasihAktif);
+        }
+
         $validated = $request->validate(
             [
                 'full_name' => [
@@ -45,18 +76,14 @@ class RegisteredUserController extends Controller
                     'lowercase',
                     'email',
                     'max:255',
-                    Rule::unique('users', 'email'),
+                    $emailUniqueRule,
                 ],
                 'university' => [
                     'required',
                     'string',
                     'max:255',
                 ],
-                'student_id' => [
-                    'required',
-                    'string',
-                    'max:50',
-                ],
+                'student_id' => $studentIdRules,
                 'major' => [
                     'required',
                     'string',
@@ -80,22 +107,41 @@ class RegisteredUserController extends Controller
                 'full_name.required' => 'Nama lengkap wajib diisi.',
                 'email.required' => 'Alamat email wajib diisi.',
                 'email.email' => 'Format alamat email tidak valid.',
-                'email.unique' => 'Alamat email sudah terdaftar.',
+                'email.unique' => $role === 'pelamar'
+                    ? 'Pengajuan dengan alamat email ini masih menunggu atau sudah disetujui.'
+                    : 'Alamat email sudah terdaftar.',
                 'university.required' => 'Asal sekolah atau universitas wajib diisi.',
                 'student_id.required' => 'Nomor induk wajib diisi.',
+                'student_id.unique' => 'Pengajuan dengan NIS/NIM ini masih menunggu atau sudah disetujui.',
                 'major.required' => 'Jurusan wajib diisi.',
                 'phone.required' => 'Nomor telepon wajib diisi.',
                 'terms.accepted' => 'Anda harus menyetujui ketentuan pendaftaran.',
             ],
         );
 
-        $role = session(
-            'register_role',
-            $request->input('role', 'pelamar'),
-        );
+        if ($role === 'pelamar') {
+            PermintaanMagang::query()->create([
+                'user_id' => null,
+                'nama_pemohon' => trim($validated['full_name']),
+                'email' => strtolower($validated['email']),
+                'nama_sekolah' => trim($validated['university']),
+                'no_induk' => trim($validated['student_id']),
+                'jurusan' => trim($validated['major']),
+                'no_hp' => trim($validated['phone']),
+                'pesan' => filled($validated['description'] ?? null)
+                    ? trim($validated['description'])
+                    : null,
+                'status' => 'menunggu',
+            ]);
 
-        if (! in_array($role, ['pelamar', 'karyawan'], true)) {
-            $role = 'pelamar';
+            $request->session()->forget('register_role');
+
+            return redirect()
+                ->route('login')
+                ->with(
+                    'status',
+                    'Pengajuan magang berhasil dikirim. Data Anda akan diperiksa oleh admin. Akun peserta diberikan setelah pengajuan disetujui.',
+                );
         }
 
         $username = $this->makeUniqueUsername(
@@ -107,7 +153,7 @@ class RegisteredUserController extends Controller
             'nama' => $validated['full_name'],
             'username' => $username,
             'email' => strtolower($validated['email']),
-            'role' => $role,
+            'role' => 'karyawan',
             'university' => $validated['university'],
             'student_id' => $validated['student_id'],
             'major' => $validated['major'],
