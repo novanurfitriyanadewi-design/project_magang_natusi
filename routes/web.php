@@ -30,7 +30,7 @@ use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTug
 use App\Http\Controllers\PesertaMagang\DashboardController as PesertaMagangDashboardController;
 use App\Http\Controllers\PesertaMagang\AbsensiController as PesertaMagangAbsensiController;
 use App\Http\Controllers\PesertaMagang\PenugasanController as PesertaMagangPenugasanController;
-
+use App\Http\Controllers\PesertaMagang\AturanController as PesertaAturanController;
 use App\Http\Controllers\PesertaMagang\PembayaranController as PesertaMagangPembayaranController;
 use App\Http\Controllers\PesertaMagang\LaporanMingguanController as PesertaMagangLaporanMingguanController;
 use App\Http\Controllers\Peserta\TugasController as PesertaTugasController;
@@ -325,6 +325,9 @@ Route::middleware(['auth', 'role:peserta'])
         // Penugasan
         Route::get('/penugasan', [PesertaMagangPenugasanController::class, 'index'])->name('penugasan.index');
         Route::post('/penugasan/{id_tugas}/kumpul', [PesertaMagangPenugasanController::class, 'store'])->name('penugasan.store');
+
+        // Aturan Perusahaan
+        Route::get('/aturan', [PesertaAturanController::class, 'index'])->name('aturan.index');
 
         // Fitur penugasan alternatif dari main branch
         Route::get('/tugas', [PesertaTugasController::class, 'index'])->name('tugas.index');
