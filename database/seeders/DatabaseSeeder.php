@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        // 1. Membuat/Update Super Admin
         User::updateOrCreate(
             ['username' => 'superadmin'],
             [
@@ -23,5 +24,10 @@ class DatabaseSeeder extends Seeder
                 'wajib_ganti_password' => false,
             ]
         );
+
+        // 2. Menjalankan PesertaMagangSeeder
+        $this->call([
+            PesertaMagangSeeder::class,
+        ]);
     }
 }

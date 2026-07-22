@@ -18,25 +18,11 @@ use App\Http\Controllers\Admin\DataAbsensiController as AdminDataAbsensiControll
 use App\Http\Controllers\Admin\DataPembayaranController as AdminDataPembayaranController;
 use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetodePembayaranController;
 use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTugasController;
+use App\Http\Controllers\PesertaMagang\DashboardController as PesertaMagangDashboardController;
+use App\Http\Controllers\PesertaMagang\AbsensiController as PesertaMagangAbsensiController;
 use Illuminate\Support\Facades\Route;
 
 /* Halaman Awal & Registrasi */
-
-Route::get('/', fn () => redirect()->route('login'));
-
-Route::middleware('guest')->group(function () {
-    Route::get('/register/pelamar', function () {
-        session(['register_role' => 'pelamar']);
-        return redirect()->route('register');
-    })->name('register.pelamar');
-
-    Route::get('/register/karyawan', function () {
-        session(['register_role' => 'karyawan']);
-        return redirect()->route('register');
-    })->name('register.karyawan');
-});
-
-/* Dashboard Umum (redirect sesuai role) */
 
 Route::middleware('auth')->get('/dashboard', function () {
     $user = auth()->user();
@@ -44,6 +30,7 @@ Route::middleware('auth')->get('/dashboard', function () {
     return match ($user?->role) {
         'superadmin' => redirect()->route('superadmin.dashboard'),
         'admin'      => redirect()->route('admin.dashboard'),
+        'peserta'    => redirect()->route('peserta-magang.dashboard'), // tambahkan ini
         default      => view('dashboard'),
     };
 })->name('dashboard');
@@ -146,6 +133,20 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/pembayaran', [AdminDataPembayaranController::class, 'index'])->name('pembayaran.index');
         Route::patch('/pembayaran/{pembayaran}/terima', [AdminDataPembayaranController::class, 'terima'])->name('pembayaran.terima');
         Route::patch('/pembayaran/{pembayaran}/tolak', [AdminDataPembayaranController::class, 'tolak'])->name('pembayaran.tolak');
+    });
+
+    /* PESERTA MAGANG */
+
+Route::middleware(['auth', 'role:peserta'])
+    ->prefix('peserta-magang')
+    ->name('peserta-magang.')
+    ->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [PesertaMagangDashboardController::class, 'index'])->name('dashboard');
+
+        // Absensi
+        Route::get('/absensi', [PesertaMagangAbsensiController::class, 'index'])->name('absensi.index');
+        Route::post('/absensi', [PesertaMagangAbsensiController::class, 'store'])->name('absensi.store');
     });
 
 /* Authentication */

@@ -40,14 +40,42 @@
             ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
         default => [
-            ['label' => 'Dashboard', 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
-            ['label' => 'Tugas', 'route' => 'peserta.tugas.index', 'match' => 'peserta.tugas.*', 'icon' => 'tasks', 'tour' => 'tasks'],
-            ['label' => 'Absensi', 'route' => 'peserta.absensi.index', 'match' => 'peserta.absensi.*', 'icon' => 'clock', 'tour' => 'attendance'],
-            ['label' => 'Laporan Mingguan', 'route' => 'peserta.laporan.index', 'match' => 'peserta.laporan.*', 'icon' => 'report', 'tour' => 'weekly-report'],
-            ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
-        ],
-    };
+    [
+        'label' => 'Dashboard',
+        'route' => 'peserta-magang.dashboard',
+        'match' => 'peserta-magang.dashboard',
+        'icon' => 'dashboard',
+    ],
 
+    [
+        'label' => 'Tugas',
+        'route' => 'peserta-magang.tugas.index',
+        'match' => 'peserta-magang.tugas.*',
+        'icon' => 'tasks',
+    ],
+
+    [
+        'label' => 'Absensi',
+        'route' => 'peserta-magang.absensi.index',
+        'match' => 'peserta-magang.absensi.*',
+        'icon' => 'clock',
+    ],
+
+    [
+        'label' => 'Laporan Mingguan',
+        'route' => 'peserta-magang.laporan.index',
+        'match' => 'peserta-magang.laporan.*',
+        'icon' => 'report',
+    ],
+
+    [
+        'label' => 'Kelola Profil',
+        'route' => 'profile.edit',
+        'match' => 'profile.*',
+        'icon' => 'profile',
+    ],
+],
+    };
     $homeRoute = $role === 'superadmin' && Route::has('superadmin.dashboard')
         ? route('superadmin.dashboard')
         : route('dashboard');
