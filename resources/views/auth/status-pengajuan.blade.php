@@ -30,6 +30,20 @@
     $isEmployee = $isEmployee ?? (session('register_role') === 'karyawan' || ($permintaan->role ?? '') === 'karyawan');
 
     $statusMeta = match ($status) {
+        'interview' => [
+            'title' => 'DIUNDANG INTERVIEW',
+            'badge' => 'INTERVIEW',
+            'icon' => '🎤',
+            'border' => 'border-l-indigo-500',
+            'icon_bg' => 'bg-indigo-100 text-indigo-700',
+            'badge_class' => 'border-indigo-200 bg-indigo-50 text-indigo-700',
+            'information_title' => 'Anda Diundang untuk Interview',
+            'information' => $permintaan->jadwal_interview
+                ? 'Silakan datang ke kantor pada '
+                    . \Illuminate\Support\Carbon::parse($permintaan->jadwal_interview)->translatedFormat('d M Y, H:i')
+                    . ' di ' . $permintaan->lokasi_interview . '. Mohon datang tepat waktu dan membawa berkas pendukung.'
+                : 'Tim HRD CV Natusi akan segera menghubungi Anda untuk menentukan jadwal interview.',
+        ],
         'disetujui' => [
             'title' => 'PENGAJUAN DISETUJUI',
             'badge' => 'DISETUJUI',
@@ -217,6 +231,33 @@
                     </div>
                 </section>
 
+                {{-- Kartu Jadwal Interview (Hanya Tampil Jika Status Interview) --}}
+                @if($status === 'interview' && $permintaan->jadwal_interview)
+                    <section class="overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-[0_16px_38px_rgba(79,70,229,0.10)]">
+                        <header class="border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-5">
+                            <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-indigo-700">Jadwal Interview</p>
+                            <h2 class="mt-1 text-lg font-extrabold text-slate-950">Catat waktu dan lokasi berikut</h2>
+                        </header>
+
+                        <div class="grid gap-4 px-6 py-6 sm:grid-cols-2">
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                                <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Tanggal &amp; Jam</p>
+                                <p class="mt-2 text-lg font-black text-slate-900">
+                                    {{ \Illuminate\Support\Carbon::parse($permintaan->jadwal_interview)->translatedFormat('d M Y, H:i') }} WIB
+                                </p>
+                            </div>
+                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                                <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Lokasi</p>
+                                <p class="mt-2 text-lg font-black text-slate-900">{{ $permintaan->lokasi_interview ?? '-' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-indigo-100 bg-indigo-50 px-6 py-4 text-xs leading-5 text-indigo-800">
+                            Mohon datang 15 menit lebih awal dan membawa dokumen pendukung (KTP, CV, portofolio jika ada).
+                        </div>
+                    </section>
+                @endif
+
                 {{-- Kartu Kredensial Akun (Hanya Tampil Jika Diterima) --}}
                 @if($status === 'disetujui' && $permintaan->akun_dibuat && filled($permintaan->username_peserta) && filled($permintaan->password_awal))
                     <section class="overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-[0_16px_38px_rgba(16,185,129,0.10)]">
@@ -285,8 +326,9 @@
                     <ol class="mt-4 space-y-3 text-xs leading-5 text-slate-600">
                         <li><strong>1.</strong> Masuk menggunakan email dan kata sandi yang dibuat saat pendaftaran.</li>
                         <li><strong>2.</strong> Sistem langsung membuka halaman status pengajuan ini.</li>
-                        <li><strong>3.</strong> Setelah diterima, lonceng atau halaman ini menampilkan akun resmi Anda.</li>
-                        <li><strong>4.</strong> Masuk kembali memakai username dan password tersebut.</li>
+                        <li><strong>3.</strong> Jika dipanggil interview, jadwal dan lokasi akan tampil di halaman ini.</li>
+                        <li><strong>4.</strong> Setelah diterima, lonceng atau halaman ini menampilkan akun resmi Anda.</li>
+                        <li><strong>5.</strong> Masuk kembali memakai username dan password tersebut.</li>
                     </ol>
                 </section>
 

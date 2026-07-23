@@ -35,10 +35,14 @@ class AuthenticatedSessionController extends Controller
             'superadmin' => redirect()->intended(route('superadmin.dashboard')),
             'admin'      => redirect()->intended(route('admin.dashboard')),
             'pelamar'    => redirect()->intended(route('pengajuan.status')),
-            
+
+            // FIX: pendaftar karyawan (termasuk yang statusnya masih interview)
+            // pakai role 'pelamar_karyawan', dulu belum ada case-nya jadi kepentok default.
+            'pelamar_karyawan' => redirect()->intended(route('pengajuan.status')),
+
             // PERBAIKAN DI SINI (Sesuaikan ke nama route peserta-magang yang ada)
             'peserta'    => redirect()->intended(route('peserta-magang.dashboard')), // atau route('peserta-magang.tugas.index')
-            
+
             'karyawan'   => redirect()->intended(route('dashboard')),
             default      => redirect()->route('login')->withErrors([
                 'email'  => 'Role akun tidak dikenali. Silakan hubungi administrator.',

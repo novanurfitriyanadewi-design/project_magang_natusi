@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,10 @@ class PermintaanLamaranController extends Controller
             ->where('status', 'disetujui')
             ->count();
 
+        $total_interview = DB::table('permintaan_lamaran')
+            ->where('status', 'interview')
+            ->count();
+
         $query = DB::table('permintaan_lamaran as pl')
             ->leftJoin('karyawan as k', 'k.permintaan_id', '=', 'pl.id_permintaan')
             ->where('pl.status', '!=', 'ditolak')
@@ -29,7 +34,7 @@ class PermintaanLamaranController extends Controller
 
         $status = $request->string('status')->toString();
 
-        if (in_array($status, ['menunggu', 'disetujui'], true)) {
+        if (in_array($status, ['menunggu', 'interview', 'disetujui'], true)) {
             $query->where('pl.status', $status);
         }
 
@@ -54,14 +59,17 @@ class PermintaanLamaranController extends Controller
         return view('admin.karyawan.permintaan-lamaran', compact(
             'permintaan_lamaran',
             'total_pendaftar',
-            'total_disetujui'
+            'total_disetujui',
+            'total_interview'
         ));
     }
 
     public function action(Request $request, int $id): RedirectResponse
     {
         $validated = $request->validate([
-            'action' => ['required', 'in:approve,reject,accept'],
+            'action' => ['required', 'in:interview,approve,reject,accept'],
+            'jadwal_interview' => ['required_if:action,interview', 'nullable', 'date'],
+            'lokasi_interview' => ['required_if:action,interview', 'nullable', 'string', 'max:255'],
         ]);
 
         $pendaftar = DB::table('permintaan_lamaran')
@@ -72,21 +80,59 @@ class PermintaanLamaranController extends Controller
             return back()->with('error', 'Data pengajuan lamaran tidak ditemukan.');
         }
 
-        if (($pendaftar->status ?? 'menunggu') !== 'menunggu') {
+        // Yang sudah final (disetujui/ditolak) tidak boleh diproses ulang.
+        // Status 'menunggu' maupun 'interview' masih boleh lanjut diproses.
+        if (in_array($pendaftar->status ?? 'menunggu', ['disetujui', 'ditolak'], true)) {
             return back()->with('error', 'Pengajuan lamaran ini sudah pernah diproses.');
         }
 
-        $disetujui = in_array($validated['action'], ['approve', 'accept'], true);
-
         // Cari user terkait berdasarkan email
         $user = DB::table('users')->where('email', $pendaftar->email)->first();
+
+        // ==========================================
+        // 0. JIKA DIJADWALKAN INTERVIEW
+        // ==========================================
+        if ($validated['action'] === 'interview') {
+            DB::transaction(function () use ($id, $user, $validated) {
+                DB::table('permintaan_lamaran')
+                    ->where('id_permintaan', $id)
+                    ->update([
+                        'status' => 'interview',
+                        'jadwal_interview' => $validated['jadwal_interview'],
+                        'lokasi_interview' => $validated['lokasi_interview'],
+                        'updated_at' => now(),
+                    ]);
+
+                if ($user) {
+                    $jadwal = Carbon::parse($validated['jadwal_interview'])->translatedFormat('d M Y, H:i');
+
+                    DB::table('notifikasi')->insert([
+                        'user_id'     => $user->id_user,
+                        'judul'       => 'Jadwal Interview Lamaran Karyawan',
+                        'pesan'       => "Anda diundang untuk interview pada {$jadwal} di {$validated['lokasi_interview']}. Mohon datang tepat waktu.",
+                        'kategori'    => 'pengajuan',
+                        'tipe'        => 'info',
+                        'referensi_id'=> $id,
+                        'dibaca'      => false,
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ]);
+                }
+            });
+
+            return back()->with(
+                'success',
+                "Jadwal interview untuk {$pendaftar->nama_pemohon} berhasil dikirim."
+            );
+        }
+
+        $disetujui = in_array($validated['action'], ['approve', 'accept'], true);
 
         // ==========================================
         // 1. JIKA LAMARAN DITOLAK
         // ==========================================
         if (! $disetujui) {
             DB::transaction(function () use ($id, $user) {
-                // Update atau hapus permintaan
                 DB::table('permintaan_lamaran')
                     ->where('id_permintaan', $id)
                     ->update([
@@ -94,14 +140,13 @@ class PermintaanLamaranController extends Controller
                         'updated_at' => now(),
                     ]);
 
-                // Kirim Notifikasi penolakan jika user ditemukan
                 if ($user) {
                     DB::table('notifikasi')->insert([
                         'user_id'     => $user->id_user,
                         'judul'       => 'Status Lamaran Karyawan',
                         'pesan'       => 'Mohon maaf, pengajuan lamaran karyawan Anda belum dapat kami terima saat ini.',
                         'kategori'    => 'pengajuan',
-                        'tipe'        => 'danger',
+                        'tipe'        => 'peringatan',
                         'referensi_id'=> $id,
                         'dibaca'      => false,
                         'created_at'  => now(),
@@ -120,7 +165,6 @@ class PermintaanLamaranController extends Controller
         // 2. JIKA LAMARAN DISETUJUI
         // ==========================================
         DB::transaction(function () use ($id, $pendaftar, $user) {
-            // Update status di tabel permintaan_lamaran
             DB::table('permintaan_lamaran')
                 ->where('id_permintaan', $id)
                 ->update([
@@ -129,7 +173,7 @@ class PermintaanLamaranController extends Controller
                 ]);
 
             if ($user) {
-                // FIX UTAMA: Ubah role akun Siti menjadi 'karyawan' resmi!
+                // Ubah role akun user menjadi 'karyawan' resmi.
                 DB::table('users')
                     ->where('id_user', $user->id_user)
                     ->update([
@@ -137,7 +181,6 @@ class PermintaanLamaranController extends Controller
                         'updated_at' => now(),
                     ]);
 
-                // Buat record di tabel karyawan (jika belum ada)
                 $karyawanExists = DB::table('karyawan')
                     ->where('permintaan_id', $id)
                     ->orWhere('user_id', $user->id_user)
@@ -147,18 +190,22 @@ class PermintaanLamaranController extends Controller
                     DB::table('karyawan')->insert([
                         'user_id'       => $user->id_user,
                         'permintaan_id' => $id,
+                        'nama_karyawan' => $pendaftar->nama_pemohon,
+                        'email'         => $pendaftar->email,
+                        'no_hp'         => $pendaftar->no_hp ?? null,
+                        'jabatan'       => $pendaftar->posisi ?? null,
+                        'status'        => 'aktif',
                         'created_at'    => now(),
                         'updated_at'    => now(),
                     ]);
                 }
 
-                // Kirim Notifikasi kelulusan/persetujuan ke akun Siti
                 DB::table('notifikasi')->insert([
                     'user_id'     => $user->id_user,
                     'judul'       => 'Selamat! Lamaran Karyawan Disetujui',
                     'pesan'       => 'Pengajuan lamaran Anda telah disetujui. Anda sekarang sudah aktif sebagai karyawan dan dapat mengakses Portal Internal.',
                     'kategori'    => 'pengajuan',
-                    'tipe'        => 'success',
+                    'tipe'        => 'sukses',
                     'referensi_id'=> $id,
                     'dibaca'      => false,
                     'created_at'  => now(),
