@@ -24,7 +24,17 @@ class PermintaanMagang extends Model
         'no_hp',
         'pesan',
         'status',
+        'username_peserta',
+        'password_awal',
+        'akun_dibuat',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'akun_dibuat' => 'boolean',
+        ];
+    }
 
     public function user(): BelongsTo
     {

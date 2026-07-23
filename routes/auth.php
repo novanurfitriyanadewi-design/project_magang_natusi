@@ -23,38 +23,78 @@ Route::middleware('guest')->group(function () {
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
-    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
-        ->name('password.request');
+    Route::get(
+        'forgot-password',
+        [PasswordResetLinkController::class, 'create']
+    )->name('password.request');
 
-    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-        ->name('password.email');
+    Route::post(
+        'forgot-password',
+        [PasswordResetLinkController::class, 'store']
+    )->name('password.email');
 
-    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-        ->name('password.reset');
+    Route::get(
+        'reset-password/{token}',
+        [NewPasswordController::class, 'create']
+    )->name('password.reset');
 
-    Route::post('reset-password', [NewPasswordController::class, 'store'])
-        ->name('password.store');
+    Route::post(
+        'reset-password',
+        [NewPasswordController::class, 'store']
+    )->name('password.store');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Status Pengajuan Magang
+|--------------------------------------------------------------------------
+|
+| Pelamar masuk memakai email dan kata sandi pendaftaran, kemudian selalu
+| diarahkan ke halaman status milik akunnya sendiri.
+|
+*/
 Route::middleware('auth')->group(function () {
-    Route::get('verify-email', EmailVerificationPromptController::class)
-        ->name('verification.notice');
+    Route::get(
+        'pengajuan/status',
+        [RegisteredUserController::class, 'status']
+    )->name('pengajuan.status');
 
-    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
+    Route::get(
+        'verify-email',
+        EmailVerificationPromptController::class
+    )->name('verification.notice');
+
+    Route::get(
+        'verify-email/{id}/{hash}',
+        VerifyEmailController::class
+    )
         ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
 
-    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+    Route::post(
+        'email/verification-notification',
+        [EmailVerificationNotificationController::class, 'store']
+    )
         ->middleware('throttle:6,1')
         ->name('verification.send');
 
-    Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
-        ->name('password.confirm');
+    Route::get(
+        'confirm-password',
+        [ConfirmablePasswordController::class, 'show']
+    )->name('password.confirm');
 
-    Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
+    Route::post(
+        'confirm-password',
+        [ConfirmablePasswordController::class, 'store']
+    );
 
-    Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+    Route::put(
+        'password',
+        [PasswordController::class, 'update']
+    )->name('password.update');
 
-    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
-        ->name('logout');
+    Route::post(
+        'logout',
+        [AuthenticatedSessionController::class, 'destroy']
+    )->name('logout');
 });

@@ -71,11 +71,18 @@ Route::middleware('auth')->get('/dashboard', function () {
     $user = auth()->user();
 
     return match ($user?->role) {
+
         'superadmin' => redirect()->route('superadmin.dashboard'),
-        'admin'      => redirect()->route('admin.dashboard'),
-        'peserta'    => redirect()->route('peserta-magang.dashboard'),
-        default      => view('dashboard'),
+
+        'admin' => redirect()->route('admin.dashboard'),
+
+        'pelamar' => redirect()->route('pengajuan.status'),
+
+        'peserta' => redirect()->route('peserta-magang.dashboard'),
+
+        default => view('dashboard'),
     };
+
 })->name('dashboard');
 
 /*

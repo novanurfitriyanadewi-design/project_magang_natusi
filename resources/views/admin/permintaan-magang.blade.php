@@ -250,7 +250,7 @@
             x-transition:leave="transition ease-in duration-150"
             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 translate-y-4 scale-95"
-            class="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_rgba(15,23,42,0.30)]"
+            class="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_rgba(15,23,42,0.30)]"
         >
             <header class="flex items-start justify-between gap-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5">
                 <div>
@@ -338,7 +338,7 @@
                             </button>
                         </form>
 
-                        <form :action="detail.action_url" method="POST" onsubmit="return confirm('Tolak pengajuan ini? Data akan dihapus permanen dan tidak dapat dikembalikan.')">
+                        <form :action="detail.action_url" method="POST" onsubmit="return confirm('Tolak pengajuan ini? Status akan diubah menjadi ditolak dan tetap tersimpan sebagai riwayat.')">
                             @csrf
                             <input type="hidden" name="action" value="reject">
                             <button
