@@ -45,6 +45,7 @@ class LoginRequest extends FormRequest
         $login = trim((string) $this->input('email'));
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
+        // 1. Coba autentikasi email/username dan password
         $authenticated = Auth::attempt([
             $field => $login,
             'password' => (string) $this->input('password'),
@@ -55,6 +56,26 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'email' => 'Email, username, atau kata sandi salah.',
+            ]);
+        }
+
+        // 2. Dapatkan data user yang sedang mencoba login
+        $user = Auth::user();
+
+        // 3. Pengecekan Status untuk Karyawan yang masih Pending / Ditolak
+        if ($user->status === 'pending') {
+            Auth::logout(); // Keluarkan kembali session login-nya
+            
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda masih dalam proses peninjauan oleh Admin. Silakan tunggu konfirmasi.',
+            ]);
+        }
+
+        if ($user->status === 'ditolak') {
+            Auth::logout();
+            
+            throw ValidationException::withMessages([
+                'email' => 'Pengajuan akun Anda telah ditolak. Silakan hubungi Administrator.',
             ]);
         }
 

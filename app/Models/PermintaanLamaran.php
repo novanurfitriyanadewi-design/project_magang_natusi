@@ -17,17 +17,21 @@ class PermintaanLamaran extends Model
         'user_id',
         'nama_pemohon',
         'email',
+        'nik',                  // Menggunakan 'nik'
+        'pendidikan_terakhir',  // Menggunakan 'pendidikan_terakhir'
         'posisi',
         'tanggal_lamar',
         'no_hp',
         'pesan',
         'status',
+        'akun_dibuat',
         'cv_path',
         'portfolio_path',
     ];
 
     protected $casts = [
         'tanggal_lamar' => 'date',
+        'akun_dibuat'   => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -39,14 +43,19 @@ class PermintaanLamaran extends Model
         );
     }
 
-    // Helper untuk mendapatkan inisial nama pemohon
     public function getInitialsAttribute(): string
     {
-        $words = explode(' ', $this->nama_pemohon);
-        $initials = '';
-        foreach (array_slice($words, 0, 2) as $w) {
-            $initials .= strtoupper($w[0] ?? '');
+        if (empty($this->nama_pemohon)) {
+            return 'P';
         }
-        return $initials;
+
+        $words = array_filter(explode(' ', trim($this->nama_pemohon)));
+        $initials = '';
+
+        foreach (array_slice($words, 0, 2) as $w) {
+            $initials .= strtoupper(mb_substr($w, 0, 1));
+        }
+
+        return $initials ?: 'P';
     }
 }

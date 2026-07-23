@@ -45,22 +45,21 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', static fn () => redirect()->route('login'));
 
 Route::middleware('guest')->group(function (): void {
+    // Session helper untuk membedakan pendaftaran Pelamar Magang vs Karyawan
     Route::get('/register/pelamar', function () {
         session(['register_role' => 'pelamar']);
-
         return redirect()->route('register');
     })->name('register.pelamar');
 
     Route::get('/register/karyawan', function () {
         session(['register_role' => 'karyawan']);
-
         return redirect()->route('register');
     })->name('register.karyawan');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Dashboard Umum
+| Redirect Dashboard Utama (Sesuai Role Pengguna)
 |--------------------------------------------------------------------------
 */
 
@@ -68,18 +67,12 @@ Route::middleware('auth')->get('/dashboard', function () {
     $user = auth()->user();
 
     return match ($user?->role) {
-
-        'superadmin' => redirect()->route('superadmin.dashboard'),
-
-        'admin' => redirect()->route('admin.dashboard'),
-
-        'pelamar' => redirect()->route('pengajuan.status'),
-
-        'peserta' => redirect()->route('peserta-magang.dashboard'),
-
-        default => view('dashboard'),
+        'superadmin'                   => redirect()->route('superadmin.dashboard'),
+        'admin', 'karyawan'            => redirect()->route('admin.dashboard'), // Hanya Karyawan RESMI (sudah di-approve)
+        'pelamar', 'pelamar_karyawan'  => redirect()->route('pengajuan.status'), // Calon Karyawan & Pelamar Magang ke Status
+        'peserta'                      => redirect()->route('peserta-magang.dashboard'),
+        default                        => view('dashboard'),
     };
-
 })->name('dashboard');
 
 /*
@@ -129,7 +122,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::get('/dashboard', SuperadminDashboardController::class)
             ->name('dashboard');
 
-        // Kelola admin.
+        // Kelola admin
         Route::get('/admin', [SuperadminAdminController::class, 'index'])
             ->name('admin');
         Route::post('/admin', [SuperadminAdminController::class, 'store'])
@@ -139,7 +132,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::delete('/admin/{admin}', [SuperadminAdminController::class, 'destroy'])
             ->name('admin.destroy');
 
-        // Kelola aturan perusahaan.
+        // Kelola aturan perusahaan
         Route::get('/aturan', [SuperadminAturanPerusahaanController::class, 'index'])
             ->name('aturan.index');
         Route::post('/aturan', [SuperadminAturanPerusahaanController::class, 'store'])
@@ -149,7 +142,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::delete('/aturan/{aturan}', [SuperadminAturanPerusahaanController::class, 'destroy'])
             ->name('aturan.destroy');
 
-        // Kelola jam absensi.
+        // Kelola jam absensi
         Route::get('/jam-absensi', [SuperadminJamAbsensiController::class, 'index'])
             ->name('jam-absensi.index');
         Route::put('/jam-absensi', [SuperadminJamAbsensiController::class, 'update'])
@@ -157,7 +150,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::patch('/jam-absensi/reset', [SuperadminJamAbsensiController::class, 'reset'])
             ->name('jam-absensi.reset');
 
-        // Kelola metode pembayaran.
+        // Kelola metode pembayaran
         Route::get('/metode-pembayaran', [SuperadminMetodePembayaranController::class, 'index'])
             ->name('metode-pembayaran.index');
         Route::put('/metode-pembayaran/nominal', [SuperadminMetodePembayaranController::class, 'updateNominal'])
@@ -172,11 +165,11 @@ Route::middleware(['auth', 'role:superadmin'])
 
 /*
 |--------------------------------------------------------------------------
-| Admin
+| Admin & Karyawan
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'role:admin'])
+Route::middleware(['auth', 'role:admin,karyawan'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function (): void {
@@ -209,7 +202,7 @@ Route::middleware(['auth', 'role:admin'])
             ->except(['create'])
             ->parameters(['peserta' => 'peserta_magang']);
 
-        /* Permintaan magang. */
+        /* Permintaan Magang */
         Route::get('/permintaan', [AdminPermintaanMagangController::class, 'index'])
             ->name('permintaan.index');
 
@@ -217,12 +210,20 @@ Route::middleware(['auth', 'role:admin'])
             ->whereNumber('id')
             ->name('permintaan.action');
 
-        /* Kelola laporan peserta magang. */
+        /* Kelola Permintaan Lamaran Registrasi Karyawan */
+        Route::get('/permintaan-lamaran', [AdminPermintaanLamaranController::class, 'index'])
+            ->name('permintaan-lamaran.index');
+
+        Route::post('/permintaan-lamaran/{id}/action', [AdminPermintaanLamaranController::class, 'action'])
+            ->whereNumber('id')
+            ->name('permintaan-lamaran.action');
+
+        /* Kelola Laporan Peserta Magang */
         Route::resource('laporan-peserta', AdminLaporanPesertaController::class)
             ->only(['index', 'store', 'update', 'destroy'])
             ->parameters(['laporan-peserta' => 'peserta_magang']);
 
-        /* Laporan pembayaran, penugasan, dan absensi. */
+        /* Laporan Pembayaran, Penugasan, dan Absensi */
         Route::get('/laporan/pembayaran', [AdminLaporanPembayaranController::class, 'index'])
             ->name('laporan.pembayaran');
 
@@ -232,7 +233,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/laporan/absensi', [AdminLaporanAbsensiController::class, 'index'])
             ->name('laporan.absensi');
 
-        /* Kelola tugas magang. */
+        /* Kelola Tugas Magang */
         Route::get('/tugas', [AdminTugasController::class, 'index'])
             ->name('tugas.index');
 
@@ -260,7 +261,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::delete('/tugas/{tugas}', [AdminTugasController::class, 'destroy'])
             ->name('tugas.destroy');
 
-        /* Pengumpulan tugas. */
+        /* Pengumpulan Tugas */
         Route::get('/pengumpulan-tugas', [AdminPengumpulanTugasController::class, 'index'])
             ->name('pengumpulan-tugas.index');
 
@@ -276,11 +277,11 @@ Route::middleware(['auth', 'role:admin'])
             ->whereNumber('pengumpulan')
             ->name('pengumpulan-tugas.show');
 
-        /* Data absensi. */
+        /* Data Absensi */
         Route::get('/absensi', [AdminDataAbsensiController::class, 'index'])
             ->name('absensi.index');
 
-        /* Metode pembayaran. */
+        /* Metode Pembayaran */
         Route::get('/metode-pembayaran', [AdminDataMetodePembayaranController::class, 'index'])
             ->name('metode-pembayaran.index');
 
@@ -296,7 +297,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::delete('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'destroyBank'])
             ->name('metode-pembayaran.bank.destroy');
 
-        /* Data pembayaran. */
+        /* Data Pembayaran */
         Route::get('/pembayaran', [AdminDataPembayaranController::class, 'index'])
             ->name('pembayaran.index');
 
@@ -305,16 +306,7 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::patch('/pembayaran/{pembayaran}/tolak', [AdminDataPembayaranController::class, 'tolak'])
             ->name('pembayaran.tolak');
-
-        /* Permintaan Lamaran (Menggunakan Controller di folder Admin/Karyawan) */
-       Route::get('/permintaan-lamaran', [AdminPermintaanLamaranController::class, 'index'])
-            ->name('permintaan-lamaran.index');
-
-        Route::post('/permintaan-lamaran/{id}/action', [AdminPermintaanLamaranController::class, 'action'])
-            ->whereNumber('id')
-            ->name('permintaan-lamaran.action');
     });
-    
 
 /*
 |--------------------------------------------------------------------------
@@ -357,7 +349,44 @@ Route::middleware(['auth', 'role:peserta'])
 
 /*
 |--------------------------------------------------------------------------
-| Authentication
+| Status Pengajuan Pelamar (Magang & Karyawan)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'role:pelamar,pelamar_karyawan'])->group(function () {
+    Route::get('/pengajuan/status', function () {
+        $user = auth()->user();
+
+        // 1. Coba cari di PermintaanMagang lebih dulu
+        $permintaan = \App\Models\PermintaanMagang::where('email', $user->email)
+            ->latest()
+            ->first();
+
+        // 2. Jika tidak ada dan ada model PermintaanLamaran (karyawan), ambil dari sana
+        if (! $permintaan && class_exists('\App\Models\PermintaanLamaran')) {
+            $permintaan = \App\Models\PermintaanLamaran::where('email', $user->email)
+                ->latest()
+                ->first();
+        }
+
+        // 3. Mengambil notifikasi terkait user
+        $notifications = \App\Models\Notifikasi::where('user_id', $user->id)
+            ->latest()
+            ->get();
+
+        $unreadNotificationCount = $notifications->where('dibaca', false)->count();
+
+        return view('pelamar.status-pengajuan', [
+            'permintaan' => $permintaan,
+            'notifications' => $notifications,
+            'unreadNotificationCount' => $unreadNotificationCount,
+        ]);
+    })->name('pengajuan.status');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes (Breeze / Fortify)
 |--------------------------------------------------------------------------
 */
 

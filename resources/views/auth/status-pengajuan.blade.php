@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Status Pengajuan Magang | CV Natusi Portal</title>
+    @php
+        $isEmployee = auth()->check() && (auth()->user()->role === 'karyawan' || auth()->user()->role === 'pelamar_karyawan');
+    @endphp
+
+    <title>Status Pengajuan {{ $isEmployee ? 'Karyawan' : 'Magang' }} | CV Natusi Portal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,6 +26,9 @@
     $unreadNotificationCount = $unreadNotificationCount ?? 0;
     $isAuthenticated = auth()->check();
 
+    // Deteksi Role Pendaftaran
+    $isEmployee = $isEmployee ?? (session('register_role') === 'karyawan' || ($permintaan->role ?? '') === 'karyawan');
+
     $statusMeta = match ($status) {
         'disetujui' => [
             'title' => 'PENGAJUAN DISETUJUI',
@@ -30,8 +37,10 @@
             'border' => 'border-l-emerald-500',
             'icon_bg' => 'bg-emerald-100 text-emerald-700',
             'badge_class' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
-            'information_title' => 'Selamat, Anda Diterima',
-            'information' => 'Akun peserta magang telah dibuat otomatis. Lihat notifikasi lonceng atau kartu akun di bawah untuk memperoleh username dan password awal.',
+            'information_title' => $isEmployee ? 'Selamat, Lamaran Anda Diterima' : 'Selamat, Anda Diterima',
+            'information' => $isEmployee 
+                ? 'Akun karyawan Anda telah aktif/dibuat. Silakan periksa notifikasi lonceng atau kartu akun di bawah untuk memperoleh kredensial masuk portal kerja.' 
+                : 'Akun peserta magang telah dibuat otomatis. Lihat notifikasi lonceng atau kartu akun di bawah untuk memperoleh username dan password awal.',
         ],
         'ditolak' => [
             'title' => 'PENGAJUAN BELUM DISETUJUI',
@@ -41,7 +50,7 @@
             'icon_bg' => 'bg-rose-100 text-rose-700',
             'badge_class' => 'border-rose-200 bg-rose-50 text-rose-700',
             'information_title' => 'Pengajuan Belum Dapat Disetujui',
-            'information' => 'Silakan hubungi Admin CV Natusi apabila memerlukan informasi lebih lanjut mengenai hasil pengajuan.',
+            'information' => 'Silakan hubungi Tim HRD CV Natusi apabila memerlukan informasi lebih lanjut mengenai hasil evaluasi lamaran Anda.',
         ],
         default => [
             'title' => 'MENUNGGU KONFIRMASI',
@@ -50,13 +59,16 @@
             'border' => 'border-l-sky-600',
             'icon_bg' => 'bg-sky-100 text-sky-700',
             'badge_class' => 'border-amber-200 bg-amber-50 text-amber-700',
-            'information_title' => 'Pengajuan Sedang Diperiksa',
-            'information' => 'Data pengajuan telah diterima. Admin akan memeriksa informasi yang dikirim sebelum memberikan keputusan.',
+            'information_title' => 'Berkas Sedang Dievaluasi',
+            'information' => $isEmployee 
+                ? 'Berkas lamaran kerja Anda telah diterima. Tim HRD CV Natusi sedang melakukan verifikasi dan seleksi kualifikasi.' 
+                : 'Data pengajuan telah diterima. Admin akan memeriksa informasi yang dikirim sebelum memberikan keputusan.',
         ],
     };
 @endphp
 
 <div class="flex min-h-screen flex-col">
+    {{-- Header --}}
     <header class="border-b border-slate-200 bg-white shadow-sm">
         <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
             <a href="{{ $isAuthenticated ? route('pengajuan.status') : route('login') }}" class="flex items-center gap-3">
@@ -174,12 +186,15 @@
                     </div>
                 @endif
 
+                {{-- Card Status Utama --}}
                 <section class="overflow-hidden rounded-2xl border border-slate-200 border-l-4 {{ $statusMeta['border'] }} bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
                     <div class="flex flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
                         <div class="flex items-center gap-4">
                             <span class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-2xl font-black {{ $statusMeta['icon_bg'] }}">{{ $statusMeta['icon'] }}</span>
                             <div class="min-w-0">
-                                <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Status Pengajuan</p>
+                                <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                                    Status Pengajuan {{ $isEmployee ? 'Karyawan' : 'Magang' }}
+                                </p>
                                 <div class="mt-1 flex flex-wrap items-center gap-3">
                                     <h1 class="text-xl font-extrabold tracking-tight text-slate-950 sm:text-2xl">{{ $statusMeta['title'] }}</h1>
                                     <span class="inline-flex rounded-full border px-3 py-1 text-[10px] font-extrabold {{ $statusMeta['badge_class'] }}">{{ $statusMeta['badge'] }}</span>
@@ -191,6 +206,7 @@
                     </div>
                 </section>
 
+                {{-- Banner Informasi --}}
                 <section class="rounded-2xl border border-sky-200 bg-sky-50 px-5 py-5 shadow-sm">
                     <div class="flex items-start gap-4">
                         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-700 font-black text-white">i</span>
@@ -201,10 +217,13 @@
                     </div>
                 </section>
 
+                {{-- Kartu Kredensial Akun (Hanya Tampil Jika Diterima) --}}
                 @if($status === 'disetujui' && $permintaan->akun_dibuat && filled($permintaan->username_peserta) && filled($permintaan->password_awal))
                     <section class="overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-[0_16px_38px_rgba(16,185,129,0.10)]">
                         <header class="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5">
-                            <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">Akun Peserta Magang</p>
+                            <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">
+                                Akun {{ $isEmployee ? 'Karyawan' : 'Peserta Magang' }}
+                            </p>
                             <h2 class="mt-1 text-lg font-extrabold text-slate-950">Simpan username dan password berikut</h2>
                         </header>
 
@@ -220,11 +239,12 @@
                         </div>
 
                         <div class="border-t border-emerald-100 bg-emerald-50 px-6 py-4 text-xs leading-5 text-emerald-800">
-                            Keluar dari akun pelamar, lalu masuk kembali menggunakan username dan password peserta di atas. Setelah berhasil masuk, segera ubah password awal melalui menu profil.
+                            Keluar dari akun pelamar, lalu masuk kembali menggunakan username dan password di atas untuk mengakses portal kerja. Jangan lupa memperbarui password awal Anda melalui menu profil.
                         </div>
                     </section>
                 @endif
 
+                {{-- Detail Berkas Pengajuan --}}
                 <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
                     <header class="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-5">
                         <h2 class="text-lg font-extrabold text-slate-950">Detail Pengajuan</h2>
@@ -235,10 +255,10 @@
                         @foreach([
                             ['Nama Lengkap', $permintaan->nama_pemohon],
                             ['Alamat Email', $permintaan->email],
-                            ['Asal Sekolah / Universitas', $permintaan->nama_sekolah],
-                            ['Jurusan', $permintaan->jurusan],
-                            ['NIS / NIM', $permintaan->no_induk],
-                            ['Nomor Telepon', $permintaan->no_hp],
+                            [$isEmployee ? 'Pendidikan Terakhir' : 'Asal Sekolah / Universitas', $permintaan->nama_sekolah],
+                            [$isEmployee ? 'Bidang / Keahlian' : 'Jurusan', $permintaan->jurusan],
+                            [$isEmployee ? 'Posisi Yang Dilamar' : 'NIS / NIM', $permintaan->no_induk],
+                            ['Nomor Telepon / WA', $permintaan->no_hp],
                         ] as [$label, $value])
                             <div>
                                 <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{{ $label }}</p>
@@ -247,29 +267,32 @@
                         @endforeach
 
                         <div class="sm:col-span-2">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Deskripsi / Pertanyaan</p>
+                            <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">
+                                {{ $isEmployee ? 'Ringkasan Diri / Pengalaman' : 'Deskripsi / Pertanyaan' }}
+                            </p>
                             <div class="mt-2 min-h-20 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm italic leading-6 text-slate-600">
-                                {{ filled($permintaan->pesan) ? $permintaan->pesan : 'Tidak ada deskripsi atau pertanyaan tambahan.' }}
+                                {{ filled($permintaan->pesan) ? $permintaan->pesan : 'Tidak ada catatan tambahan.' }}
                             </div>
                         </div>
                     </div>
                 </section>
             </div>
 
+            {{-- Sidebar --}}
             <aside class="space-y-5">
                 <section class="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
                     <h2 class="text-base font-extrabold text-slate-950">Cara Memeriksa Status</h2>
                     <ol class="mt-4 space-y-3 text-xs leading-5 text-slate-600">
                         <li><strong>1.</strong> Masuk menggunakan email dan kata sandi yang dibuat saat pendaftaran.</li>
                         <li><strong>2.</strong> Sistem langsung membuka halaman status pengajuan ini.</li>
-                        <li><strong>3.</strong> Setelah diterima, lonceng menampilkan akun peserta hasil generate.</li>
-                        <li><strong>4.</strong> Masuk kembali memakai username dan password peserta.</li>
+                        <li><strong>3.</strong> Setelah diterima, lonceng atau halaman ini menampilkan akun resmi Anda.</li>
+                        <li><strong>4.</strong> Masuk kembali memakai username dan password tersebut.</li>
                     </ol>
                 </section>
 
                 <section class="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
                     <h2 class="text-base font-extrabold text-slate-950">Butuh Bantuan?</h2>
-                    <p class="mt-3 text-xs leading-5 text-slate-500">Hubungi tim HR apabila Anda memiliki kendala teknis atau pertanyaan mengenai pengajuan.</p>
+                    <p class="mt-3 text-xs leading-5 text-slate-500">Hubungi tim HRD apabila Anda memiliki kendala teknis atau pertanyaan mengenai proses pendaftaran.</p>
                     <a href="mailto:{{ config('mail.from.address') }}" class="mt-5 inline-flex w-full items-center justify-center rounded-xl border border-sky-600 bg-white px-4 py-3 text-xs font-extrabold text-sky-700 transition hover:bg-sky-50">Hubungi HRD</a>
                 </section>
             </aside>
@@ -278,7 +301,7 @@
 
     <footer class="border-t border-slate-200 bg-white">
         <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 text-[10px] text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-            <p>© {{ now()->year }} <strong>CV Natusi</strong>. Portal Pendaftaran Magang.</p>
+            <p>© {{ now()->year }} <strong>CV Natusi</strong>. Portal Pendaftaran {{ $isEmployee ? 'Karyawan' : 'Magang' }}.</p>
             <p>Status diperbarui setiap kali halaman dimuat ulang.</p>
         </div>
     </footer>

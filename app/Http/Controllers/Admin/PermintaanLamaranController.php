@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
- 
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,12 +51,11 @@ class PermintaanLamaranController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // DENGAN SUBFOLDER KARYAWAN (BENAR)
         return view('admin.karyawan.permintaan-lamaran', compact(
             'permintaan_lamaran',
             'total_pendaftar',
             'total_disetujui'
-));
+        ));
     }
 
     public function action(Request $request, int $id): RedirectResponse
@@ -79,27 +78,98 @@ class PermintaanLamaranController extends Controller
 
         $disetujui = in_array($validated['action'], ['approve', 'accept'], true);
 
+        // Cari user terkait berdasarkan email
+        $user = DB::table('users')->where('email', $pendaftar->email)->first();
+
+        // ==========================================
+        // 1. JIKA LAMARAN DITOLAK
+        // ==========================================
         if (! $disetujui) {
-            DB::table('permintaan_lamaran')
-                ->where('id_permintaan', $id)
-                ->delete();
+            DB::transaction(function () use ($id, $user) {
+                // Update atau hapus permintaan
+                DB::table('permintaan_lamaran')
+                    ->where('id_permintaan', $id)
+                    ->update([
+                        'status' => 'ditolak',
+                        'updated_at' => now(),
+                    ]);
+
+                // Kirim Notifikasi penolakan jika user ditemukan
+                if ($user) {
+                    DB::table('notifikasi')->insert([
+                        'user_id'     => $user->id_user,
+                        'judul'       => 'Status Lamaran Karyawan',
+                        'pesan'       => 'Mohon maaf, pengajuan lamaran karyawan Anda belum dapat kami terima saat ini.',
+                        'kategori'    => 'pengajuan',
+                        'tipe'        => 'danger',
+                        'referensi_id'=> $id,
+                        'dibaca'      => false,
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ]);
+                }
+            });
 
             return back()->with(
                 'success',
-                "Pengajuan lamaran atas nama {$pendaftar->nama_pemohon} berhasil ditolak dan dihapus."
+                "Pengajuan lamaran atas nama {$pendaftar->nama_pemohon} berhasil ditolak."
             );
         }
 
-        DB::table('permintaan_lamaran')
-            ->where('id_permintaan', $id)
-            ->update([
-                'status' => 'disetujui',
-                'updated_at' => now(),
-            ]);
+        // ==========================================
+        // 2. JIKA LAMARAN DISETUJUI
+        // ==========================================
+        DB::transaction(function () use ($id, $pendaftar, $user) {
+            // Update status di tabel permintaan_lamaran
+            DB::table('permintaan_lamaran')
+                ->where('id_permintaan', $id)
+                ->update([
+                    'status'     => 'disetujui',
+                    'updated_at' => now(),
+                ]);
+
+            if ($user) {
+                // FIX UTAMA: Ubah role akun Siti menjadi 'karyawan' resmi!
+                DB::table('users')
+                    ->where('id_user', $user->id_user)
+                    ->update([
+                        'role'       => 'karyawan',
+                        'updated_at' => now(),
+                    ]);
+
+                // Buat record di tabel karyawan (jika belum ada)
+                $karyawanExists = DB::table('karyawan')
+                    ->where('permintaan_id', $id)
+                    ->orWhere('user_id', $user->id_user)
+                    ->exists();
+
+                if (! $karyawanExists) {
+                    DB::table('karyawan')->insert([
+                        'user_id'       => $user->id_user,
+                        'permintaan_id' => $id,
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ]);
+                }
+
+                // Kirim Notifikasi kelulusan/persetujuan ke akun Siti
+                DB::table('notifikasi')->insert([
+                    'user_id'     => $user->id_user,
+                    'judul'       => 'Selamat! Lamaran Karyawan Disetujui',
+                    'pesan'       => 'Pengajuan lamaran Anda telah disetujui. Anda sekarang sudah aktif sebagai karyawan dan dapat mengakses Portal Internal.',
+                    'kategori'    => 'pengajuan',
+                    'tipe'        => 'success',
+                    'referensi_id'=> $id,
+                    'dibaca'      => false,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+            }
+        });
 
         return back()->with(
             'success',
-            "Pengajuan lamaran atas nama {$pendaftar->nama_pemohon} berhasil disetujui."
+            "Pengajuan lamaran atas nama {$pendaftar->nama_pemohon} berhasil disetujui dan role user resmi diubah menjadi Karyawan."
         );
     }
 }

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Ajukan Magang | CV Natusi</title>
+    <title>{{ $isEmployee ?? false ? 'Daftar Karyawan' : 'Ajukan Magang' }} | CV Natusi</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,8 @@
 
     <main class="relative min-h-screen overflow-hidden lg:h-dvh lg:min-h-0">
         <section class="grid min-h-screen lg:h-dvh lg:min-h-0 lg:grid-cols-[1.04fr_0.96fr]">
-            {{-- Panel kiri --}}
+            
+            {{-- Panel Kiri --}}
             <aside class="relative isolate hidden overflow-hidden bg-[#e7f0ff] px-8 py-8 lg:flex lg:h-dvh lg:min-h-0 lg:flex-col xl:px-12 xl:py-10">
                 <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
                     <div class="absolute right-[-110px] top-[15%] h-[380px] w-[380px] rounded-full border border-[#8dbde8]/35"></div>
@@ -32,24 +33,28 @@
 
                 <a href="{{ route('login') }}" class="inline-flex w-fit items-center gap-3 text-[#075f8c] transition hover:opacity-80">
                     <span class="grid h-11 w-11 place-items-center overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200/70">
-                        <img
-                            src="{{ asset('images/logo.jpeg') }}"
-                            alt="Logo CV Natusi"
-                            class="h-9 w-9 object-contain"
-                        >
+                        <img src="{{ asset('images/logo.jpeg') }}" alt="Logo CV Natusi" class="h-9 w-9 object-contain">
                     </span>
                     <span class="font-['Manrope'] text-base font-bold">CV Natusi</span>
                 </a>
 
                 <div class="my-auto max-w-[560px] py-16">
                     <h1 class="font-['Manrope'] text-3xl font-extrabold leading-[1.08] tracking-[-0.035em] text-slate-950 xl:text-[38px]">
-                        Ignite Your Career
-                        <span class="block text-[#006b9d]">With Strategic Internships.</span>
+                        @if ($isEmployee)
+                            Elevate Your Career
+                            <span class="block text-[#006b9d]">With Professional Excellence.</span>
+                        @else
+                            Ignite Your Career
+                            <span class="block text-[#006b9d]">With Strategic Internships.</span>
+                        @endif
                     </h1>
 
                     <p class="mt-5 max-w-[510px] text-[15px] leading-7 text-slate-700 xl:text-base">
-                        Bergabunglah dengan portal eksklusif kami untuk terhubung dengan pemimpin industri,
-                        memperoleh pengalaman profesional, dan membangun jalur karier yang lebih terarah.
+                        @if ($isEmployee)
+                            Bergabunglah bersama tim profesional CV Natusi. Kembangkan bakat, kepemimpinan, dan dorong inovasi bersama kami.
+                        @else
+                            Bergabunglah dengan portal eksklusif kami untuk terhubung dengan pemimpin industri, memperoleh pengalaman profesional, dan membangun jalur karier yang lebih terarah.
+                        @endif
                     </p>
 
                     <div class="mt-7 space-y-4">
@@ -63,7 +68,7 @@
                             <div>
                                 <h2 class="text-sm font-semibold text-slate-900">Institutional Reliability</h2>
                                 <p class="mt-0.5 text-xs leading-5 text-slate-600">
-                                    Kemitraan terpercaya dengan institusi pendidikan dan perusahaan profesional.
+                                    Lingkungan kerja kondusif dan didukung budaya profesionalitas tinggi.
                                 </p>
                             </div>
                         </div>
@@ -78,7 +83,7 @@
                             <div>
                                 <h2 class="text-sm font-semibold text-slate-900">Career Progression</h2>
                                 <p class="mt-0.5 text-xs leading-5 text-slate-600">
-                                    Jalur terstruktur untuk membantu peserta berkembang dari pelajar menjadi profesional.
+                                    Jalur pengembangan jenjang karier yang terukur dan berorientasi pada kinerja.
                                 </p>
                             </div>
                         </div>
@@ -86,14 +91,14 @@
                 </div>
 
                 <blockquote class="max-w-[570px] border-l-[3px] border-[#0879ad] pl-5 text-sm italic leading-6 text-slate-700">
-                    “CV Natusi menjadi jembatan antara dunia akademik dan dunia profesional. Sistem magangnya sangat membantu peserta berkembang.”
+                    “CV Natusi terus berkomitmen menciptakan ruang tumbuh bagi profesional berbakat untuk mencetak karya berdampak.”
                     <footer class="mt-2 text-[11px] font-semibold not-italic text-slate-900">
                         — Tim Pengembangan SDM CV Natusi
                     </footer>
                 </blockquote>
             </aside>
 
-            {{-- Panel kanan --}}
+            {{-- Panel Kanan (Form) --}}
             <section class="relative flex min-h-screen items-center justify-center bg-[#f8f9ff] px-5 py-8 sm:px-8 lg:h-dvh lg:min-h-0 lg:overflow-hidden lg:px-10 lg:py-4 xl:px-14">
                 <div class="pointer-events-none absolute right-[-120px] top-[-100px] h-72 w-72 rounded-full bg-blue-100/50 blur-3xl"></div>
 
@@ -111,7 +116,7 @@
                         </h1>
                         <p class="mt-1.5 text-[13px] leading-5 text-slate-600">
                             {{ $isEmployee
-                                ? 'Lengkapi data berikut untuk mengajukan pendaftaran sebagai karyawan CV Natusi.'
+                                ? 'Lengkapi data berikut untuk mengajukan pendaftaran sebagai calon karyawan CV Natusi.'
                                 : 'Ajukan permohonan magang atau PKL Anda di CV Natusi.' }}
                         </p>
                     </header>
@@ -195,10 +200,10 @@
                                 @enderror
                             </div>
 
-                            {{-- Sekolah / Universitas --}}
+                            {{-- Institusi / Pendidikan Terakhir --}}
                             <div>
                                 <label for="university" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
-                                    Asal Sekolah / Universitas
+                                    {{ $isEmployee ? 'Pendidikan Terakhir / Lulusan' : 'Asal Sekolah / Universitas' }}
                                 </label>
                                 <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
                                     <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -210,7 +215,7 @@
                                         name="university"
                                         type="text"
                                         value="{{ old('university') }}"
-                                        placeholder="Nama Institusi"
+                                        placeholder="{{ $isEmployee ? 'Contoh: S1 Teknik Informatika - Universitas X' : 'Nama Institusi' }}"
                                         autocomplete="organization"
                                         required
                                         class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:border-0 focus:ring-0"
@@ -221,10 +226,10 @@
                                 @enderror
                             </div>
 
-                            {{-- NIS / NIM --}}
+                            {{-- NIS/NIM atau Posisi Dilamar --}}
                             <div>
                                 <label for="student_id" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
-                                    NIS / NIM
+                                    {{ $isEmployee ? 'Posisi Yang Dilamar' : 'NIS / NIM' }}
                                 </label>
                                 <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
                                     <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -236,7 +241,7 @@
                                         name="student_id"
                                         type="text"
                                         value="{{ old('student_id') }}"
-                                        placeholder="Masukkan NIS atau NIM Anda"
+                                        placeholder="{{ $isEmployee ? 'Contoh: Web Developer / Staff HRD' : 'Masukkan NIS atau NIM Anda' }}"
                                         required
                                         class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:border-0 focus:ring-0"
                                     >
@@ -246,10 +251,10 @@
                                 @enderror
                             </div>
 
-                            {{-- Jurusan --}}
+                            {{-- Jurusan / Keahlian Utama --}}
                             <div>
                                 <label for="major" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
-                                    Jurusan
+                                    {{ $isEmployee ? 'Bidang / Keahlian Utama' : 'Jurusan' }}
                                 </label>
                                 <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
                                     <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -261,7 +266,7 @@
                                         name="major"
                                         type="text"
                                         value="{{ old('major') }}"
-                                        placeholder="Masukkan Jurusan Anda"
+                                        placeholder="{{ $isEmployee ? 'Contoh: Laravel, UI/UX Design, Akuntansi' : 'Masukkan Jurusan Anda' }}"
                                         required
                                         class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:border-0 focus:ring-0"
                                     >
@@ -274,7 +279,7 @@
                             {{-- Telepon --}}
                             <div>
                                 <label for="phone" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
-                                    Nomor Telepon
+                                    Nomor Telepon / WhatsApp
                                 </label>
                                 <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
                                     <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -297,7 +302,7 @@
                                 @enderror
                             </div>
 
-                            {{-- Kata sandi akun untuk memeriksa status --}}
+                            {{-- Kata Sandi --}}
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <div>
                                     <label for="password" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
@@ -312,7 +317,7 @@
                                             id="password"
                                             name="password"
                                             type="password"
-                                            placeholder="Minimal 8 karakter"
+                                            placeholder="Min. 8 karakter"
                                             autocomplete="new-password"
                                             required
                                             minlength="8"
@@ -347,22 +352,24 @@
                                 </div>
                             </div>
 
-                            @if (! $isEmployee)
-                                <p class="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2 text-[11px] leading-5 text-sky-800">
+                            <p class="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2 text-[11px] leading-5 text-sky-800">
+                                @if ($isEmployee)
+                                    Email dan kata sandi ini digunakan untuk masuk ke portal pendaftaran karyawan dan memantau pembaruan status seleksi berkas Anda.
+                                @else
                                     Email dan kata sandi ini digunakan untuk masuk kembali dan memeriksa status pengajuan. Setelah diterima, akun peserta baru akan diberikan melalui notifikasi lonceng.
-                                </p>
-                            @endif
+                                @endif
+                            </p>
 
-                            {{-- Deskripsi --}}
+                            {{-- Deskripsi / Ringkasan --}}
                             <div>
                                 <label for="description" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
-                                    Deskripsi / Pertanyaan
+                                    {{ $isEmployee ? 'Ringkasan Diri / Pengalaman Kerja' : 'Deskripsi / Pertanyaan' }}
                                 </label>
                                 <textarea
                                     id="description"
                                     name="description"
                                     rows="3"
-                                    placeholder="Tanyakan ketersediaan magang atau jelaskan minat Anda..."
+                                    placeholder="{{ $isEmployee ? 'Ceritakan secara singkat pengalaman kerja atau keahlian utama Anda...' : 'Tanyakan ketersediaan magang atau jelaskan minat Anda...' }}"
                                     class="mt-1.5 block w-full resize-none rounded-lg border border-slate-300 bg-[#f8faff] px-3 py-2.5 text-sm leading-5 text-slate-800 placeholder:text-slate-400 transition focus:border-[#0879ad] focus:bg-white focus:ring-4 focus:ring-[#0879ad]/10"
                                 >{{ old('description') }}</textarea>
                                 @error('description')
@@ -392,7 +399,7 @@
                                 type="submit"
                                 class="inline-flex h-12 w-full items-center justify-center gap-3 rounded-lg bg-gradient-to-b from-[#0879ad] to-[#066c9b] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(8,121,173,0.18)] transition hover:-translate-y-0.5 hover:brightness-95 hover:shadow-[0_11px_24px_rgba(8,121,173,0.24)] focus:outline-none focus:ring-4 focus:ring-[#0879ad]/25 active:translate-y-0"
                             >
-                                <span>{{ $isEmployee ? 'Daftar Karyawan' : 'Ajukan Magang' }}</span>
+                                <span>{{ $isEmployee ? 'Kirim Lamaran Karyawan' : 'Ajukan Magang' }}</span>
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                     <path d="M5 12h13M13 7l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
@@ -409,7 +416,7 @@
                     </p>
 
                     <p class="mt-7 shrink-0 text-center text-[9px] font-medium uppercase tracking-[0.12em] text-slate-500 lg:mt-3">
-                        © 2024 CV Natusi Corporation • Professional Excellence
+                        © 2026 CV Natusi Corporation • Professional Excellence
                     </p>
                 </div>
             </section>
