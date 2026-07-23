@@ -297,6 +297,62 @@
                                 @enderror
                             </div>
 
+                            {{-- Kata sandi akun untuk memeriksa status --}}
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <div>
+                                    <label for="password" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
+                                        Kata Sandi
+                                    </label>
+                                    <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
+                                        <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                            <path d="M8.5 10V7.5a3.5 3.5 0 1 1 7 0V10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                        </svg>
+                                        <input
+                                            id="password"
+                                            name="password"
+                                            type="password"
+                                            placeholder="Minimal 8 karakter"
+                                            autocomplete="new-password"
+                                            required
+                                            minlength="8"
+                                            class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:border-0 focus:ring-0"
+                                        >
+                                    </div>
+                                    @error('password')
+                                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label for="password_confirmation" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
+                                        Konfirmasi Kata Sandi
+                                    </label>
+                                    <div class="mt-1.5 flex h-11 items-center gap-2.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 transition focus-within:border-[#0879ad] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#0879ad]/10">
+                                        <svg class="h-[18px] w-[18px] shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="m7 12 3 3 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                                        </svg>
+                                        <input
+                                            id="password_confirmation"
+                                            name="password_confirmation"
+                                            type="password"
+                                            placeholder="Ulangi kata sandi"
+                                            autocomplete="new-password"
+                                            required
+                                            minlength="8"
+                                            class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder:text-slate-400 focus:border-0 focus:ring-0"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (! $isEmployee)
+                                <p class="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2 text-[11px] leading-5 text-sky-800">
+                                    Email dan kata sandi ini digunakan untuk masuk kembali dan memeriksa status pengajuan. Setelah diterima, akun peserta baru akan diberikan melalui notifikasi lonceng.
+                                </p>
+                            @endif
+
                             {{-- Deskripsi --}}
                             <div>
                                 <label for="description" class="block text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">

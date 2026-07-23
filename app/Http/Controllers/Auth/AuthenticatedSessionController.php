@@ -15,6 +15,7 @@ class AuthenticatedSessionController extends Controller
     {
         return view('auth.login');
     }
+
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
@@ -24,7 +25,10 @@ class AuthenticatedSessionController extends Controller
 
         return match ($user->role) {
             'superadmin' => redirect()->intended(route('superadmin.dashboard')),
-            'admin', 'peserta', 'pelamar', 'karyawan' => redirect()->intended(route('dashboard')),
+            'admin' => redirect()->intended(route('admin.dashboard')),
+            'pelamar' => redirect()->intended(route('pengajuan.status')),
+            'peserta' => redirect()->intended(route('peserta.tugas.index')),
+            'karyawan' => redirect()->intended(route('dashboard')),
             default => redirect()->route('login')->withErrors([
                 'email' => 'Role akun tidak dikenali. Silakan hubungi administrator.',
             ]),
