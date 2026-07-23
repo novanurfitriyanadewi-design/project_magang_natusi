@@ -10,9 +10,7 @@ use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardCo
 use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
 
-
 // Admin Controllers
-
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\PesertaMagangController as AdminPesertaMagangController;
 use App\Http\Controllers\Admin\LaporanPesertaController as AdminLaporanPesertaController;
@@ -25,6 +23,7 @@ use App\Http\Controllers\Admin\DataAbsensiController as AdminDataAbsensiControll
 use App\Http\Controllers\Admin\DataPembayaranController as AdminDataPembayaranController;
 use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetodePembayaranController;
 use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTugasController;
+use App\Http\Controllers\Admin\PermintaanLamaranController as AdminPermintaanLamaranController;
 
 // Peserta Magang Controllers
 use App\Http\Controllers\PesertaMagang\DashboardController as PesertaMagangDashboardController;
@@ -35,7 +34,6 @@ use App\Http\Controllers\PesertaMagang\PembayaranController as PesertaMagangPemb
 use App\Http\Controllers\PesertaMagang\LaporanMingguanController as PesertaMagangLaporanMingguanController;
 use App\Http\Controllers\Peserta\TugasController as PesertaTugasController;
 
-
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,7 +41,6 @@ use Illuminate\Support\Facades\Route;
 | Halaman Awal dan Registrasi
 |--------------------------------------------------------------------------
 */
-
 
 Route::get('/', static fn () => redirect()->route('login'));
 
@@ -201,7 +198,6 @@ Route::middleware(['auth', 'role:admin'])
         Route::patch('/peserta/{peserta_magang}/status', [AdminPesertaMagangController::class, 'updateStatus'])
             ->name('peserta.status');
 
-        // Kelola Data Peserta Magang (Hapus except jika butuh show & edit, atau cukup kecualikan create saja)
         Route::resource('peserta', AdminPesertaMagangController::class)
             ->except(['create'])
             ->parameters(['peserta' => 'peserta_magang']);
@@ -302,14 +298,22 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::patch('/pembayaran/{pembayaran}/tolak', [AdminDataPembayaranController::class, 'tolak'])
             ->name('pembayaran.tolak');
+
+        /* Permintaan Lamaran (Menggunakan Controller di folder Admin/Karyawan) */
+       Route::get('/permintaan-lamaran', [AdminPermintaanLamaranController::class, 'index'])
+            ->name('permintaan-lamaran.index');
+
+        Route::post('/permintaan-lamaran/{id}/action', [AdminPermintaanLamaranController::class, 'action'])
+            ->whereNumber('id')
+            ->name('permintaan-lamaran.action');
     });
+    
 
 /*
 |--------------------------------------------------------------------------
 | Peserta Magang
 |--------------------------------------------------------------------------
 */
-
 
 Route::middleware(['auth', 'role:peserta'])
     ->prefix('peserta-magang')
@@ -329,7 +333,7 @@ Route::middleware(['auth', 'role:peserta'])
         // Aturan Perusahaan
         Route::get('/aturan', [PesertaAturanController::class, 'index'])->name('aturan.index');
 
-        // Fitur penugasan alternatif dari main branch
+        // Fitur penugasan alternatif
         Route::get('/tugas', [PesertaTugasController::class, 'index'])->name('tugas.index');
         Route::get('/tugas/{penugasan}/file', [PesertaTugasController::class, 'downloadTask'])->name('tugas.file.download');
         Route::get('/tugas/{penugasan}/template-laporan', [PesertaTugasController::class, 'downloadReportTemplate'])->name('tugas.template-laporan.download');

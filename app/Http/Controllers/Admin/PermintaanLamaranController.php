@@ -1,7 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Admin; // Namespace langsung ke Admin
-
+namespace App\Http\Controllers\Admin;
+ 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,12 +51,12 @@ class PermintaanLamaranController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Mengarahkan ke view di folder admin/karyawan/permintaan-lamaran
+        // DENGAN SUBFOLDER KARYAWAN (BENAR)
         return view('admin.karyawan.permintaan-lamaran', compact(
             'permintaan_lamaran',
             'total_pendaftar',
             'total_disetujui'
-        ));
+));
     }
 
     public function action(Request $request, int $id): RedirectResponse
