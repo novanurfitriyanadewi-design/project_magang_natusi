@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\AbsensiKaryawanExport;
 use App\Http\Controllers\Controller;
 use App\Models\AbsensiKaryawan;
 use App\Models\Karyawan;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AbsensiKaryawanController extends Controller
 {
@@ -61,5 +63,15 @@ class AbsensiKaryawanController extends Controller
         $absensiKaryawan->delete();
 
         return back()->with('success', 'Absensi karyawan berhasil dihapus.');
+    }
+
+    public function export(Request $request)
+    {
+        $tanggal = $request->input('tanggal', now()->toDateString());
+        $search = $request->input('search');
+
+        $namaFile = 'absensi-karyawan-' . $tanggal . '.xlsx';
+
+        return Excel::download(new AbsensiKaryawanExport($tanggal, $search), $namaFile);
     }
 }
