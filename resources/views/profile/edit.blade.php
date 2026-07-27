@@ -72,21 +72,9 @@
         }"
     >
         <section>
-            <span
-                class="
-                    inline-flex items-center gap-2 rounded-full
-                    bg-sky-100 px-3 py-1
-                    text-[10px] font-bold uppercase
-                    tracking-[0.16em] text-sky-700
-                "
-            >
-                <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
-                Pengaturan Akun
-            </span>
-
             <h1
                 class="
-                    mt-3 text-2xl font-extrabold tracking-tight
+                    mt-5 text-2xl font-extrabold tracking-tight
                     text-slate-950 sm:text-3xl
                 "
             >
@@ -938,11 +926,11 @@
         {{-- Informasi keamanan --}}
         <section
             class="
-                relative mt-5 overflow-hidden rounded-3xl
-                border border-rose-300
+                relative mt-5 overflow-hidden rounded-2xl
+                border border-rose-200
                 bg-gradient-to-r
-                from-rose-100 via-red-50 to-orange-100
-                px-6 py-5
+                from-rose-100 via-red-10 to-orange-10
+                px-4 py-4
                 shadow-[0_18px_44px_rgba(225,29,72,0.18)]
             "
         >
@@ -950,7 +938,7 @@
                 class="
                     pointer-events-none absolute
                     -right-14 -top-16 h-40 w-40
-                    rounded-full bg-rose-400/20 blur-2xl
+                    rounded-full bg-rose-40/20 blur-2xl
                 "
             ></div>
 
@@ -958,7 +946,7 @@
                 class="
                     pointer-events-none absolute
                     -bottom-14 left-1/3 h-32 w-32
-                    rounded-full bg-orange-300/20 blur-2xl
+                    rounded-full bg-orange-300/10 blur-2xl
                 "
             ></div>
 
@@ -970,9 +958,9 @@
             >
                 <span
                     class="
-                        grid h-14 w-14 shrink-0 place-items-center
+                        grid h-12 w-12 shrink-0 place-items-center
                         rounded-2xl
-                        bg-gradient-to-br from-rose-600 to-red-700
+                        bg-gradient-to-br from-rose-400 to-red-600
                         text-white shadow-lg
                         ring-4 ring-white/75
                     "
@@ -999,9 +987,9 @@
                 </span>
 
                 <div class="min-w-0 flex-1">
-                    <div class="flex flex-wrap items-center gap-2">
+                    <div class=" flex flex-wrap items-center gap-3">
                         <p
-                            class="
+                            class=" mt-2
                                 text-[10px] font-extrabold uppercase
                                 tracking-[0.18em] text-rose-800
                             "
@@ -1010,9 +998,9 @@
                         </p>
 
                         <span
-                            class="
+                            class=" mt-1
                                 inline-flex rounded-full
-                                bg-rose-600 px-2.5 py-1
+                                bg-rose-500 px-2.5 py-1
                                 text-[9px] font-extrabold uppercase
                                 tracking-[0.12em] text-white
                                 shadow-sm
@@ -1024,7 +1012,7 @@
 
                     <h2
                         class="
-                            mt-2 text-lg font-extrabold
+                            mt-1.5 text-lg font-extrabold
                             text-slate-950 sm:text-xl
                         "
                     >
@@ -1033,12 +1021,11 @@
 
                     <p
                         class="
-                            mt-2 max-w-5xl text-sm
+                            mt-1 max-w-5xl text-sm
                             leading-6 text-slate-700
                         "
                     >
-                        Gunakan kata sandi unik, jangan membagikan kredensial,
-                        dan selalu keluar dari akun ketika menggunakan perangkat bersama.
+                        Gunakan kata sandi unik, dan selalu keluar dari akun ketika menggunakan perangkat bersama.
                         Jabatan serta hak akses hanya dapat diubah oleh pengelola sistem.
                     </p>
                 </div>

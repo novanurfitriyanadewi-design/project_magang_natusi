@@ -42,13 +42,24 @@
             <h2 class="text-base font-semibold text-slate-800">Unggah Template Tugas</h2>
             <p class="text-xs text-slate-500">Gunakan file Excel (.xlsx) untuk pembaruan massal.</p>
 
+            <!-- Tombol Panduan -->
             <a
-                href="{{ route('admin.tugas.template.download') }}"
-                class="ml-auto inline-flex items-center gap-1 text-sm font-medium text-blue-700 hover:underline"
+                href="{{ route('admin.tugas.panduan.download') }}"
+                class="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+            >
+                <span class="material-symbols-outlined text-[18px]">description</span>
+                Panduan Materi & Tugas
+            </a>
+
+            <!-- Tombol Template Excel -->
+            <a
+                href="{{ route('admin.tugas.template-excel.download') }}"
+                class="inline-flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-700 hover:bg-green-100"
             >
                 <span class="material-symbols-outlined text-[18px]">download</span>
-                Download Template
+                Unduh Template Excel
             </a>
+
         </div>
 
         <form

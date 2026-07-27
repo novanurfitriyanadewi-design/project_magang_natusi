@@ -1,308 +1,375 @@
 @extends('layouts.portal')
 
-@section('title', 'Dashboard - Natusi Admin')
-@section('page-title', 'Internship Portal')
+@section('title', 'Dashboard Admin')
 
 @section('content')
+    @php
+        $totalInterns = $totalInterns ?? 0;
+        $activeInterns = $activeInterns ?? 0;
+        $totalApplications = $totalApplications ?? 0;
+        $pendingApplications = $pendingApplications ?? 0;
+        $paidParticipantsThisMonth = $paidParticipantsThisMonth ?? 0;
+        $todayAttendanceCount = $todayAttendanceCount ?? 0;
+        $attendanceBreakdown = $attendanceBreakdown ?? ['hadir' => 0, 'terlambat' => 0, 'izin' => 0];
+        $monthlyApplications = collect($monthlyApplications ?? []);
+        $latestAttendance = $latestAttendance ?? collect();
+        $latestTaskSubmissions = $latestTaskSubmissions ?? collect();
 
-    {{-- Welcome Header --}}
-    <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        $applicationRoute = Route::has('admin.permintaan.index') ? route('admin.permintaan.index') : '#';
+        $participantRoute = Route::has('admin.peserta.index') ? route('admin.peserta.index') : '#';
+        $attendanceRoute = Route::has('admin.absensi.index') ? route('admin.absensi.index') : '#';
+        $paymentRoute = Route::has('admin.pembayaran.index') ? route('admin.pembayaran.index') : '#';
+        $submissionRoute = Route::has('admin.pengumpulan-tugas.index') ? route('admin.pengumpulan-tugas.index') : '#';
+
+        $chartWidth = 820;
+        $chartHeight = 300;
+        $paddingLeft = 54;
+        $paddingRight = 28;
+        $paddingTop = 30;
+        $paddingBottom = 52;
+        $plotWidth = $chartWidth - $paddingLeft - $paddingRight;
+        $plotHeight = $chartHeight - $paddingTop - $paddingBottom;
+        $chartMax = max(1, (int) $monthlyApplications->max('total'));
+        $roundedChartMax = max(4, (int) ceil($chartMax / 4) * 4);
+        $chartCount = max(1, $monthlyApplications->count());
+        $xStep = $chartCount > 1 ? $plotWidth / ($chartCount - 1) : 0;
+
+        $chartPoints = $monthlyApplications->values()->map(function ($item, $index) use ($paddingLeft, $paddingTop, $plotHeight, $roundedChartMax, $xStep) {
+            $x = $paddingLeft + ($index * $xStep);
+            $y = $paddingTop + $plotHeight - (((int) $item['total'] / $roundedChartMax) * $plotHeight);
+
+            return [
+                'x' => round($x, 2),
+                'y' => round($y, 2),
+                'total' => (int) $item['total'],
+                'label' => $item['label'],
+                'year' => $item['year'],
+            ];
+        });
+
+        $polylinePoints = $chartPoints->map(fn ($point) => $point['x'].','.$point['y'])->implode(' ');
+        $areaPoints = $chartPoints->isNotEmpty()
+            ? $paddingLeft.','.($paddingTop + $plotHeight).' '.$polylinePoints.' '.($paddingLeft + $plotWidth).','.($paddingTop + $plotHeight)
+            : '';
+
+        $present = (int) ($attendanceBreakdown['hadir'] ?? 0);
+        $late = (int) ($attendanceBreakdown['terlambat'] ?? 0);
+        $leave = (int) ($attendanceBreakdown['izin'] ?? 0);
+        $attendanceTotal = $present + $late + $leave;
+        $attendanceDivisor = max(1, $attendanceTotal);
+        $presentPercent = round(($present / $attendanceDivisor) * 100, 1);
+        $latePercent = round(($late / $attendanceDivisor) * 100, 1);
+        $leavePercent = round(($leave / $attendanceDivisor) * 100, 1);
+        $presentEnd = $presentPercent;
+        $lateEnd = $presentPercent + $latePercent;
+        $leaveEnd = min(100, $presentPercent + $latePercent + $leavePercent);
+    @endphp
+
+    <section class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-            <h3 class="text-3xl font-bold tracking-tight text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Dashboard Overview</h3>
-            <p class="text-sm text-slate-500 mt-1">Monitoring internship activities and administrative tasks for CV Natusi.</p>
-        </div>
-    </div>
+            <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
+                Halo, {{ auth()->user()->nama ?? 'Admin' }} 👋
+            </h1>
 
-    {{-- Key Metrics --}}
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 relative overflow-hidden">
-            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#006191]"></div>
-            <div class="flex justify-between items-start">
-                <span class="text-[11px] font-semibold tracking-wider text-slate-500">ACTIVE INTERNS</span>
-                <div class="p-2 bg-[#006191]/10 rounded-lg text-[#006191]">
-                    <span class="material-symbols-outlined">groups</span>
-                </div>
-            </div>
-            <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-extrabold headline" style="font-family: 'Manrope', sans-serif;">{{ $activeInterns ?? 0 }}</span>
-                <span class="text-xs text-green-600 font-bold">+{{ $newInternsThisMonth ?? 0 }} this month</span>
-            </div>
-        </div>
+            <p class="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
+                Pantau pengajuan, peserta, pembayaran, absensi, dan pengumpulan tugas magang dalam satu dashboard.
+            </p>
 
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 relative overflow-hidden">
-            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#d32f2f]"></div>
-            <div class="flex justify-between items-start">
-                <span class="text-[11px] font-semibold tracking-wider text-slate-500">PENDING REQUESTS</span>
-                <div class="p-2 bg-[#d32f2f]/10 rounded-lg text-[#d32f2f]">
-                    <span class="material-symbols-outlined">pending_actions</span>
-                </div>
-            </div>
-            <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-extrabold headline" style="font-family: 'Manrope', sans-serif;">{{ $pendingRequests ?? 0 }}</span>
-                <span class="text-xs text-[#d32f2f] font-bold">Needs Review</span>
-            </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 relative overflow-hidden">
-            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#6366f1]"></div>
-            <div class="flex justify-between items-start">
-                <span class="text-[11px] font-semibold tracking-wider text-slate-500">TODAY'S ATTENDANCE</span>
-                <div class="p-2 bg-[#6366f1]/10 rounded-lg text-[#6366f1]">
-                    <span class="material-symbols-outlined">how_to_reg</span>
-                </div>
-            </div>
-            <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-extrabold headline" style="font-family: 'Manrope', sans-serif;">{{ $attendanceRate ?? 0 }}%</span>
-                <span class="text-xs text-slate-400">{{ $presentToday ?? 0 }}/{{ $activeInterns ?? 0 }} Present</span>
-            </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 relative overflow-hidden">
-            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#f59e0b]"></div>
-            <div class="flex justify-between items-start">
-                <span class="text-[11px] font-semibold tracking-wider text-slate-500">TASK REVIEWS</span>
-                <div class="p-2 bg-[#f59e0b]/10 rounded-lg text-[#f59e0b]">
-                    <span class="material-symbols-outlined">assignment_turned_in</span>
-                </div>
-            </div>
-            <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-extrabold headline" style="font-family: 'Manrope', sans-serif;">{{ str_pad($pendingTaskReviews ?? 0, 2, '0', STR_PAD_LEFT) }}</span>
-                <span class="text-xs text-slate-400">Assignments pending</span>
+            <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] font-medium text-slate-400">
+                <span>Diperbarui {{ now()->translatedFormat('d M Y, H:i') }}</span>
+                <span class="hidden h-1 w-1 rounded-full bg-slate-300 sm:block"></span>
+                <span>Akses Administrator</span>
             </div>
         </div>
     </section>
 
-    {{-- Main Interactive Section --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-
-        {{-- Laporan Magang Summary --}}
-        <section class="lg:col-span-2 space-y-6">
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-1 h-6 bg-[#006191] rounded-full"></div>
-                        <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Laporan Magang Summary</h4>
-                    </div>
-                    @if (Route::has('admin.laporan.peserta'))
-                        <a href="{{ route('admin.laporan.peserta') }}" class="text-[#006191] text-[11px] font-semibold tracking-wider hover:underline">View All</a>
-                    @endif
+    <section class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <a href="{{ $participantRoute }}" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-600 to-cyan-500 p-5 text-white shadow-[0_16px_36px_rgba(2,132,199,0.18)] transition duration-200 hover:-translate-y-0.5">
+            <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full border-[18px] border-white/10"></div>
+            <div class="relative flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-sky-100">Peserta Magang</p>
+                    <p class="mt-3 text-4xl font-extrabold">{{ number_format($totalInterns) }}</p>
+                    <p class="mt-1 text-sm text-sky-100">{{ number_format($activeInterns) }} peserta aktif</p>
                 </div>
-                <div class="p-5">
-                    <div class="space-y-4">
-                        @forelse ($recentReports ?? [] as $report)
-                            <div class="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-lg transition-colors group">
-                                <div class="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                                    <span class="material-symbols-outlined text-[#006191]">description</span>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h5 class="text-sm font-semibold text-slate-900 truncate">{{ $report->title }}</h5>
-                                    <p class="text-sm text-slate-500 truncate">Submitted by: {{ $report->intern_name }} &bull; {{ $report->submitted_at->diffForHumans() }}</p>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <span class="px-2 py-1 text-[10px] font-bold rounded uppercase
-                                        {{ $report->status === 'submitted' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                                        {{ $report->status === 'submitted' ? 'Submitted' : 'In Review' }}
-                                    </span>
-                                    <button class="p-1 hover:bg-white rounded transition-colors group-hover:shadow-sm">
-                                        <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-                                    </button>
-                                </div>
-                            </div>
-                        @empty
-                            <p class="text-sm text-slate-500 italic">Belum ada laporan yang masuk.</p>
-                        @endforelse
-                    </div>
-                </div>
+                <span class="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/20 transition group-hover:scale-105">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="9" r="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M2.8 19c.5-3.5 2.2-5.2 5.2-5.2s4.8 1.7 5.2 5.2M14 14.5c2.8-.5 5 .9 5.7 3.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </span>
             </div>
+        </a>
 
-            {{-- Weekly Attendance Overview --}}
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-1 h-6 bg-[#006191] rounded-full"></div>
-                        <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Weekly Attendance Overview</h4>
-                    </div>
+        <a href="{{ $applicationRoute }}" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-500 p-5 text-white shadow-[0_16px_36px_rgba(79,70,229,0.18)] transition duration-200 hover:-translate-y-0.5">
+            <div class="absolute -bottom-12 -right-8 h-36 w-36 rounded-full border-[22px] border-white/10"></div>
+            <div class="relative flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-100">Pengajuan Magang</p>
+                    <p class="mt-3 text-4xl font-extrabold">{{ number_format($totalApplications) }}</p>
+                    <p class="mt-1 text-sm text-indigo-100">{{ number_format($pendingApplications) }} menunggu ditinjau</p>
                 </div>
-                <div class="p-5">
-                    <div class="flex items-end justify-between h-40 gap-4 px-3">
-                        @php
-                            $days = $weeklyAttendance ?? [
-                                'Mon' => 95, 'Tue' => 92, 'Wed' => 98, 'Thu' => 94, 'Fri' => 88,
-                            ];
-                        @endphp
-                        @foreach ($days as $day => $percent)
-                            <div class="flex-1 flex flex-col items-center gap-2">
-                                <div class="w-full bg-[#006191]/10 rounded-t-lg relative group h-[85%]">
-                                    <div class="absolute bottom-0 left-0 right-0 bg-[#006191] rounded-t-lg transition-all" style="height: {{ $percent }}%"></div>
-                                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">{{ $percent }}%</div>
-                                </div>
-                                <span class="text-[10px] font-semibold text-slate-500">{{ $day }}</span>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <div class="mt-6 pt-4 border-t border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 rounded-full bg-slate-400"></div>
-                            <div class="flex flex-col">
-                                <span class="text-[10px] font-semibold text-slate-500 uppercase">Absen</span>
-                                <span class="text-sm font-bold text-slate-900">{{ $absentCount ?? 0 }} Orang</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 rounded-full bg-yellow-100 border border-yellow-700"></div>
-                            <div class="flex flex-col">
-                                <span class="text-[10px] font-semibold text-slate-500 uppercase">Izin/Sakit</span>
-                                <span class="text-sm font-bold text-slate-900">{{ $leaveCount ?? 0 }} Orang</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 rounded-full bg-slate-200"></div>
-                            <div class="flex flex-col">
-                                <span class="text-[10px] font-semibold text-slate-500 uppercase">Belum Absen</span>
-                                <span class="text-sm font-bold text-slate-900">{{ $notYetCount ?? 0 }} Orang</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 rounded-full bg-[#006191]"></div>
-                            <div class="flex flex-col">
-                                <span class="text-[10px] font-semibold text-slate-500 uppercase">Hadir</span>
-                                <span class="text-sm font-bold text-slate-900">{{ $presentToday ?? 0 }} Orang</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <span class="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/20 transition group-hover:scale-105">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v14H4V5Zm0 9h4l2 2h4l2-2h4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </span>
             </div>
-        </section>
+        </a>
 
-        {{-- Sidebar Content --}}
-        <aside class="space-y-6">
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-slate-200 flex items-center gap-3">
-                    <div class="w-1 h-6 bg-[#006191] rounded-full"></div>
-                    <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Monthly Payment Info</h4>
+        <a href="{{ $paymentRoute }}" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-600 to-emerald-500 p-5 text-white shadow-[0_16px_36px_rgba(13,148,136,0.18)] transition duration-200 hover:-translate-y-0.5">
+            <div class="absolute -right-6 -top-10 h-32 w-32 rounded-[36px] border border-white/15"></div>
+            <div class="relative flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-emerald-100">Pembayaran Bulanan</p>
+                    <p class="mt-3 text-4xl font-extrabold">{{ number_format($paidParticipantsThisMonth) }}</p>
+                    <p class="mt-1 text-sm text-emerald-100">Peserta lunas bulan ini</p>
                 </div>
-                <div class="p-5 space-y-4">
-                    <div class="flex flex-col gap-1">
-                        <span class="text-[11px] font-semibold tracking-wider text-slate-500">TOTAL COLLECTED</span>
-                        <div class="flex items-baseline gap-1">
-                            <span class="text-2xl font-extrabold text-[#006191]">Rp {{ number_format($totalCollected ?? 0, 0, ',', '.') }}</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-[#006191]/5 rounded-lg border border-[#006191]/10">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-[#006191]">pending_actions</span>
-                            <span class="text-sm font-medium text-slate-900">{{ $pendingPayments ?? 0 }} Pending Verification</span>
-                        </div>
-                        <span class="material-symbols-outlined text-[#006191] text-[18px]">arrow_forward</span>
-                    </div>
-                </div>
+                <span class="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/20 transition group-hover:scale-105">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none"><path d="M3 9h18M5 9V7l7-4 7 4v2M6 9v8M10 9v8M14 9v8M18 9v8M4 17h16M3 21h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
             </div>
+        </a>
 
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-slate-200 flex items-center gap-3">
-                    <div class="w-1 h-6 bg-[#6366f1] rounded-full"></div>
-                    <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Quick Links</h4>
+        <a href="{{ $attendanceRoute }}" class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-800 to-cyan-700 p-5 text-white shadow-[0_16px_36px_rgba(30,64,175,0.18)] transition duration-200 hover:-translate-y-0.5">
+            <div class="absolute -bottom-20 left-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
+            <div class="relative flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-100">Absensi Hari Ini</p>
+                    <p class="mt-3 text-4xl font-extrabold">{{ number_format($todayAttendanceCount) }}</p>
+                    <p class="mt-1 text-sm text-blue-100">Data masuk {{ now()->format('d/m/Y') }}</p>
                 </div>
-                <div class="p-5 space-y-1">
-                    @php
-                        $quickLinks = [
-                            ['label' => 'Laporan Absensi', 'icon' => 'calendar_today', 'route' => 'admin.laporan.absensi'],
-                            ['label' => 'Laporan Penugasan', 'icon' => 'task', 'route' => 'admin.laporan.penugasan'],
-                            ['label' => 'Performance Analytics', 'icon' => 'analytics', 'route' => 'admin.analytics'],
-                        ];
-                    @endphp
-                    @foreach ($quickLinks as $link)
-                        <a href="{{ Route::has($link['route']) ? route($link['route']) : '#' }}"
-                           class="flex items-center justify-between p-3 bg-white hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all group {{ Route::has($link['route']) ? '' : 'opacity-50 pointer-events-none' }}">
-                            <div class="flex items-center gap-3">
-                                <span class="material-symbols-outlined text-[#006191]">{{ $link['icon'] }}</span>
-                                <span class="text-sm font-semibold text-slate-900">{{ $link['label'] }}</span>
-                            </div>
-                            <span class="material-symbols-outlined text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
-                        </a>
-                    @endforeach
-                </div>
+                <span class="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/20 transition group-hover:scale-105">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m7.5 16 1.6 1.5 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
             </div>
+        </a>
+    </section>
 
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-slate-200">
-                    <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Attendance Alerts</h4>
+    <section class="mt-5 grid gap-5 xl:grid-cols-[1.65fr_0.85fr]">
+        <article class="overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[0_18px_45px_rgba(15,52,94,0.08)] backdrop-blur">
+            <div class="flex flex-col gap-3 border-b border-slate-200/80 bg-gradient-to-r from-sky-50 to-blue-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Pengajuan Magang per Bulan</h2>
+                    <p class="mt-1 text-sm text-slate-500">Tren jumlah pengajuan selama 12 bulan terakhir.</p>
                 </div>
-                <div class="p-5 space-y-3">
-                    @forelse ($attendanceAlerts ?? [] as $alert)
-                        <div class="p-3 rounded-lg border-l-4 {{ $alert['type'] === 'warning' ? 'border-[#d32f2f] bg-[#d32f2f]/5' : 'border-[#006191] bg-[#006191]/5' }} flex items-start gap-3">
-                            <span class="material-symbols-outlined {{ $alert['type'] === 'warning' ? 'text-[#d32f2f]' : 'text-[#006191]' }} mt-1">{{ $alert['type'] === 'warning' ? 'warning' : 'info' }}</span>
-                            <div>
-                                <p class="text-sm font-semibold text-slate-900">{{ $alert['title'] }}</p>
-                                <p class="text-xs text-slate-500">{{ $alert['message'] }}</p>
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-sm text-slate-500 italic">Tidak ada notifikasi saat ini.</p>
-                    @endforelse
-                </div>
-            </div>
-        </aside>
-    </div>
-
-    {{-- Recent Task Review Table --}}
-    <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mt-6">
-        <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-            <h4 class="text-lg font-semibold text-slate-900 headline" style="font-family: 'Manrope', sans-serif;">Recent Task Reviews</h4>
-            @if (Route::has('admin.pengumpulan-tugas.index'))
-                <a href="{{ route('admin.pengumpulan-tugas.index') }}" class="text-[#006191] text-[11px] font-semibold tracking-wider hover:underline flex items-center gap-1">
-                    Show More <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                <a href="{{ $applicationRoute }}" class="inline-flex w-fit items-center gap-1 rounded-xl bg-white px-4 py-2 text-xs font-bold text-sky-700 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5">
+                    Lihat pengajuan
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>
-            @endif
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                        <th class="px-5 py-3 text-[11px] font-semibold tracking-wider text-slate-500">INTERN NAME</th>
-                        <th class="px-5 py-3 text-[11px] font-semibold tracking-wider text-slate-500">TASK TITLE</th>
-                        <th class="px-5 py-3 text-[11px] font-semibold tracking-wider text-slate-500">DEADLINE</th>
-                        <th class="px-5 py-3 text-[11px] font-semibold tracking-wider text-slate-500">STATUS</th>
-                        <th class="px-5 py-3 text-[11px] font-semibold tracking-wider text-slate-500 text-right">ACTION</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200">
-                    @forelse ($taskReviews ?? [] as $task)
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-[#006191]/10 text-[#006191] flex items-center justify-center font-bold text-xs">
-                                        {{ $task->initials }}
-                                    </div>
-                                    <span class="text-sm font-medium text-slate-900">{{ $task->intern_name }}</span>
-                                </div>
-                            </td>
-                            <td class="px-5 py-4 text-sm text-slate-700">{{ $task->title }}</td>
-                            <td class="px-5 py-4 text-sm text-slate-700">{{ $task->deadline->format('d M Y') }}</td>
-                            <td class="px-5 py-4">
-                                <span class="px-2 py-1 text-[10px] font-bold rounded uppercase
-                                    {{ $task->status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-[#006191]/10 text-[#006191]' }}">
-                                    {{ $task->status === 'completed' ? 'Completed' : 'In Review' }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-4 text-right">
-                                <button class="{{ $task->status === 'completed' ? 'text-slate-400' : 'text-[#006191]' }} hover:underline text-sm font-semibold">
-                                    {{ $task->status === 'completed' ? 'Details' : 'Review' }}
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-5 py-6 text-center text-sm text-slate-500 italic">Belum ada tugas yang perlu direview.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
-            <span class="text-[11px] font-semibold tracking-wider text-slate-500 opacity-70 italic">Showing {{ ($taskReviews ?? [])->count() ?? 0 }} of {{ $pendingTaskReviews ?? 0 }} pending reviews</span>
-        </div>
+            </div>
+
+            <div class="overflow-x-auto px-4 pb-4 pt-5 sm:px-6">
+                <svg viewBox="0 0 {{ $chartWidth }} {{ $chartHeight }}" class="min-w-[760px]" role="img" aria-label="Grafik pengajuan magang per bulan">
+                    <defs>
+                        <linearGradient id="applicationArea" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#0284c7" stop-opacity="0.28"/>
+                            <stop offset="100%" stop-color="#0284c7" stop-opacity="0.02"/>
+                        </linearGradient>
+                        <filter id="pointShadow" x="-100%" y="-100%" width="300%" height="300%">
+                            <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0369a1" flood-opacity="0.2"/>
+                        </filter>
+                    </defs>
+
+                    @for ($step = 0; $step <= 4; $step++)
+                        @php
+                            $gridY = $paddingTop + (($plotHeight / 4) * $step);
+                            $gridValue = (int) round($roundedChartMax - (($roundedChartMax / 4) * $step));
+                        @endphp
+                        <line x1="{{ $paddingLeft }}" y1="{{ $gridY }}" x2="{{ $paddingLeft + $plotWidth }}" y2="{{ $gridY }}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="5 6"/>
+                        <text x="{{ $paddingLeft - 14 }}" y="{{ $gridY + 4 }}" text-anchor="end" fill="#94a3b8" font-size="11" font-weight="600">{{ $gridValue }}</text>
+                    @endfor
+
+                    @if ($chartPoints->isNotEmpty())
+                        <polygon points="{{ $areaPoints }}" fill="url(#applicationArea)"/>
+                        <polyline points="{{ $polylinePoints }}" fill="none" stroke="#0284c7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+                        @foreach ($chartPoints as $point)
+                            <line x1="{{ $point['x'] }}" y1="{{ $paddingTop + $plotHeight }}" x2="{{ $point['x'] }}" y2="{{ $point['y'] }}" stroke="#bae6fd" stroke-width="1" stroke-dasharray="3 5"/>
+                            <circle cx="{{ $point['x'] }}" cy="{{ $point['y'] }}" r="6" fill="#ffffff" stroke="#0284c7" stroke-width="3" filter="url(#pointShadow)"/>
+                            <text x="{{ $point['x'] }}" y="{{ max(15, $point['y'] - 13) }}" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="800">{{ $point['total'] }}</text>
+                            <text x="{{ $point['x'] }}" y="{{ $paddingTop + $plotHeight + 25 }}" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700">{{ $point['label'] }}</text>
+                            @if ($loop->first || $point['label'] === 'Jan')
+                                <text x="{{ $point['x'] }}" y="{{ $paddingTop + $plotHeight + 41 }}" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600">{{ $point['year'] }}</text>
+                            @endif
+                        @endforeach
+                    @endif
+                </svg>
+            </div>
+        </article>
+
+        <article class="rounded-3xl border border-white/80 bg-white/90 p-5 shadow-[0_18px_45px_rgba(15,52,94,0.08)] backdrop-blur sm:p-6">
+            <div>
+                <h2 class="text-lg font-bold text-slate-900">Status Absensi Hari Ini</h2>
+                <p class="mt-1 text-sm text-slate-500">Komposisi hadir, terlambat, dan izin.</p>
+            </div>
+
+            <div class="mt-6 flex flex-col items-center">
+                <div
+                    class="relative grid h-48 w-48 place-items-center rounded-full shadow-[0_18px_45px_rgba(15,52,94,0.12)]"
+                    style="background: conic-gradient(#0ea5e9 0% {{ $presentEnd }}%, #f59e0b {{ $presentEnd }}% {{ $lateEnd }}%, #8b5cf6 {{ $lateEnd }}% {{ $leaveEnd }}%, #e2e8f0 {{ $leaveEnd }}% 100%);"
+                    role="img"
+                    aria-label="Diagram lingkaran status absensi hari ini"
+                >
+                    <div class="grid h-32 w-32 place-items-center rounded-full bg-white text-center shadow-inner ring-1 ring-slate-100">
+                        <div>
+                            <p class="text-3xl font-extrabold text-slate-950">{{ $attendanceTotal }}</p>
+                            <p class="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Total Absensi</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 w-full space-y-3">
+                    <div class="flex items-center justify-between rounded-2xl bg-sky-50 px-4 py-3 ring-1 ring-sky-100">
+                        <div class="flex items-center gap-3">
+                            <span class="h-3 w-3 rounded-full bg-sky-500 shadow-[0_0_0_4px_rgba(14,165,233,0.12)]"></span>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">Hadir</p>
+                                <p class="text-[11px] text-slate-500">Datang tepat waktu</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-base font-extrabold text-slate-950">{{ $present }}</p>
+                            <p class="text-[10px] font-bold text-sky-600">{{ $presentPercent }}%</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between rounded-2xl bg-amber-50 px-4 py-3 ring-1 ring-amber-100">
+                        <div class="flex items-center gap-3">
+                            <span class="h-3 w-3 rounded-full bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,0.12)]"></span>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">Terlambat</p>
+                                <p class="text-[11px] text-slate-500">Melewati jam masuk</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-base font-extrabold text-slate-950">{{ $late }}</p>
+                            <p class="text-[10px] font-bold text-amber-600">{{ $latePercent }}%</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between rounded-2xl bg-violet-50 px-4 py-3 ring-1 ring-violet-100">
+                        <div class="flex items-center gap-3">
+                            <span class="h-3 w-3 rounded-full bg-violet-500 shadow-[0_0_0_4px_rgba(139,92,246,0.12)]"></span>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">Izin</p>
+                                <p class="text-[11px] text-slate-500">Tidak hadir dengan izin</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-base font-extrabold text-slate-950">{{ $leave }}</p>
+                            <p class="text-[10px] font-bold text-violet-600">{{ $leavePercent }}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
     </section>
 
+    <section class="mt-5 grid gap-5 xl:grid-cols-2">
+        <article class="overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[0_18px_45px_rgba(15,52,94,0.08)] backdrop-blur">
+            <div class="flex items-center justify-between gap-4 border-b border-slate-200/80 bg-gradient-to-r from-sky-50 to-blue-50 px-5 py-5">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Absensi Terbaru</h2>
+                    <p class="mt-1 text-sm text-slate-500">Aktivitas absensi peserta yang paling baru.</p>
+                </div>
+                <a href="{{ $attendanceRoute }}" class="rounded-xl bg-white px-4 py-2 text-xs font-bold text-sky-700 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5">Lihat semua</a>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                @forelse ($latestAttendance as $attendance)
+                    @php
+                        $participantName = $attendance->peserta?->user?->nama ?? 'Peserta Magang';
+                        $initials = collect(preg_split('/\s+/', trim($participantName)))
+                            ->filter()
+                            ->take(2)
+                            ->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))
+                            ->implode('');
+                        $status = strtolower((string) $attendance->status);
+                        $statusClasses = match ($status) {
+                            'hadir' => 'bg-emerald-100 text-emerald-700 ring-emerald-200',
+                            'terlambat' => 'bg-amber-100 text-amber-700 ring-amber-200',
+                            'izin' => 'bg-violet-100 text-violet-700 ring-violet-200',
+                            'sakit' => 'bg-blue-100 text-blue-700 ring-blue-200',
+                            default => 'bg-rose-100 text-rose-700 ring-rose-200',
+                        };
+                    @endphp
+                    <div class="flex items-center gap-3 px-5 py-4 transition hover:bg-sky-50/50">
+                        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-sky-100 to-blue-100 text-xs font-extrabold text-sky-700 ring-1 ring-sky-200">
+                            {{ $initials ?: 'PM' }}
+                        </span>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="truncate text-sm font-bold text-slate-900">{{ $participantName }}</p>
+                                <span class="rounded-full px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide ring-1 {{ $statusClasses }}">{{ $attendance->status }}</span>
+                            </div>
+                            <p class="mt-1 truncate text-xs text-slate-500">
+                                {{ $attendance->tanggal?->format('d M Y') ?? '-' }}
+                                <span class="mx-1 text-slate-300">•</span>
+                                {{ $attendance->jam ? substr((string) $attendance->jam, 0, 5).' WIB' : 'Jam belum tercatat' }}
+                            </p>
+                        </div>
+                        <span class="hidden text-[10px] font-medium text-slate-400 sm:block">{{ $attendance->created_at?->diffForHumans() }}</span>
+                    </div>
+                @empty
+                    <div class="px-5 py-14 text-center">
+                        <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-sky-50 text-sky-500">
+                            <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                        </span>
+                        <p class="mt-3 font-bold text-slate-800">Belum ada data absensi</p>
+                        <p class="mt-1 text-sm text-slate-500">Data terbaru akan tampil setelah peserta melakukan absensi.</p>
+                    </div>
+                @endforelse
+            </div>
+        </article>
+
+        <article class="overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[0_18px_45px_rgba(15,52,94,0.08)] backdrop-blur">
+            <div class="flex items-center justify-between gap-4 border-b border-slate-200/80 bg-gradient-to-r from-indigo-50 to-violet-50 px-5 py-5">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Pengumpulan Tugas Terbaru</h2>
+                    <p class="mt-1 text-sm text-slate-500">Berkas tugas peserta yang terakhir dikumpulkan.</p>
+                </div>
+                <a href="{{ $submissionRoute }}" class="rounded-xl bg-white px-4 py-2 text-xs font-bold text-indigo-700 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5">Lihat semua</a>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                @forelse ($latestTaskSubmissions as $submission)
+                    @php
+                        $participantName = $submission->peserta?->user?->nama ?? 'Peserta Magang';
+                        $initials = collect(preg_split('/\s+/', trim($participantName)))
+                            ->filter()
+                            ->take(2)
+                            ->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))
+                            ->implode('');
+                        $submissionStatus = strtolower((string) $submission->status);
+                        $submissionStatusClasses = match ($submissionStatus) {
+                            'dinilai' => 'bg-emerald-100 text-emerald-700 ring-emerald-200',
+                            'telat' => 'bg-rose-100 text-rose-700 ring-rose-200',
+                            default => 'bg-indigo-100 text-indigo-700 ring-indigo-200',
+                        };
+                        $submittedAt = $submission->dikumpulkan_pada ?? $submission->created_at;
+                    @endphp
+                    <div class="flex items-center gap-3 px-5 py-4 transition hover:bg-indigo-50/40">
+                        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100 text-xs font-extrabold text-indigo-700 ring-1 ring-indigo-200">
+                            {{ $initials ?: 'PM' }}
+                        </span>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="truncate text-sm font-bold text-slate-900">{{ $participantName }}</p>
+                                <span class="rounded-full px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide ring-1 {{ $submissionStatusClasses }}">{{ $submission->status }}</span>
+                            </div>
+                            <p class="mt-1 truncate text-xs font-semibold text-slate-600">{{ $submission->tugas?->judul ?? 'Tugas Magang' }}</p>
+                            <p class="mt-0.5 truncate text-[11px] text-slate-400">
+                                {{ $submittedAt?->format('d M Y, H:i') ?? 'Waktu belum tercatat' }}
+                            </p>
+                        </div>
+                        <span class="hidden text-[10px] font-medium text-slate-400 sm:block">{{ $submittedAt?->diffForHumans() }}</span>
+                    </div>
+                @empty
+                    <div class="px-5 py-14 text-center">
+                        <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-indigo-50 text-indigo-500">
+                            <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none"><path d="M6 3h9l3 3v15H6V3Zm3 7h6M9 14h6M9 18h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                        <p class="mt-3 font-bold text-slate-800">Belum ada pengumpulan tugas</p>
+                        <p class="mt-1 text-sm text-slate-500">Tugas terbaru akan muncul setelah peserta mengunggah jawaban.</p>
+                    </div>
+                @endforelse
+            </div>
+        </article>
+    </section>
 @endsection

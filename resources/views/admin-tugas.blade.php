@@ -1,577 +1,530 @@
-{{--
-    admin-tugas.blade.php
-
-    Nama route mengikuti konvensi project (group prefix 'admin' + name 'admin.'):
-    - admin.tugas.index    -> GET    /admin/tugas
-    - admin.tugas.store    -> POST   /admin/tugas
-    - admin.tugas.update   -> PUT    /admin/tugas/{tugas}
-    - admin.tugas.destroy  -> DELETE /admin/tugas/{tugas}
-    - admin.tugas.upload   -> POST   /admin/tugas/upload
-    - admin.tugas.template.download -> GET /admin/tugas/template/download
-
-    Model  : Tugas -> id_tugas, user_id, judul, materi,
-             jenis_tugas ('harian'|'mingguan'|'akhir'), minggu_ke,
-             file_tugas, pengumpulan (datetime), status ('aktif'|'nonaktif'|'selesai')
-    Dikirim dari controller:
-        $tugasList -> paginator/collection dari model Tugas
---}}
-
 @extends('layouts.portal')
 
 @section('title', 'Kelola Tugas Magang')
 
 @section('content')
-<div
-    x-data="kelolaTugas()"
-    x-init="init()"
->
+<div x-data="taskTemplatePage()" class="space-y-6">
+    <header>
+        <h1 class="mt-5 text-2xl font-bold tracking-tight text-slate-950">Kelola Tugas Magang</h1>
+        <p class="mt-1 text-sm text-slate-500">
+            Unggah template penugasan dan sistem akan membentuk jadwal serta deadline berbeda untuk setiap peserta berdasarkan tanggal mulai magangnya.
+        </p>
+    </header>
 
-    {{-- Breadcrumb --}}
-    <nav class="mb-3 flex items-center gap-2 text-sm text-slate-500">
-        <span>Manajemen</span>
-        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-        <span class="font-medium text-slate-700">Kelola Tugas Magang</span>
-    </nav>
-
-    {{-- Heading --}}
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h1 class="headline text-2xl font-bold text-slate-900">Kelola Tugas Magang</h1>
-            <p class="mt-1 text-sm text-slate-500">
-                Unggah dan perbarui daftar tugas berkala untuk peserta magang berdasarkan jenis tugas.
-            </p>
+    @if (session('success'))
+        <div class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <span class="material-symbols-outlined text-[20px]">check_circle</span>
+            <p>{{ session('success') }}</p>
         </div>
-    </div>
+    @endif
 
-    {{-- ================= UPLOAD TEMPLATE (MASSAL) ================= --}}
-    <div class="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-base font-semibold text-slate-800">Unggah Template Tugas</h2>
-            <p class="text-xs text-slate-500">
-                Gunakan template tugas sebagai acuan pengerjaan bagi peserta magang dari Universitas maupun Sekolah.
-            </p>
-
-            <div class="ml-auto flex items-center gap-4">
-
-            {{-- Panduan --}}
-            <a
-                href="{{ route('admin.tugas.panduan.download') }}"
-                class="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
-            >
-                <span class="material-symbols-outlined text-[18px]">description</span>
-                Download Panduan Materi & Tugas
-            </a>
-
-            {{-- Template --}}
-            <a
-                href="{{ route('admin.tugas.template.download') }}"
-                class="inline-flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700 hover:bg-green-100"
-            >
-                <span class="material-symbols-outlined text-[18px]">table_view</span>
-                Download Template Excel
-            </a>
+    @if ($errors->any())
+        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div class="flex items-center gap-2 font-semibold">
+                <span class="material-symbols-outlined text-[20px]">error</span>
+                Data belum dapat diproses
+            </div>
+            <ul class="mt-2 list-disc space-y-1 pl-6">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
+    @endif
 
-        <form
-            action="{{ route('admin.tugas.upload') }}"
-            method="POST"
-            enctype="multipart/form-data"
-            class="space-y-5"
-        >
-            @csrf
-
-            {{-- Jenis Tugas --}}
-            <div>
-                <p class="mb-2 text-sm font-medium text-slate-700">Jenis Tugas</p>
-
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-
-                    <label
-                        class="flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition"
-                        :class="uploadJenis === 'harian'
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-slate-200 hover:border-slate-300'"
-                    >
-                        <input type="radio" name="jenis_tugas" value="harian" class="hidden" x-model="uploadJenis">
-                        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-700">
-                            <span class="material-symbols-outlined text-[20px]">today</span>
-                        </span>
-                        <span>
-                            <span class="block text-sm font-semibold text-slate-800">Harian</span>
-                            <span class="block text-xs text-slate-500">Tugas rutin setiap hari</span>
-                        </span>
-                    </label>
-
-                    <label
-                        class="flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition"
-                        :class="uploadJenis === 'mingguan'
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-slate-200 hover:border-slate-300'"
-                    >
-                        <input type="radio" name="jenis_tugas" value="mingguan" class="hidden" x-model="uploadJenis">
-                        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                            <span class="material-symbols-outlined text-[20px]">calendar_view_week</span>
-                        </span>
-                        <span>
-                            <span class="block text-sm font-semibold text-slate-800">Mingguan</span>
-                            <span class="block text-xs text-slate-500">Tugas per minggu ke-</span>
-                        </span>
-                    </label>
-
-                    <label
-                        class="flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition"
-                        :class="uploadJenis === 'akhir'
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-slate-200 hover:border-slate-300'"
-                    >
-                        <input type="radio" name="jenis_tugas" value="akhir" class="hidden" x-model="uploadJenis">
-                        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-purple-700">
-                            <span class="material-symbols-outlined text-[20px]">flag</span>
-                        </span>
-                        <span>
-                            <span class="block text-sm font-semibold text-slate-800">Akhir</span>
-                            <span class="block text-xs text-slate-500">Tugas akhir magang</span>
-                        </span>
-                    </label>
-
+    <section class="overflow-hidden rounded-3xl border border-blue-200 bg-white shadow-xl shadow-slate-200/70 ring-1 ring-blue-100">
+        <div class="h-1.5 bg-gradient-to-r from-blue-700 via-cyan-500 to-blue-700"></div>
+        <div class="border-b border-blue-100 bg-gradient-to-r from-blue-50/70 via-white to-white px-6 py-5 lg:flex lg:items-center lg:justify-between lg:gap-6">
+            <div class="flex items-start gap-3">
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-100 text-blue-700 shadow-sm ring-1 ring-blue-200">
+                    <span class="material-symbols-outlined text-[22px]">upload_file</span>
+                </span>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Unggah Template Tugas</h2>
+                    <p class="mt-1 text-sm text-slate-500">
+                        Gunakan template tugas mingguan resmi. Sistem membaca ketiga sheet dan menentukan jadwal serta deadline peserta secara otomatis.
+                    </p>
                 </div>
             </div>
 
-            <div class="mt-5">
-
-                <p class="mb-2 text-sm font-medium text-slate-700">
-                    Instansi
-                </p>
-
-                <div class="grid grid-cols-2 gap-3">
-
-                    <label class="flex items-center gap-3 rounded-xl border p-4 cursor-pointer">
-                        <input type="radio"
-                            name="jenis_instansi"
-                            value="universitas"
-                            x-model="jenisInstansi">
-
-                        <span>Universitas</span>
-                    </label>
-
-                    <label class="flex items-center gap-3 rounded-xl border p-4 cursor-pointer">
-                        <input type="radio"
-                            name="jenis_instansi"
-                            value="sekolah"
-                            x-model="jenisInstansi">
-
-                        <span>Sekolah</span>
-                    </label>
-
-                </div>
-
-            </div>
-
-            {{-- File Excel Dropzone --}}
-            <div>
-                <p class="mb-2 text-sm font-medium text-slate-700">
-                    Pilih File Tugas EXEL
-                </p>
-
-                <label
-                    class="flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition"
-                    :class="dragOver ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-slate-400'"
-                    @dragover.prevent="dragOver = true"
-                    @dragleave.prevent="dragOver = false"
-                    @drop.prevent="dragOver = false; handleFile($event.dataTransfer.files[0])"
-                >
-                    <span class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                        <span class="material-symbols-outlined text-[24px]">upload</span>
-                    </span>
-
-                    <template x-if="!fileName">
-                        <div>
-                            <p class="text-sm font-medium text-blue-700">Klik untuk mengunggah atau drag &amp; drop</p>
-                            <p class="mt-1 text-xs text-slate-400">PPastikan file dalam format .xlsx</p>
-                        </div>
-                    </template>
-
-                    <template x-if="fileName">
-                        <p class="text-sm font-medium text-slate-700" x-text="fileName"></p>
-                    </template>
-
-                    <span class="mt-1 rounded-full bg-slate-100 px-3 py-1 text-[11px] text-slate-500">
-                        Hanya file .xlsx yang didukung
-                    </span>
-
-                    <input
-                        type="file"
-                        name="file_template"
-                        accept=".xlsx"
-                        class="hidden"
-                        @change="handleFile($event.target.files[0])"
-                    >
-                </label>
-            </div>
-
-            <div class="flex flex-col gap-3 sm:flex-row">
-                <button
-                    type="submit"
-                    class="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
-                >
-                    <span class="material-symbols-outlined text-[18px]">cloud_upload</span>
-                    Simpan &amp; Publikasikan Tugas
-                </button>
-
-                <a
-                    href="{{ route('admin.tugas.index') }}"
-                    class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-                >
-                    Batal
+            <div class="mt-4 flex flex-wrap gap-3 lg:mt-0">
+                <a href="{{ route('admin.tugas.panduan.download') }}"
+                    class="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100">
+                    <span class="material-symbols-outlined text-[19px]">description</span>
+                    Panduan Materi &amp; Tugas
+                </a>
+                <a href="{{ route('admin.tugas.template.download') }}"
+                    class="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
+                    <span class="material-symbols-outlined text-[19px]">table_view</span>
+                    Unduh Template Excel
                 </a>
             </div>
-        </form>
-
-        <div class="mt-5 flex items-start gap-2 rounded-xl border border-blue-100 bg-blue-50 p-4">
-            <span class="material-symbols-outlined mt-0.5 text-[18px] text-blue-600">info</span>
-            <p class="text-xs text-blue-700">
-                <span class="font-semibold">Informasi Penting:</span>
-                Mengunggah file baru akan menimpa (overwrite) daftar tugas yang ada untuk jenis tugas yang dipilih.
-                Pastikan Anda telah mengunduh data terakhir sebelum melakukan pembaruan massal.
-            </p>
-        </div>
-    </div>
-
-    {{-- ================= DAFTAR TUGAS ================= --}}
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-base font-semibold text-slate-800">Daftar Tugas</h2>
-
-            <div class="relative">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">search</span>
-                <input
-                    type="text"
-                    x-model="query"
-                    placeholder="Cari judul tugas..."
-                    class="w-64 rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none"
-                >
-            </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead>
-                    <tr class="border-b border-slate-200 text-xs uppercase text-slate-500">
-                        <th class="py-3 pr-4">Judul Tugas</th>
-                        <th class="py-3 pr-4">Jenis Tugas</th>
-                        <th class="py-3 pr-4">Instansi</th>
-                        <th class="py-3 pr-4">Status</th>
-                        <th class="py-3 pr-4 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($tugasList as $tugas)
-                        <tr
-                            x-show="matches(@js($tugas->judul))"
-                            class="border-b border-slate-100 last:border-0"
-                        >
-                            <td class="py-3 pr-4 font-medium text-slate-800">{{ $tugas->judul }}</td>
-                            <td class="py-3 pr-4">
-                                @php
-                                    $jenisBadge = [
-                                        'harian'   => 'bg-blue-100 text-blue-700',
-                                        'mingguan' => 'bg-amber-100 text-amber-700',
-                                        'akhir'    => 'bg-purple-100 text-purple-700',
-                                    ][$tugas->jenis_tugas] ?? 'bg-slate-100 text-slate-600';
-                                @endphp
-                                <span class="rounded-full px-2.5 py-1 text-xs font-medium {{ $jenisBadge }}">
-                                    {{ ucfirst($tugas->jenis_tugas) }}
-                                </span>
-                            </td>
-                            <td>{{ $tugas->instansi }}</td>
-                            <td class="py-3 pr-4">
-                                @php
-                                    $statusBadge = [
-                                        'aktif'    => 'bg-green-100 text-green-700',
-                                        'nonaktif' => 'bg-slate-100 text-slate-600',
-                                        'selesai'  => 'bg-blue-100 text-blue-700',
-                                    ][$tugas->status] ?? 'bg-slate-100 text-slate-600';
-                                @endphp
-                                <span class="rounded-full px-2.5 py-1 text-xs font-medium {{ $statusBadge }}">
-                                    {{ ucfirst($tugas->status) }}
-                                </span>
-                            </td>
-                            <td class="py-3 pr-4">
-                                <div class="flex items-center justify-end gap-1">
-                                    <button
-                                        type="button"
-                                        title="Lihat Detail"
-                                        @click="openShow(@js($tugas))"
-                                        class="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
-                                    >
-                                        <span class="material-symbols-outlined text-[18px]">visibility</span>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        title="Edit Tugas"
-                                        @click="openEdit(@js($tugas))"
-                                        class="rounded-lg p-2 text-blue-600 hover:bg-blue-50"
-                                    >
-                                        <span class="material-symbols-outlined text-[18px]">edit</span>
-                                    </button>
-
-                                    <form
-                                        action="{{ route('admin.tugas.destroy', $tugas->id_tugas) }}"
-                                        method="POST"
-                                        onsubmit="return confirm('Yakin ingin menghapus tugas ini?');"
-                                    >
-                                        @csrf
-                                        @method('DELETE')
-                                        <button
-                                            type="submit"
-                                            title="Hapus Tugas"
-                                            class="rounded-lg p-2 text-red-500 hover:bg-red-50"
-                                        >
-                                            <span class="material-symbols-outlined text-[18px]">delete</span>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="py-8 text-center text-sm italic text-slate-400">
-                                Belum ada tugas yang ditambahkan.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        @if(method_exists($tugasList, 'links'))
-            <div class="mt-4">
-                {{ $tugasList->links() }}
-            </div>
-        @endif
-    </div>
-
-    {{-- ================= MODAL: EDIT ================= --}}
-    <div
-        x-show="editOpen"
-        x-cloak
-        x-transition.opacity
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-    >
-        <div
-            @click.outside="editOpen = false"
-            class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
-        >
-            <div class="mb-4 flex items-center justify-between">
-                <h3 class="text-base font-semibold text-slate-800">Edit Tugas</h3>
-                <button type="button" @click="editOpen = false" class="text-slate-400 hover:text-slate-600">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-
-            <form
-                :action="'{{ url('admin/tugas') }}/' + (selected?.id_tugas ?? '')"
-                method="POST"
-                enctype="multipart/form-data"
-                class="space-y-4"
-            >
+        <div class="grid gap-6 p-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <form action="{{ route('admin.tugas.upload') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf
-                @method('PUT')
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Judul Tugas</label>
-                    <input type="text" name="judul" x-model="selected.judul" required
-                        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-semibold text-slate-800">Sheet yang Dibaca Sistem</p>
+                            <p class="mt-1 text-xs text-slate-500">Satu file Excel memuat seluruh kelompok peserta.</p>
+                        </div>
+                        <span class="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-700">TUGAS MINGGUAN</span>
+                    </div>
+
+                    <div class="grid gap-3 md:grid-cols-3">
+                        @foreach ([
+                            ['title' => 'SMK RPL', 'subtitle' => 'RPL / PPLG', 'icon' => 'code', 'tone' => 'blue'],
+                            ['title' => 'SMK TKJ', 'subtitle' => 'TKJ / TJKT', 'icon' => 'lan', 'tone' => 'amber'],
+                            ['title' => 'Universitas', 'subtitle' => 'Mahasiswa / Politeknik', 'icon' => 'school', 'tone' => 'purple'],
+                        ] as $sheet)
+                            <div class="rounded-2xl border border-slate-200 p-4">
+                                <div class="flex items-center gap-3">
+                                    <span @class([
+                                        'grid h-11 w-11 place-items-center rounded-full',
+                                        'bg-blue-100 text-blue-700' => $sheet['tone'] === 'blue',
+                                        'bg-amber-100 text-amber-700' => $sheet['tone'] === 'amber',
+                                        'bg-purple-100 text-purple-700' => $sheet['tone'] === 'purple',
+                                    ])>
+                                        <span class="material-symbols-outlined text-[21px]">{{ $sheet['icon'] }}</span>
+                                    </span>
+                                    <span>
+                                        <strong class="block text-sm text-slate-900">{{ $sheet['title'] }}</strong>
+                                        <span class="mt-0.5 block text-xs text-slate-500">{{ $sheet['subtitle'] }}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="mt-4 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs leading-5 text-sky-800">
+                        Sistem membaca kolom <strong>Minggu Ke</strong>, <strong>Materi &amp; Laporan</strong>, <strong>Tugas</strong>,
+                        <strong>Hari Tampil</strong>, <strong>Hari Deadline</strong>, dan <strong>Jam Deadline</strong> pada ketiga sheet tersebut.
+                    </div>
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Materi</label>
-                    <textarea name="materi" rows="3" x-model="selected.materi"
-                        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"></textarea>
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <p class="text-sm font-semibold text-slate-800">Pilih File Tugas Excel</p>
+                        <span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-500">Maks. 10 MB</span>
+                    </div>
+
+                    <label class="flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition"
+                        :class="dragOver ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-slate-50/50 hover:border-blue-400 hover:bg-blue-50/40'"
+                        @dragover.prevent="dragOver = true"
+                        @dragleave.prevent="dragOver = false"
+                        @drop.prevent="handleDrop($event)">
+                        <input x-ref="excelInput" type="file" name="file_template" accept=".xlsx" required class="sr-only"
+                            @change="selectFile($event.target.files[0])">
+
+                        <span class="grid h-14 w-14 place-items-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200">
+                            <span class="material-symbols-outlined text-[27px]">upload_file</span>
+                        </span>
+                        <template x-if="!fileName">
+                            <div class="mt-4">
+                                <p class="text-sm font-semibold text-blue-700">Klik untuk mengunggah atau drag &amp; drop</p>
+                                <p class="mt-1 text-xs text-slate-400">Pastikan file menggunakan template resmi berformat .xlsx</p>
+                            </div>
+                        </template>
+                        <template x-if="fileName">
+                            <div class="mt-4">
+                                <p class="text-sm font-semibold text-slate-800" x-text="fileName"></p>
+                                <p class="mt-1 text-xs text-emerald-600">File siap diproses</p>
+                            </div>
+                        </template>
+                    </label>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <button type="submit"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-900 px-5 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-800">
+                    <span class="material-symbols-outlined text-[20px]">publish</span>
+                    Unggah dan Publikasikan Jadwal
+                </button>
+            </form>
+
+            <aside class="rounded-2xl border border-blue-100 bg-gradient-to-b from-blue-50 to-white p-5">
+                <div class="flex items-center gap-3">
+                    <span class="grid h-10 w-10 place-items-center rounded-xl bg-blue-100 text-blue-700">
+                        <span class="material-symbols-outlined text-[21px]">route</span>
+                    </span>
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700">Jenis Tugas</label>
-                        <select name="jenis_tugas" x-model="selected.jenis_tugas" required
-                            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
-                            <option value="harian">Harian</option>
-                            <option value="mingguan">Mingguan</option>
-                            <option value="akhir">Akhir</option>
+                        <h3 class="text-sm font-bold text-slate-900">Alur Penugasan</h3>
+                        <p class="text-xs text-slate-500">Jadwal dihitung per akun peserta.</p>
+                    </div>
+                </div>
+
+                <ol class="mt-5 space-y-4">
+                    @foreach ([
+                        ['title' => 'Unduh template', 'text' => 'Gunakan file resmi dengan sheet SMK RPL, SMK TKJ, dan Universitas.'],
+                        ['title' => 'Isi jadwal mingguan', 'text' => 'Isi minggu, materi/laporan, tugas, hari tampil, hari deadline, dan jam deadline.'],
+                        ['title' => 'Unggah satu kali', 'text' => 'Sistem membaca semua sheet sekaligus dan mencocokkannya dengan jurusan peserta.'],
+                        ['title' => 'Deadline otomatis', 'text' => 'Tanggal dan jam deadline dihitung berdasarkan tanggal mulai setiap peserta.'],
+                    ] as $index => $step)
+                        <li class="flex gap-3">
+                            <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-blue-900 text-xs font-bold text-white">{{ $index + 1 }}</span>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800">{{ $step['title'] }}</p>
+                                <p class="mt-0.5 text-xs leading-5 text-slate-500">{{ $step['text'] }}</p>
+                            </div>
+                        </li>
+                    @endforeach
+                </ol>
+
+                <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-800">
+                    <strong>Contoh:</strong> peserta mulai Rabu akan melewati tugas yang deadline-nya sudah berakhir pada Selasa, sedangkan tugas yang masih aktif langsung tampil pada hari mulai.
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <section class="overflow-hidden rounded-3xl border border-purple-200 bg-white shadow-xl shadow-slate-200/70 ring-1 ring-purple-100">
+        <div class="h-1.5 bg-gradient-to-r from-purple-700 via-fuchsia-500 to-purple-700"></div>
+        <div class="border-b border-purple-100 bg-gradient-to-r from-purple-50/70 via-white to-white px-6 py-5">
+            <div class="flex items-start gap-3">
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-purple-100 text-purple-700">
+                    <span class="material-symbols-outlined text-[22px]">docs</span>
+                </span>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Template Laporan Peserta</h2>
+                    <p class="mt-1 text-sm text-slate-500">
+                        File Word dapat diunduh peserta. Ketentuan laporan disimpan terpisah dan tampil langsung pada setiap penugasan berkategori laporan.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid gap-6 p-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
+            <form action="{{ route('admin.tugas.template-laporan.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                @csrf
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-slate-800">Judul Template</label>
+                        <input type="text" name="judul_template" value="{{ old('judul_template', 'Template Laporan Magang') }}" required
+                            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-slate-800">Instansi</label>
+                        <select name="instansi_laporan" required
+                            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                            <option value="universitas">Universitas</option>
+                            <option value="sekolah">Sekolah</option>
+                            <option value="semua">Semua Instansi</option>
                         </select>
                     </div>
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Ganti File Template/Instruksi Tugas (opsional, PDF/Word)</label>
-                    <input type="file" name="file_tugas" accept=".pdf,.doc,.docx"
-                        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
-                    <template x-if="selected.file_tugas">
-                        <p class="mt-1 text-xs text-slate-400">File saat ini: <span x-text="selected.file_tugas"></span></p>
-                    </template>
+                    <label class="mb-2 block text-sm font-semibold text-slate-800">File Template Laporan Word</label>
+                    <input type="file" name="file_word" accept=".doc,.docx" required
+                        class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-purple-100 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-purple-700">
+                    <p class="mt-1.5 text-xs text-slate-400">Format .doc atau .docx, maksimal 10 MB.</p>
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">
-                        Instansi
-                    </label>
-
-                    <select
-                        name="instansi"
-                        x-model="selected.instansi"
-                        class="w-full rounded-lg border border-slate-200 px-3 py-2"
-                        required
-                    >
-                        <option value="">Pilih Instansi</option>
-
-                        <option value="Universitas">
-                            Universitas
-                        </option>
-
-                        <option value="Sekolah">
-                            Sekolah
-                        </option>
-
-                    </select>
+                    <label class="mb-2 block text-sm font-semibold text-slate-800">Ketentuan Pembuatan Laporan</label>
+                    <textarea name="ketentuan_laporan" rows="8" required
+                        placeholder="Contoh:&#10;1. Gunakan font Times New Roman 12.&#10;2. Minimal 15 halaman.&#10;3. Lampirkan dokumentasi kegiatan."
+                        class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm leading-6 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">{{ old('ketentuan_laporan') }}</textarea>
+                    <p class="mt-1.5 text-xs text-slate-400">Ketentuan ini tidak dimasukkan ke file Word, tetapi tampil di halaman tugas peserta.</p>
                 </div>
 
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Status</label>
-                    <select name="status" x-model="selected.status"
-                        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
-                        <option value="aktif">Aktif</option>
-                        <option value="nonaktif">Nonaktif</option>
-                        <option value="selesai">Selesai</option>
-                    </select>
-                </div>
-
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" @click="editOpen = false"
-                        class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
-                        Batal
-                    </button>
-                    <button type="submit"
-                        class="rounded-xl bg-blue-900 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800">
-                        Simpan Perubahan
-                    </button>
-                </div>
+                <button type="submit"
+                    class="inline-flex items-center gap-2 rounded-xl bg-purple-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-purple-600">
+                    <span class="material-symbols-outlined text-[19px]">save</span>
+                    Simpan Template Laporan
+                </button>
             </form>
-        </div>
-    </div>
 
-    {{-- ================= MODAL: SHOW (DETAIL) ================= --}}
-    <div
-        x-show="showOpen"
-        x-cloak
-        x-transition.opacity
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-    >
-        <div
-            @click.outside="showOpen = false"
-            class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
-        >
-            <div class="mb-4 flex items-center justify-between">
-                <h3 class="text-base font-semibold text-slate-800">Detail Tugas</h3>
-                <button type="button" @click="showOpen = false" class="text-slate-400 hover:text-slate-600">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-
-            <template x-if="selected">
-                <div class="space-y-3 text-sm">
-                    <div>
-                        <p class="text-xs uppercase text-slate-400">Judul Tugas</p>
-                        <p class="font-medium text-slate-800" x-text="selected.judul"></p>
-                    </div>
-                    <div>
-                        <p class="text-xs uppercase text-slate-400">Materi</p>
-                        <p class="text-slate-600" x-text="selected.materi || '-'"></p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <p class="text-xs uppercase text-slate-400">Jenis Tugas</p>
-                            <p class="text-slate-700" x-text="selected.jenis_tugas"></p>
+            <div>
+                <h3 class="text-sm font-bold text-slate-900">Template yang Tersimpan</h3>
+                <div class="mt-3 space-y-3">
+                    @forelse ($templateLaporan as $template)
+                        <article class="rounded-2xl border border-slate-200 p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h4 class="truncate text-sm font-semibold text-slate-900">{{ $template->judul }}</h4>
+                                        @if ($template->is_active)
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">AKTIF</span>
+                                        @else
+                                            <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">ARSIP</span>
+                                        @endif
+                                    </div>
+                                    <p class="mt-1 text-xs text-slate-500">{{ ucfirst($template->instansi) }} · {{ basename($template->file_word) }}</p>
+                                    <p class="mt-2 line-clamp-3 whitespace-pre-line text-xs leading-5 text-slate-600">{{ $template->ketentuan }}</p>
+                                </div>
+                                <form action="{{ route('admin.tugas.template-laporan.destroy', $template) }}" method="POST"
+                                    onsubmit="return confirm('Hapus template laporan ini?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="rounded-lg p-2 text-red-500 hover:bg-red-50" title="Hapus">
+                                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    @empty
+                        <div class="rounded-2xl border border-dashed border-slate-300 px-5 py-10 text-center">
+                            <span class="material-symbols-outlined text-3xl text-slate-300">draft</span>
+                            <p class="mt-2 text-sm font-medium text-slate-500">Belum ada template laporan.</p>
                         </div>
-                    </div>
-                    <div>
-                        <p class="text-xs uppercase text-slate-400">
-                            Instansi
-                        </p>
-
-                        <p class="text-slate-700"
-                            x-text="selected.instansi">
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-xs uppercase text-slate-400">File Tugas</p>
-                        <p class="text-slate-700" x-text="selected.file_tugas || '-'"></p>
-                    </div>
-                    <div>
-                        <p class="text-xs uppercase text-slate-400">Status</p>
-                        <p class="text-slate-700" x-text="selected.status"></p>
-                    </div>
+                    @endforelse
                 </div>
-            </template>
-
-            <div class="mt-5 flex justify-end">
-                <button type="button" @click="showOpen = false"
-                    class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
-                    Tutup
-                </button>
             </div>
         </div>
-    </div>
+    </section>
 
+    <section id="daftar-penugasan" class="overflow-hidden rounded-3xl border border-cyan-200 bg-white shadow-xl shadow-slate-200/70 ring-1 ring-cyan-100">
+        <div class="h-1.5 bg-gradient-to-r from-cyan-600 via-sky-500 to-blue-700"></div>
+
+        <div class="border-b border-cyan-100 bg-gradient-to-r from-cyan-50/70 via-white to-white px-6 py-5">
+            <div class="flex items-start gap-3">
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-cyan-100 text-cyan-700 shadow-sm ring-1 ring-cyan-200">
+                    <span class="material-symbols-outlined text-[22px]">table_rows</span>
+                </span>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Daftar Penugasan dari Template</h2>
+                    <p class="mt-1 text-sm text-slate-500">
+                        Susunan tabel mengikuti template Excel: Minggu Ke, Materi &amp; Laporan, Tugas, Hari Tampil, Hari Deadline, dan Jam Deadline.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        @php
+            $filterKelompok = [
+                ['value' => '', 'label' => 'Semua', 'icon' => 'groups'],
+                ['value' => 'smk_tkj', 'label' => 'SMK TKJ', 'icon' => 'lan'],
+                ['value' => 'smk_rpl', 'label' => 'SMK RPL', 'icon' => 'code'],
+                ['value' => 'universitas', 'label' => 'Universitas', 'icon' => 'school'],
+            ];
+
+            $kelompokMeta = [
+                'smk_tkj' => [
+                    'judul' => 'SMK TKJ',
+                    'deskripsi' => 'Tugas peserta SMK Teknik Komputer dan Jaringan',
+                    'ikon' => 'lan',
+                ],
+                'smk_rpl' => [
+                    'judul' => 'SMK RPL',
+                    'deskripsi' => 'Tugas peserta SMK Rekayasa Perangkat Lunak',
+                    'ikon' => 'code',
+                ],
+                'universitas' => [
+                    'judul' => 'Universitas',
+                    'deskripsi' => 'Tugas peserta Universitas/Politeknik',
+                    'ikon' => 'school',
+                ],
+            ];
+
+            $kelompokAktif = request('target_peserta', '');
+            if (!array_key_exists($kelompokAktif, $kelompokMeta)) {
+                $kelompokAktif = '';
+            }
+
+            $kelompokDitampilkan = $kelompokAktif !== ''
+                ? [$kelompokAktif]
+                : array_keys($kelompokMeta);
+        @endphp
+
+        <div class="border-b border-slate-100 bg-slate-50/70 px-6 py-5">
+            <div class="flex flex-wrap items-center gap-2.5" aria-label="Filter kelompok peserta">
+                @foreach ($filterKelompok as $filter)
+                    @php
+                        $aktif = $kelompokAktif === $filter['value'];
+                        $filterUrl = $filter['value'] === ''
+                            ? route('admin.tugas.index')
+                            : route('admin.tugas.index', ['target_peserta' => $filter['value']]);
+                    @endphp
+
+                    <a href="{{ $filterUrl }}#daftar-penugasan"
+                        @class([
+                            'inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold transition-all duration-200',
+                            'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-blue-200 ring-1 ring-blue-500' => $aktif,
+                            'border border-slate-200 bg-white text-slate-600 shadow-sm hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 hover:shadow-md' => !$aktif,
+                        ])
+                        @if ($aktif) aria-current="page" @endif>
+                        <span class="material-symbols-outlined text-[18px]">{{ $filter['icon'] }}</span>
+                        {{ $filter['label'] }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="space-y-6 p-6">
+            @if ($tugasList->isEmpty())
+                <div class="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-14 text-center">
+                    <span class="material-symbols-outlined text-4xl text-slate-300">table_view</span>
+                    <p class="mt-3 text-sm font-semibold text-slate-500">Belum ada template tugas yang diunggah.</p>
+                    <p class="mt-1 text-xs text-slate-400">Unggah file template Excel agar daftar penugasan tampil mengikuti isi setiap sheet.</p>
+                </div>
+            @else
+                @foreach ($kelompokDitampilkan as $target)
+                    @php
+                        $meta = $kelompokMeta[$target];
+                        $groupTasks = $tugasList
+                            ->where('target_peserta', $target)
+                            ->sortBy([
+                                ['minggu_ke', 'asc'],
+                                ['rilis_hari_ke', 'asc'],
+                                ['id_tugas', 'asc'],
+                            ])
+                            ->values();
+                    @endphp
+
+                    @continue($groupTasks->isEmpty())
+
+                    <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/70 ring-1 ring-slate-100">
+                        <div class="flex items-center justify-between gap-4 bg-[#102f50] px-5 py-3 text-white">
+                            <div class="flex items-center gap-3">
+                                <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/10">
+                                    <span class="material-symbols-outlined text-[20px]">{{ $meta['ikon'] }}</span>
+                                </span>
+                                <h3 class="text-base font-bold tracking-wide">{{ $meta['judul'] }}</h3>
+                            </div>
+
+                            <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
+                                {{ $groupTasks->count() }} penugasan
+                            </span>
+                        </div>
+
+                        <div class="border-b border-sky-100 bg-sky-50 px-5 py-3 text-sm font-semibold text-slate-700">
+                            {{ $meta['deskripsi'] }}
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-[980px] w-full border-collapse text-left text-sm">
+                                <thead>
+                                    <tr class="bg-sky-600 text-xs uppercase tracking-wide text-white">
+                                        <th class="w-[110px] border-r border-sky-500 px-4 py-3 text-center">Minggu Ke</th>
+                                        <th class="w-[190px] border-r border-sky-500 px-4 py-3">Materi &amp; Laporan</th>
+                                        <th class="min-w-[320px] border-r border-sky-500 px-4 py-3">Tugas</th>
+                                        <th class="w-[140px] border-r border-sky-500 px-4 py-3 text-center">Hari Tampil</th>
+                                        <th class="w-[150px] border-r border-sky-500 px-4 py-3 text-center">Hari Deadline</th>
+                                        <th class="w-[140px] px-4 py-3 text-center">Jam Deadline</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody class="divide-y divide-slate-200">
+                                    @foreach ($groupTasks->groupBy('minggu_ke') as $minggu => $tugasMinggu)
+                                        @foreach ($tugasMinggu as $baris => $tugas)
+                                            @php
+                                                $isLaporan = $tugas->kategori_tugas === 'laporan';
+                                            @endphp
+
+                                            <tr @class([
+                                                'transition hover:bg-blue-50/70',
+                                                'bg-purple-50/40' => $isLaporan,
+                                                'bg-white' => !$isLaporan,
+                                            ])>
+                                                @if ($baris === 0)
+                                                    <td rowspan="{{ $tugasMinggu->count() }}"
+                                                        class="border-r border-slate-200 bg-amber-50 px-4 py-4 text-center align-middle">
+                                                        <span class="inline-flex h-10 min-w-10 items-center justify-center rounded-xl bg-amber-100 px-3 font-extrabold text-amber-800 ring-1 ring-amber-200">
+                                                            {{ $minggu ?: '-' }}
+                                                        </span>
+                                                    </td>
+                                                @endif
+
+                                                <td class="border-r border-slate-200 px-4 py-4 align-top">
+                                                    <span @class([
+                                                        'inline-flex rounded-full px-3 py-1 text-xs font-bold',
+                                                        'bg-purple-100 text-purple-700' => $isLaporan,
+                                                        'bg-amber-100 text-amber-700' => !$isLaporan,
+                                                    ])>
+                                                        {{ $tugas->materi ?: ($isLaporan ? 'Laporan' : 'Materi') }}
+                                                    </span>
+                                                </td>
+
+                                                <td class="border-r border-slate-200 px-4 py-4 align-top">
+                                                    <div class="flex items-start justify-between gap-4">
+                                                        <div class="min-w-0">
+                                                            <p class="font-semibold leading-6 text-slate-900">{{ $tugas->judul }}</p>
+                                                            <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
+                                                                <span>{{ $tugas->kode_tugas ?: 'Tanpa kode' }}</span>
+                                                                <span class="inline-flex items-center gap-1">
+                                                                    <span class="material-symbols-outlined text-[14px]">group</span>
+                                                                    {{ $tugas->penugasan_peserta_count }} peserta
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <form action="{{ route('admin.tugas.destroy', $tugas) }}" method="POST" class="shrink-0"
+                                                            onsubmit="return confirm('Hapus tugas dan seluruh jadwal pesertanya?');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="rounded-lg p-2 text-red-500 transition hover:bg-red-50 hover:text-red-600"
+                                                                title="Hapus penugasan">
+                                                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+
+                                                <td class="border-r border-slate-200 px-4 py-4 text-center font-medium text-slate-700">
+                                                    {{ ucfirst($tugas->hari_tampil ?: '-') }}
+                                                </td>
+
+                                                <td class="border-r border-slate-200 px-4 py-4 text-center font-medium text-slate-700">
+                                                    {{ ucfirst($tugas->hari_deadline ?: '-') }}
+                                                </td>
+
+                                                <td class="px-4 py-4 text-center">
+                                                    <span class="inline-flex rounded-xl bg-slate-100 px-3 py-1.5 font-bold tabular-nums text-slate-700">
+                                                        {{ $tugas->jam_deadline ? substr((string) $tugas->jam_deadline, 0, 5) : '-' }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                @endforeach
+            @endif
+        </div>
+    </section>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-    function kelolaTugas() {
+    function taskTemplatePage() {
         return {
-            // upload state
-            uploadJenis: 'harian',
             dragOver: false,
             fileName: null,
 
-            // create modal state
-            createJenis: 'harian',
+            selectFile(file) {
+                if (!file) {
+                    this.fileName = null;
+                    return;
+                }
 
-            // list & search state
-            query: '',
+                if (!file.name.toLowerCase().endsWith('.xlsx')) {
+                    alert('File harus berformat .xlsx');
+                    this.$refs.excelInput.value = '';
+                    this.fileName = null;
+                    return;
+                }
 
-            // modal state
-            createOpen: false,
-            editOpen: false,
-            showOpen: false,
-            selected: {},
-
-            init() {},
-
-            matches(text) {
-                return String(text ?? '')
-                    .toLowerCase()
-                    .includes(this.query.toLowerCase());
+                this.fileName = file.name;
             },
 
-            handleFile(file) {
-                this.fileName = file ? file.name : null;
-            },
+            handleDrop(event) {
+                this.dragOver = false;
+                const file = event.dataTransfer.files[0];
+                if (!file) return;
 
-
-            openEdit(tugas) {
-                this.selected = { ...tugas };
-                this.editOpen = true;
+                const transfer = new DataTransfer();
+                transfer.items.add(file);
+                this.$refs.excelInput.files = transfer.files;
+                this.selectFile(file);
             },
-
-            openShow(tugas) {
-                this.selected = { ...tugas };
-                this.showOpen = true;
-            },
-        }
+        };
     }
 </script>
 @endpush

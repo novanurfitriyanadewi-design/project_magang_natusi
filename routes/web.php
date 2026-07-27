@@ -104,8 +104,6 @@ Route::middleware('auth')->group(function (): void {
         ->name('profile.photo.show');
 
     // Notifikasi
-    Route::patch('/notifikasi/baca-semua', [NotifikasiController::class, 'tandaiSemuaDibacaWeb'])
-        ->name('notifikasi.read-all');
 
     Route::patch('/notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'tandaiDibacaWeb'])
         ->whereNumber('notifikasi')
@@ -181,7 +179,7 @@ Route::middleware(['auth', 'role:admin'])
 
         /* Data Peserta Magang */
         Route::get('/peserta/template', function () {
-            $templatePath = public_path('template/template_peserta_magang.xlsx');
+            $templatePath = public_path('template/peserta_magang.xlsx');
 
             abort_unless(
                 file_exists($templatePath),
@@ -191,7 +189,7 @@ Route::middleware(['auth', 'role:admin'])
 
             return response()->download(
                 $templatePath,
-                'template_peserta_magang.xlsx'
+                'peserta_magang.xlsx'
             );
         })->name('peserta.template');
 
@@ -205,7 +203,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('peserta', AdminPesertaMagangController::class)
             ->except(['create'])
             ->parameters(['peserta' => 'peserta_magang']);
-
+        
         /* Permintaan magang. */
         Route::get('/permintaan', [AdminPermintaanMagangController::class, 'index'])
             ->name('permintaan.index');
@@ -244,6 +242,9 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::get('/tugas/template/download', [AdminTugasController::class, 'downloadTemplate'])
             ->name('tugas.template.download');
+
+        Route::get('/tugas/template-excel/download', [AdminTugasController::class, 'downloadTemplateExcel'])
+            ->name('tugas.template-excel.download');
 
         Route::post('/tugas/template-laporan', [AdminTugasController::class, 'storeTemplateLaporan'])
             ->name('tugas.template-laporan.store');

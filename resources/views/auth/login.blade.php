@@ -207,8 +207,8 @@
 
                         <p class="text-center text-xs leading-5 text-slate-700 sm:text-[13px]">
                             Belum punya akun?
-                            <a href="{{ route('register') }}" class="ml-1 font-medium text-[#cf0a1f] hover:underline">
-                                Ajukan sekarang
+                            <a href="{{ route('register.pelamar') }}" class="ml-1 font-medium text-[#cf0a1f] hover:underline">
+                                Ajukan Magang
                             </a>
                         </p>
                     </div>
