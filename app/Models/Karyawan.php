@@ -50,7 +50,7 @@ class Karyawan extends Model
         $words = preg_split('/\s+/', trim($this->nama_karyawan));
         return mb_strtoupper(mb_substr($words[0] ?? '', 0, 1) . mb_substr($words[1] ?? '', 0, 1));
 
-
+    }
     public function absensi(): MorphMany
     {
         return $this->morphMany(Absensi::class, 'absentable');
