@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTug
 use App\Http\Controllers\Admin\PermintaanLamaranController as AdminPermintaanLamaranController;
 use App\Http\Controllers\Admin\KaryawanController;
 
+
 // Peserta Magang Controllers
 use App\Http\Controllers\PesertaMagang\DashboardController as PesertaMagangDashboardController;
 use App\Http\Controllers\PesertaMagang\AbsensiController as PesertaMagangAbsensiController;
@@ -254,6 +255,9 @@ Route::middleware(['auth', 'role:admin,karyawan'])
 
         Route::get('/tugas/template/download', [AdminTugasController::class, 'downloadTemplate'])
             ->name('tugas.template.download');
+
+        Route::get('/admin/tugas/panduan/download', [AdminTugasController::class, 'downloadPanduan'])
+            ->name('admin.tugas.panduan.download');
 
         Route::get('/tugas/template-excel/download', [AdminTugasController::class, 'downloadTemplateExcel'])
             ->name('tugas.template-excel.download');

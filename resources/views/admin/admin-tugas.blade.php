@@ -48,6 +48,15 @@
             </div>
 
             <div class="mt-4 flex flex-wrap gap-3 lg:mt-0">
+            <!-- Tombol Panduan -->
+            <a
+                href="{{ route('admin.tugas.panduan.download') }}"
+                class="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+            >
+                <span class="material-symbols-outlined text-[18px]">description</span>
+                Panduan Materi & Tugas 1 
+            </a>
+            
                 <a href="{{ route('admin.tugas.template.download') }}"
                     class="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
                     <span class="material-symbols-outlined text-[19px]">table_view</span>
