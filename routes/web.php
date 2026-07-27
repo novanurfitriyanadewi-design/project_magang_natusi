@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugas
 use App\Http\Controllers\Admin\TugasController as AdminTugasController;
 use App\Http\Controllers\Admin\PermintaanMagangController as AdminPermintaanMagangController;
 use App\Http\Controllers\Admin\DataAbsensiController as AdminDataAbsensiController;
+use App\Http\Controllers\Admin\AbsensiKaryawanController as AdminAbsensiKaryawanController;
 use App\Http\Controllers\Admin\DataPembayaranController as AdminDataPembayaranController;
 use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetodePembayaranController;
 use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTugasController;
@@ -286,6 +287,13 @@ Route::middleware(['auth', 'role:admin,karyawan'])
         Route::get('/absensi', [AdminDataAbsensiController::class, 'index'])
             ->name('absensi.index');
 
+        /* Absensi Karyawan */
+        Route::get('/absensi-karyawan', [AdminAbsensiKaryawanController::class, 'index'])
+            ->name('absensi-karyawan.index');
+        Route::post('/absensi-karyawan', [AdminAbsensiKaryawanController::class, 'store'])
+            ->name('absensi-karyawan.store');
+        Route::delete('/absensi-karyawan/{absensiKaryawan}', [AdminAbsensiKaryawanController::class, 'destroy'])
+            ->name('absensi-karyawan.destroy');
         /* Metode Pembayaran */
         Route::get('/metode-pembayaran', [AdminDataMetodePembayaranController::class, 'index'])
             ->name('metode-pembayaran.index');
@@ -433,3 +441,4 @@ Route::middleware(['auth', 'role:pelamar,pelamar_karyawan,karyawan,peserta'])->g
 */
 
 require __DIR__ . '/auth.php';
+
