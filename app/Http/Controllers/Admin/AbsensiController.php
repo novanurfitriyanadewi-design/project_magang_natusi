@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class AbsensiController extends Controller
 
 {
-    //public function index(Request $request)
+    public function index(Request $request)
     {
         // 1. Ambil input filter dari halaman browser
         $search = $request->input('search');

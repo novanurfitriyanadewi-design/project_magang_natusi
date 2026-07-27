@@ -195,6 +195,10 @@
                                         <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                                         Disetujui
                                     </span>
+                                @elseif($status === 'perlu_revisi')
+                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700">Perlu Revisi</span>
+                                @elseif($status === 'ditolak')
+                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700">Ditolak</span>
                                 @else
                                     <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700">
                                         <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
@@ -250,7 +254,7 @@
             x-transition:leave="transition ease-in duration-150"
             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 translate-y-4 scale-95"
-            class="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_rgba(15,23,42,0.30)]"
+            class="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_rgba(15,23,42,0.30)]"
         >
             <header class="flex items-start justify-between gap-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5">
                 <div>
@@ -338,9 +342,10 @@
                             </button>
                         </form>
 
-                        <form :action="detail.action_url" method="POST" onsubmit="return confirm('Tolak pengajuan ini? Data akan dihapus permanen dan tidak dapat dikembalikan.')">
+                        <form :action="detail.action_url" method="POST" onsubmit="const reason = prompt('Masukkan alasan penolakan (wajib):'); if (!reason || !reason.trim()) return false; this.querySelector('[name=alasan_penolakan]').value = reason.trim(); return true;">
                             @csrf
                             <input type="hidden" name="action" value="reject">
+                            <input type="hidden" name="alasan_penolakan" value="">
                             <button
                                 type="submit"
                                 class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 px-5 py-2.5 text-sm font-bold text-white shadow-[0_10px_22px_rgba(225,29,72,0.22)] transition hover:-translate-y-0.5 hover:from-rose-600 hover:to-red-700"
@@ -348,6 +353,12 @@
                                 <span class="material-symbols-outlined text-[19px]">cancel</span>
                                 Ditolak
                             </button>
+                        </form>
+                        <form :action="detail.action_url" method="POST" onsubmit="const note = prompt('Masukkan catatan revisi (wajib):'); if (!note || !note.trim()) return false; this.querySelector('[name=catatan_revisi]').value = note.trim(); return true;">
+                            @csrf
+                            <input type="hidden" name="action" value="revision">
+                            <input type="hidden" name="catatan_revisi" value="">
+                            <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-white">Perlu Revisi</button>
                         </form>
                     </div>
                 </template>

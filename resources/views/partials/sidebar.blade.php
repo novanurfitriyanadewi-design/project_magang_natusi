@@ -13,6 +13,7 @@
             ['label' => 'Dashboard', 'route' => 'superadmin.dashboard', 'match' => 'superadmin.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
             ['label' => 'Kelola Admin', 'route' => 'superadmin.admin', 'match' => 'superadmin.admin*', 'icon' => 'users', 'tour' => 'manage-admin'],
             ['label' => 'Aturan Perusahaan', 'route' => 'superadmin.aturan.index', 'match' => 'superadmin.aturan.*', 'icon' => 'rules', 'tour' => 'company-rules'],
+            ['label' => 'Kelola Divisi', 'route' => 'superadmin.divisi.index', 'match' => 'superadmin.divisi.*', 'icon' => 'users', 'tour' => 'manage-divisi'],
             ['label' => 'Jam Absensi', 'route' => 'superadmin.jam-absensi.index', 'match' => 'superadmin.jam-absensi.*', 'icon' => 'clock', 'tour' => 'attendance-hours'],
             ['label' => 'Metode Pembayaran', 'route' => 'superadmin.metode-pembayaran.index', 'match' => 'superadmin.metode-pembayaran.*', 'icon' => 'bank', 'tour' => 'payment-methods'],
             ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
@@ -20,23 +21,51 @@
         'admin' => [
             ['label' => 'Dashboard', 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
             ['label' => 'Permintaan Magang', 'route' => 'admin.permintaan.index', 'match' => 'admin.permintaan.*', 'icon' => 'inbox', 'tour' => 'internship-requests'],
-            ['label' => 'Peserta Magang', 'route' => 'admin.peserta.index', 'match' => 'admin.peserta.*', 'icon' => 'users', 'tour' => 'internship-participants'],
-            ['label' => 'Data Absensi', 'route' => 'admin.absensi.index', 'match' => 'admin.absensi.*', 'icon' => 'clock', 'tour' => 'attendance-data'],
-            ['label' => 'Kelola Tugas', 'route' => 'admin.tugas.index', 'match' => 'admin.tugas.*', 'icon' => 'tasks', 'tour' => 'manage-tasks'],
-            ['label' => 'Pengumpulan Tugas', 'route' => 'admin.pengumpulan-tugas.index', 'match' => 'admin.pengumpulan-tugas.*', 'icon' => 'tasks', 'tour' => 'task-submissions'],
-            ['label' => 'Data Pembayaran', 'route' => Route::has('admin.pembayaran.index') ? 'admin.pembayaran.index' : 'admin.pembayaran', 'match' => 'admin.pembayaran.*', 'icon' => 'bank', 'tour' => 'payment-data'],
+            ['label' => 'Permintaan Lamaran', 'route' => 'admin.permintaan-lamaran.index', 'match' => 'admin.permintaan-lamaran.*', 'icon' => 'inbox', 'tour' => 'permintaan-lamaran'],
+
+            [
+                'label' => 'Karyawan',
+                'icon' => 'users',
+                'match' => 'admin.karyawan.*',
+                'tour' => 'karyawan',
+                'children' => [
+                    ['label' => 'Data Karyawan', 'route' => 'admin.karyawan.index', 'match' => 'admin.karyawan.*', 'tour' => 'data-karyawan'],
+                    ['label' => 'Absensi Karyawan', 'route' => 'admin.absensi-karyawan.index', 'match' => 'admin.absensi-karyawan.*', 'tour' => 'absensi-karyawan'],
+                    ['label' => 'Pembayaran Gaji', 'route' => 'admin.pembayaran-karyawan.index', 'match' => 'admin.pembayaran-karyawan.*', 'tour' => 'pembayaran-karyawan'],
+                    ['label' => 'Pengajuan Resign', 'route' => 'admin.resign.index', 'match' => 'admin.resign.*', 'tour' => 'resign'],
+                ],
+            ],
+
+            [
+                'label' => 'Peserta Magang',
+                'icon' => 'users',
+                'match' => 'admin.peserta.*',
+                'tour' => 'peserta-magang',
+                'children' => [
+                    ['label' => 'Data Peserta Magang', 'route' => 'admin.peserta.index', 'match' => 'admin.peserta.*', 'tour' => 'internship-participants'],
+                    ['label' => 'Absensi Peserta Magang', 'route' => 'admin.absensi.index', 'match' => 'admin.absensi.*', 'tour' => 'attendance-data'],
+                    ['label' => 'Pembayaran Sumbangan', 'route' => 'admin.pembayaran.index', 'match' => 'admin.pembayaran.*', 'tour' => 'pembayaran-peserta'],
+                    ['label' => 'Kelola Tugas', 'route' => 'admin.tugas.index', 'match' => 'admin.tugas.*', 'tour' => 'manage-tasks'],
+                    ['label' => 'Pengumpulan Tugas', 'route' => 'admin.pengumpulan-tugas.index', 'match' => 'admin.pengumpulan-tugas.*', 'tour' => 'task-submissions'],
+                ],
+            ],
+
             [
                 'label' => 'Laporan',
                 'icon' => 'rules',
                 'match' => 'admin.laporan.*',
                 'tour' => 'reports',
                 'children' => [
-                    ['label' => 'Peserta', 'route' => 'admin.laporan-peserta.index', 'match' => 'admin.laporan-peserta.*', 'tour' => 'report-participants'],
-                    ['label' => 'Absensi', 'route' => 'admin.laporan.absensi', 'match' => 'admin.laporan.absensi', 'tour' => 'report-attendance'],
+                    ['label' => 'Peserta Magang', 'route' => 'admin.laporan-peserta.index', 'match' => 'admin.laporan-peserta.*', 'tour' => 'report-participants'],
+                    ['label' => 'Karyawan', 'route' => 'admin.laporan-karyawan.index', 'match' => 'admin.laporan-karyawan.*', 'tour' => 'report-karyawan'],
+                    ['label' => 'Absensi Peserta', 'route' => 'admin.laporan.absensi', 'match' => 'admin.laporan.absensi', 'tour' => 'report-attendance'],
+                    ['label' => 'Absensi Karyawan', 'route' => 'admin.laporan.absensi-karyawan', 'match' => 'admin.laporan.absensi-karyawan', 'tour' => 'report-attendance-karyawan'],
                     ['label' => 'Penugasan', 'route' => 'admin.laporan.penugasan', 'match' => 'admin.laporan.penugasan', 'tour' => 'report-tasks'],
-                    ['label' => 'Pembayaran', 'route' => 'admin.laporan.pembayaran', 'match' => 'admin.laporan.pembayaran', 'tour' => 'report-payments'],
+                    ['label' => 'Pembayaran Peserta', 'route' => 'admin.laporan.pembayaran', 'match' => 'admin.laporan.pembayaran', 'tour' => 'report-payments'],
+                    ['label' => 'Pembayaran Karyawan', 'route' => 'admin.laporan.pembayaran-karyawan', 'match' => 'admin.laporan.pembayaran-karyawan', 'tour' => 'report-payments-karyawan'],
                 ],
             ],
+
             ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
         default => [
@@ -101,7 +130,6 @@
 @endphp
 
 <style>
-    /* Scrollbar menu sidebar: tetap terlihat agar pengguna mengetahui menu dapat digulir. */
     .natusi-sidebar-scrollbar {
         scrollbar-width: thin;
         scrollbar-color: rgba(186, 230, 253, 0.82) rgba(255, 255, 255, 0.10);
@@ -175,7 +203,6 @@
                         $groupActive = collect($menu['children'])->contains(fn ($c) => request()->routeIs($c['match']));
                     @endphp
 
-                    {{-- ITEM GROUP (dropdown) --}}
                     <div>
                         <button
                             type="button"
@@ -250,7 +277,6 @@
                         $href = $available ? route($menu['route']) : '#';
                     @endphp
 
-                    {{-- ITEM BIASA (tanpa children) --}}
                     <a
                         href="{{ $href }}"
                         data-tour="{{ $menu['tour'] ?? '' }}"
@@ -350,6 +376,6 @@
             </form>
         </div>
 
-        <p class="mt-4 text-center text-[8px] font-medium tracking-[0.13em] text-white/25">CV NATUSI PORTAL ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ V1.0</p>
+        <p class="mt-4 text-center text-[8px] font-medium tracking-[0.13em] text-white/25">CV NATUSI PORTAL &copy; V1.0</p>
     </div>
 </aside>

@@ -205,12 +205,20 @@
                             <span class="h-px bg-slate-300"></span>
                         </div>
 
-                        <p class="text-center text-xs leading-5 text-slate-700 sm:text-[13px]">
-                            Belum punya akun?
-                            <a href="{{ route('register.pelamar') }}" class="ml-1 font-medium text-[#cf0a1f] hover:underline">
-                                Ajukan Magang
-                            </a>
-                        </p>
+                        <!-- Opsi Pilihan Registrasi Baru (Magang & Karyawan) -->
+                        <div class="space-y-2 text-center text-xs text-slate-700 sm:text-[13px]">
+                            <p>Belum memiliki akun?</p>
+                            <div class="flex items-center justify-center gap-2 text-[12px] sm:text-xs">
+                                <a href="{{ route('register.pelamar') }}" class="font-medium text-[#08678f] transition hover:underline">
+                                    Ajukan Magang
+                                </a>
+                                <span class="text-slate-300">•</span>
+                                <a href="{{ route('register.karyawan') }}" class="font-medium text-[#cf0a1f] transition hover:underline">
+                                    Ajukan Karyawan
+                                </a>
+                            </div>
+                        </div>
+
                     </div>
                 </section>
             </section>
@@ -220,7 +228,7 @@
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] sm:text-xs">
                 <strong class="text-xs text-slate-950 sm:text-sm">CV Natusi</strong>
                 <span class="hidden h-6 w-px bg-slate-500/40 sm:block"></span>
-                <span>© 2024 Portal Magang CV Natusi. Hak cipta dilindungi undang-undang.</span>
+                <span>© 2026 Portal Magang CV Natusi. Hak cipta dilindungi undang-undang.</span>
             </div>
 
             <nav class="flex flex-wrap gap-x-6 gap-y-2 text-xs" aria-label="Tautan footer">

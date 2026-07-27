@@ -45,6 +45,7 @@ class LoginRequest extends FormRequest
         $login = trim((string) $this->input('email'));
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
+        // 1. Coba autentikasi email/username dan password
         $authenticated = Auth::attempt([
             $field => $login,
             'password' => (string) $this->input('password'),
@@ -54,11 +55,44 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => 'Email, username, atau kata sandi salah.',
+                'email' => 'Email, username, atau kata sandi yang Anda masukkan salah.',
             ]);
         }
 
+        // 2. Dapatkan data user yang berhasil diautentikasi
+        $user = Auth::user();
+
+        // 3. Pengecekan Status User (jika ada kolom status pada tabel users / karyawan)
+        if (isset($user->status)) {
+            if (in_array($user->status, ['pending', 'menunggu'], true)) {
+                $this->logoutAndInvalidate();
+
+                throw ValidationException::withMessages([
+                    'email' => 'Akun Anda masih dalam proses peninjauan oleh Admin. Silakan periksa status pengajuan Anda secara berkala.',
+                ]);
+            }
+
+            if (in_array($user->status, ['ditolak', 'nonaktif'], true)) {
+                $this->logoutAndInvalidate();
+
+                throw ValidationException::withMessages([
+                    'email' => 'Akun Anda telah ditolak atau dinonaktifkan. Silakan hubungi Administrator.',
+                ]);
+            }
+        }
+
+        // Reset hit limiter jika autentikasi dan status pengguna valid
         RateLimiter::clear($this->throttleKey());
+    }
+
+    /**
+     * Logout user and invalidate the current session safely.
+     */
+    protected function logoutAndInvalidate(): void
+    {
+        Auth::logout();
+        $this->session()->invalidate();
+        $this->session()->regenerateToken();
     }
 
     /**
