@@ -289,6 +289,8 @@ Route::middleware(['auth', 'role:admin,karyawan'])
             ->name('absensi-karyawan.store');
         Route::delete('/absensi-karyawan/{absensiKaryawan}', [AdminAbsensiKaryawanController::class, 'destroy'])
             ->name('absensi-karyawan.destroy');
+        Route::get('/absensi-karyawan/export', [AdminAbsensiKaryawanController::class, 'export'])
+            ->name('absensi-karyawan.export');
         /* Metode Pembayaran */
         Route::get('/metode-pembayaran', [AdminDataMetodePembayaranController::class, 'index'])
             ->name('metode-pembayaran.index');

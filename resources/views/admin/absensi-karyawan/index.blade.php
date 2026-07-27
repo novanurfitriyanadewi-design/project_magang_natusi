@@ -19,6 +19,9 @@
                 Pantau dan kelola data kehadiran karyawan setiap hari.
             </p>
         </div>
+        <div class="flex gap-2">
+            <a href="{{ route('admin.absensi-karyawan.export', ['tanggal' => $tanggal, 'search' => request('search')]) }}" class="flex items-center gap-2 rounded-lg bg-sky-700 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-sky-800 active:scale-95"><span class="material-symbols-outlined text-[20px]">download</span>Export</a>
+        </div>
     </section>
 
     @if(session('success'))
@@ -94,99 +97,90 @@
         </article>
     </section>
 
-    {{-- Form Tambah Absensi Manual --}}
-    <section class="overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[0_18px_45px_rgba(15,52,94,0.08)] backdrop-blur">
-        <details>
-            <summary class="flex cursor-pointer list-none items-center gap-3 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50 px-5 py-5 sm:px-6">
-                <span class="grid h-11 w-11 place-items-center rounded-2xl bg-white text-sky-600 shadow-sm ring-1 ring-sky-100">
-                    <span class="material-symbols-outlined text-[23px]">edit_calendar</span>
-                </span>
-                <div>
-                    <h2 class="text-lg font-extrabold tracking-tight text-slate-950">Tambah Absensi Manual</h2>
-                    <p class="mt-0.5 text-sm text-slate-500">Klik untuk membuka form input absensi karyawan.</p>
-                </div>
-            </summary>
+    {{-- Form Tambah Absensi Manual (gaya clean seperti Stitch) --}}
+    <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm" style="border-left: 4px solid #006191;">
+        <div class="mb-6 flex items-center gap-3">
+            <div class="rounded-lg bg-sky-100 p-2 text-sky-700">
+                <span class="material-symbols-outlined">edit_calendar</span>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Tambah Absensi Manual</h3>
+                <p class="text-xs text-slate-500">Input data kehadiran, izin, atau sakit karyawan</p>
+            </div>
+        </div>
 
-            <form action="{{ route('admin.absensi-karyawan.store') }}" method="POST" class="space-y-4 px-5 py-5 sm:px-6">
-                @csrf
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold uppercase tracking-wide text-slate-500">Nama Karyawan</label>
-                        <select name="id_karyawan" required class="w-full rounded-xl border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm focus:border-sky-400 focus:ring-sky-200">
-                            <option value="">Pilih karyawan</option>
-                            @foreach($karyawanList as $karyawan)
-                                <option value="{{ $karyawan->id_karyawan }}">{{ $karyawan->nama_karyawan }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold uppercase tracking-wide text-slate-500">Tanggal</label>
-                        <input type="date" name="tanggal" required value="{{ $tanggal }}" class="w-full rounded-xl border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm focus:border-sky-400 focus:ring-sky-200">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold uppercase tracking-wide text-slate-500">Jam Masuk</label>
-                        <input type="time" name="jam_masuk" class="w-full rounded-xl border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm focus:border-sky-400 focus:ring-sky-200">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold uppercase tracking-wide text-slate-500">Jam Pulang</label>
-                        <input type="time" name="jam_pulang" class="w-full rounded-xl border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm focus:border-sky-400 focus:ring-sky-200">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold uppercase tracking-wide text-slate-500">Status</label>
-                        <select name="status" required class="w-full rounded-xl border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm focus:border-sky-400 focus:ring-sky-200">
-                            <option value="hadir">Hadir</option>
-                            <option value="izin">Izin</option>
-                            <option value="sakit">Sakit</option>
-                            <option value="alpha">Alpha</option>
-                        </select>
-                    </div>
-                </div>
-
+        <form action="{{ route('admin.absensi-karyawan.store') }}" method="POST" class="space-y-4">
+            @csrf
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div class="space-y-1">
-                    <label class="text-xs font-bold uppercase tracking-wide text-slate-500">Keterangan</label>
-                    <textarea name="keterangan" rows="2" placeholder="Catatan tambahan (opsional)" class="w-full rounded-xl border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm focus:border-sky-400 focus:ring-sky-200"></textarea>
+                    <label class="text-sm font-semibold text-slate-600">Nama Karyawan</label>
+                    <select name="id_karyawan" required class="w-full rounded-lg border border-slate-200 p-2.5 text-sm text-slate-800 outline-none transition-all focus:border-sky-600 focus:ring-1 focus:ring-sky-600">
+                        <option value="">Pilih karyawan</option>
+                        @foreach($karyawanList as $karyawan)
+                            <option value="{{ $karyawan->id_karyawan }}">{{ $karyawan->nama_karyawan }}</option>
+                        @endforeach
+                    </select>
                 </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-semibold text-slate-600">Tanggal</label>
+                    <input type="date" name="tanggal" required value="{{ $tanggal }}" class="w-full rounded-lg border border-slate-200 p-2.5 text-sm text-slate-800 outline-none transition-all focus:border-sky-600 focus:ring-1 focus:ring-sky-600">
+                </div>
+            </div>
 
-                <div class="flex justify-end pt-1">
-                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-6 py-2.5 text-sm font-extrabold text-white shadow-[0_8px_20px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5">
-                        <span class="material-symbols-outlined text-[18px]">add_circle</span>
-                        Simpan Absensi
-                    </button>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div class="space-y-1">
+                    <label class="text-sm font-semibold text-slate-600">Jam Masuk</label>
+                    <input type="time" name="jam_masuk" class="w-full rounded-lg border border-slate-200 p-2.5 text-sm text-slate-800 outline-none transition-all focus:border-sky-600 focus:ring-1 focus:ring-sky-600">
                 </div>
-            </form>
-        </details>
+                <div class="space-y-1">
+                    <label class="text-sm font-semibold text-slate-600">Jam Pulang</label>
+                    <input type="time" name="jam_pulang" class="w-full rounded-lg border border-slate-200 p-2.5 text-sm text-slate-800 outline-none transition-all focus:border-sky-600 focus:ring-1 focus:ring-sky-600">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-semibold text-slate-600">Status</label>
+                    <select name="status" required class="w-full rounded-lg border border-slate-200 p-2.5 text-sm text-slate-800 outline-none transition-all focus:border-sky-600 focus:ring-1 focus:ring-sky-600">
+                        <option value="hadir">Hadir</option>
+                        <option value="izin">Izin</option>
+                        <option value="sakit">Sakit</option>
+                        <option value="alpha">Alpha</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-sm font-semibold text-slate-600">Keterangan</label>
+                <textarea name="keterangan" rows="2" placeholder="Catatan tambahan (opsional)" class="w-full rounded-lg border border-slate-200 p-2.5 text-sm text-slate-800 outline-none transition-all focus:border-sky-600 focus:ring-1 focus:ring-sky-600"></textarea>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="submit" class="rounded-lg bg-sky-700 px-8 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-sky-800 active:scale-95">
+                    Simpan Absensi
+                </button>
+            </div>
+        </form>
     </section>
 
     {{-- Tabel Data Absensi --}}
-    <section class="overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[0_18px_45px_rgba(15,52,94,0.08)] backdrop-blur">
-        <header class="flex flex-col gap-3 border-b border-slate-100 bg-white px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <div>
-                <h2 class="text-xl font-extrabold tracking-tight text-slate-950">Data Kehadiran</h2>
-                <p class="mt-1 text-sm text-slate-500">Menampilkan data absensi pada tanggal terpilih.</p>
-            </div>
-            <span class="w-fit rounded-xl bg-slate-100 px-4 py-2 text-xs font-extrabold text-slate-700 shadow-sm ring-1 ring-slate-200">
-                {{ number_format($absensi->total()) }} data
-            </span>
-        </header>
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-200 p-5">
+            <h3 class="text-[14px] font-semibold uppercase tracking-wider text-slate-600">Data Kehadiran</h3>
+            <span class="rounded-lg bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">{{ number_format($absensi->total()) }} data</span>
+        </div>
 
-        <div class="border-b border-slate-200 bg-slate-50/70 px-5 py-4 sm:px-6">
+        <div class="border-b border-slate-200 bg-slate-50 px-5 py-4">
             <form action="{{ route('admin.absensi-karyawan.index') }}" method="GET" class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div class="relative w-full lg:max-w-xs">
                     <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-slate-400">search</span>
-                    <input type="search" name="search" value="{{ request('search') }}" placeholder="Cari nama karyawan..." class="w-full rounded-xl border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-700 shadow-sm focus:border-sky-400 focus:ring-sky-200">
+                    <input type="search" name="search" value="{{ request('search') }}" placeholder="Cari nama karyawan..." class="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600">
                 </div>
-
                 <div class="flex flex-col gap-2 sm:flex-row">
-                    <input type="date" name="tanggal" value="{{ $tanggal }}" class="rounded-xl border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 shadow-sm focus:border-sky-400 focus:ring-sky-200">
-                    <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-slate-800">
+                    <input type="date" name="tanggal" value="{{ $tanggal }}" class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-600 outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600">
+                    <button type="submit" class="flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800">
                         <span class="material-symbols-outlined text-[19px]">filter_alt</span>
                         Terapkan
                     </button>
                     @if(request('search') || request('tanggal') !== $tanggal)
-                        <a href="{{ route('admin.absensi-karyawan.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100">
+                        <a href="{{ route('admin.absensi-karyawan.index') }}" class="flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100">
                             Reset
                         </a>
                     @endif
@@ -195,43 +189,37 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-[900px] w-full border-collapse text-left">
-                <thead>
-                    <tr class="border-b border-slate-200 bg-sky-50/70">
-                        <th class="px-6 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Nama Karyawan</th>
-                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Tanggal</th>
-                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Jam Masuk</th>
-                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Jam Pulang</th>
-                        <th class="px-5 py-4 text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Status</th>
-                        <th class="px-6 py-4 text-right text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Aksi</th>
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 text-xs text-slate-500">
+                    <tr>
+                        <th class="px-6 py-3 font-semibold">Nama Karyawan</th>
+                        <th class="px-6 py-3 font-semibold">Tanggal</th>
+                        <th class="px-6 py-3 font-semibold">Jam Masuk</th>
+                        <th class="px-6 py-3 font-semibold">Jam Pulang</th>
+                        <th class="px-6 py-3 text-center font-semibold">Status</th>
+                        <th class="px-6 py-3 text-right font-semibold">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($absensi as $item)
                         @php
                             $statusMap = [
-                                'hadir' => ['label' => 'Hadir', 'class' => 'border-emerald-200 bg-emerald-50 text-emerald-700', 'dot' => 'bg-emerald-500'],
-                                'izin' => ['label' => 'Izin', 'class' => 'border-amber-200 bg-amber-50 text-amber-700', 'dot' => 'bg-amber-500'],
-                                'sakit' => ['label' => 'Sakit', 'class' => 'border-sky-200 bg-sky-50 text-sky-700', 'dot' => 'bg-sky-500'],
-                                'alpha' => ['label' => 'Alpha', 'class' => 'border-rose-200 bg-rose-50 text-rose-700', 'dot' => 'bg-rose-500'],
+                                'hadir' => ['label' => 'Hadir', 'bg' => '#dcfce7', 'text' => '#166534'],
+                                'izin' => ['label' => 'Izin', 'bg' => '#fef9c3', 'text' => '#854d0e'],
+                                'sakit' => ['label' => 'Sakit', 'bg' => '#e0f2fe', 'text' => '#075985'],
+                                'alpha' => ['label' => 'Alpha', 'bg' => '#fee2e2', 'text' => '#991b1b'],
                             ];
                             $badge = $statusMap[$item->status] ?? $statusMap['hadir'];
                         @endphp
-                        <tr class="transition hover:bg-sky-50/45">
+                        <tr class="transition-colors hover:bg-slate-50/50">
                             <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-100 to-blue-100 text-xs font-black text-sky-700 ring-1 ring-sky-200">
-                                        {{ mb_strtoupper(mb_substr($item->karyawan->nama_karyawan ?? '-', 0, 1)) }}
-                                    </div>
-                                    <p class="text-sm font-extrabold text-slate-900">{{ $item->karyawan->nama_karyawan ?? '-' }}</p>
-                                </div>
+                                <p class="text-sm font-semibold text-slate-800">{{ $item->karyawan->nama_karyawan ?? '-' }}</p>
                             </td>
-                            <td class="px-5 py-4 text-sm font-semibold text-slate-700">{{ \Illuminate\Support\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }}</td>
-                            <td class="px-5 py-4 text-sm text-slate-600">{{ $item->jam_masuk ?? '--:--' }}</td>
-                            <td class="px-5 py-4 text-sm text-slate-600">{{ $item->jam_pulang ?? '--:--' }}</td>
-                            <td class="px-5 py-4">
-                                <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-extrabold {{ $badge['class'] }}">
-                                    <span class="h-1.5 w-1.5 rounded-full {{ $badge['dot'] }}"></span>
+                            <td class="px-6 py-4 text-sm text-slate-700">{{ \Illuminate\Support\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-600">{{ $item->jam_masuk ?? '--:--' }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-600">{{ $item->jam_pulang ?? '--:--' }}</td>
+                            <td class="flex justify-center px-6 py-4">
+                                <span class="rounded-full px-3 py-1 text-xs font-bold" style="background-color: {{ $badge['bg'] }}; color: {{ $badge['text'] }};">
                                     {{ $badge['label'] }}
                                 </span>
                             </td>
@@ -239,8 +227,7 @@
                                 <form action="{{ route('admin.absensi-karyawan.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus data absensi ini?')" class="inline-block">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-extrabold text-rose-700 transition hover:bg-rose-100">
-                                        <span class="material-symbols-outlined text-[16px]">delete</span>
+                                    <button type="submit" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100">
                                         Hapus
                                     </button>
                                 </form>
@@ -249,11 +236,8 @@
                     @empty
                         <tr>
                             <td colspan="6" class="px-6 py-16 text-center">
-                                <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-slate-400">
-                                    <span class="material-symbols-outlined text-[30px]">event_busy</span>
-                                </div>
-                                <p class="mt-4 font-extrabold text-slate-700">Belum ada data absensi untuk tanggal ini.</p>
-                                <p class="mt-1 text-sm text-slate-500">Gunakan form di atas untuk menambahkan data absensi.</p>
+                                <p class="font-bold text-slate-600">Belum ada data absensi untuk tanggal ini.</p>
+                                <p class="mt-1 text-sm text-slate-400">Gunakan form di atas untuk menambahkan data.</p>
                             </td>
                         </tr>
                     @endforelse
@@ -262,9 +246,9 @@
         </div>
 
         @if($absensi->hasPages())
-            <footer class="border-t border-slate-100 bg-white px-6 py-4">
+            <div class="border-t border-slate-100 px-6 py-4">
                 {{ $absensi->links() }}
-            </footer>
+            </div>
         @endif
     </section>
 </div>
