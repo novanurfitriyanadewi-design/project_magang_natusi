@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetode
 use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTugasController;
 use App\Http\Controllers\Admin\PermintaanLamaranController as AdminPermintaanLamaranController;
 use App\Http\Controllers\Admin\KaryawanController;
+use App\Http\Controllers\Admin\NotifikasiController as AdminNotifikasiController;
 
 // Peserta Magang Controllers
 use App\Http\Controllers\PesertaMagang\DashboardController as PesertaMagangDashboardController;
@@ -341,6 +342,26 @@ Route::middleware(['auth', 'role:admin,karyawan'])
 
         Route::put('/karyawan/{karyawan}', [KaryawanController::class, 'update'])
         ->name('karyawan.update');
+
+        /* Notifikasi */
+        Route::get('/notifikasi', [AdminNotifikasiController::class, 'index'])
+            ->name('notifikasi.index');
+        Route::get('/notifikasi/create', [AdminNotifikasiController::class, 'create'])
+            ->name('notifikasi.create');
+        Route::post('/notifikasi', [AdminNotifikasiController::class, 'store'])
+            ->name('notifikasi.store');
+        Route::get('/notifikasi/{notifikasi}', [AdminNotifikasiController::class, 'show'])
+            ->whereNumber('notifikasi')
+            ->name('notifikasi.show');
+        Route::get('/notifikasi/{notifikasi}/edit', [AdminNotifikasiController::class, 'edit'])
+            ->whereNumber('notifikasi')
+            ->name('notifikasi.edit');
+        Route::put('/notifikasi/{notifikasi}', [AdminNotifikasiController::class, 'update'])
+            ->whereNumber('notifikasi')
+            ->name('notifikasi.update');
+        Route::delete('/notifikasi/{notifikasi}', [AdminNotifikasiController::class, 'destroy'])
+            ->whereNumber('notifikasi')
+            ->name('notifikasi.destroy');
     });
 
 /*
