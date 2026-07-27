@@ -197,11 +197,16 @@ class TugasController extends Controller
 
     public function downloadTemplate()
     {
-        $path = public_path('template/TEMPLATE PENUGASAN.xlsx');
-        abort_unless(file_exists($path), 404, 'Template penugasan tidak ditemukan.');
+       $file = public_path('template/template_tugas_mingguan.xlsx');
 
-        return response()->download($path, 'template_tugas_mingguan.xlsx');
+        if (!file_exists($file)) {
+            abort(404);
+        }
+
+        return response()->download($file);
     }
+
+
 
     private function validated(Request $request, bool $forUpdate = false): array
     {
