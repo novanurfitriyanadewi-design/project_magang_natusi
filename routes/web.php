@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\DataPembayaranController as AdminDataPembayaranCo
 use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetodePembayaranController;
 use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTugasController;
 use App\Http\Controllers\Admin\PermintaanLamaranController as AdminPermintaanLamaranController;
+use App\Http\Controllers\Admin\KaryawanController;
 
 // Peserta Magang Controllers
 use App\Http\Controllers\PesertaMagang\DashboardController as PesertaMagangDashboardController;
@@ -306,6 +307,13 @@ Route::middleware(['auth', 'role:admin,karyawan'])
 
         Route::patch('/pembayaran/{pembayaran}/tolak', [AdminDataPembayaranController::class, 'tolak'])
             ->name('pembayaran.tolak');
+
+        /* Data Karyawan */
+        Route::get('/karyawan', [KaryawanController::class, 'index'])
+        ->name('karyawan.index');
+
+        Route::put('/karyawan/{karyawan}', [KaryawanController::class, 'update'])
+        ->name('karyawan.update');
     });
 
 /*

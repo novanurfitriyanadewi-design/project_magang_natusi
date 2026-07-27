@@ -36,4 +36,18 @@ class Karyawan extends Model
         // (NamaModel::class, 'foreign_key', 'owner_key')
         return $this->belongsTo(PermintaanLamaran::class, 'permintaan_id', 'id_permintaan');
     }
+     public function statusMeta(): array
+    {
+        return match ($this->status) {
+            'aktif'    => ['label' => 'Aktif', 'dot' => 'bg-emerald-500', 'text' => 'text-emerald-700'],
+            'nonaktif' => ['label' => 'Non-Aktif', 'dot' => 'bg-rose-500', 'text' => 'text-rose-700'],
+            default    => ['label' => ucfirst($this->status), 'dot' => 'bg-slate-400', 'text' => 'text-slate-600'],
+        };
+    }
+
+    public function initials(): string
+    {
+        $words = preg_split('/\s+/', trim($this->nama_karyawan));
+        return mb_strtoupper(mb_substr($words[0] ?? '', 0, 1) . mb_substr($words[1] ?? '', 0, 1));
+    }
 }
