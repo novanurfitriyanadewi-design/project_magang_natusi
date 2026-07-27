@@ -8,6 +8,8 @@
     $roleLabel = match ($user?->role) {
         'superadmin' => 'Super Admin',
         'admin' => 'Admin',
+        'karyawan' => $user->karyawan?->jabatan ?? 'Karyawan',
+        'peserta' => 'Peserta Magang',
         default => 'Peserta Magang',
     };
 

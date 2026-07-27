@@ -5,6 +5,7 @@
     $portal = match ($role) {
         'superadmin' => ['name' => 'Natusi Admin', 'subtitle' => 'SUPER ADMIN PORTAL'],
         'admin' => ['name' => 'Natusi Admin', 'subtitle' => 'ADMIN PORTAL'],
+        'karyawan' => ['name' => 'CV Natusi', 'subtitle' => 'KARYAWAN PORTAL'],
         default => ['name' => 'CV Natusi', 'subtitle' => 'INTERNSHIP PORTAL'],
     };
 
@@ -68,6 +69,81 @@
 
             ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
+        'karyawan' => [
+            [
+                'label' => 'Dashboard',
+                'route' => 'karyawan.dashboard',
+                'match' => 'karyawan.dashboard',
+                'icon' => 'dashboard',
+                'tour' => 'dashboard',
+            ],
+            [
+                'label' => 'Absensi',
+                'route' => 'karyawan.absensi.index',
+                'match' => 'karyawan.absensi.*',
+                'icon' => 'attendance-user',
+                'tour' => 'absensi',
+            ],
+            [
+                'label' => 'Pengumuman',
+                'route' => 'karyawan.pengumuman.index',
+                'match' => 'karyawan.pengumuman.*',
+                'icon' => 'inbox',
+                'tour' => 'pengumuman',
+            ],
+            [
+                'label' => 'Aturan Perusahaan',
+                'route' => 'karyawan.aturan.index',
+                'match' => 'karyawan.aturan.*',
+                'icon' => 'rules',
+                'tour' => 'aturan',
+            ],
+            [
+                'label' => 'Cuti',
+                'route' => 'karyawan.cuti.index',
+                'match' => 'karyawan.cuti.*',
+                'icon' => 'clock',
+                'tour' => 'cuti',
+            ],
+            [
+                'label' => 'Slip Gaji',
+                'route' => 'karyawan.payslip.index',
+                'match' => 'karyawan.payslip.*',
+                'icon' => 'payment',
+                'tour' => 'payslip',
+            ],
+            [
+                'label' => 'Reimbursement',
+                'route' => 'karyawan.reimbursement.index',
+                'match' => 'karyawan.reimbursement.*',
+                'icon' => 'tasks',
+                'tour' => 'reimbursement',
+            ],
+            [
+                'label' => 'Resign',
+                'icon' => 'users',
+                'match' => 'karyawan.resign.*',
+                'tour' => 'resign',
+                'children' => [
+                    ['label' => 'Ajukan Resign', 'route' => 'karyawan.resign.create', 'match' => 'karyawan.resign.create', 'tour' => 'resign-create'],
+                    ['label' => 'Status Resign', 'route' => 'karyawan.resign.show', 'match' => 'karyawan.resign.*', 'tour' => 'resign-status'],
+                ],
+            ],
+            [
+                'label' => 'Profile',
+                'route' => 'profile.edit',
+                'match' => 'profile.*',
+                'icon' => 'profile',
+                'tour' => 'profile',
+            ],
+            [
+                'label' => 'Bantuan',
+                'route' => 'karyawan.helpdesk.index',
+                'match' => 'karyawan.helpdesk.*',
+                'icon' => 'tasks',
+                'tour' => 'helpdesk',
+            ],
+        ],
         default => [
             [
                 'label' => 'Dashboard',
@@ -114,9 +190,11 @@
         ],
     };
 
-    $homeRoute = $role === 'superadmin' && Route::has('superadmin.dashboard')
-        ? route('superadmin.dashboard')
-        : route('dashboard');
+    $homeRoute = match (true) {
+        $role === 'superadmin' && Route::has('superadmin.dashboard') => route('superadmin.dashboard'),
+        $role === 'karyawan' && Route::has('karyawan.dashboard') => route('karyawan.dashboard'),
+        default => route('dashboard'),
+    };
 
     $openGroup = null;
     foreach ($menus as $i => $menu) {
@@ -243,7 +321,14 @@
                                     @php
                                         $childAvailable = Route::has($child['route']);
                                         $childActive = $childAvailable && request()->routeIs($child['match']);
-                                        $childHref = $childAvailable ? route($child['route']) : '#';
+                                        $childHref = '#';
+                                        if ($childAvailable) {
+                                            try {
+                                                $childHref = route($child['route']);
+                                            } catch (\Illuminate\Routing\Exceptions\UrlGenerationException) {
+                                                $childAvailable = false;
+                                            }
+                                        }
                                     @endphp
 
                                     <a
@@ -274,7 +359,14 @@
                     @php
                         $available = Route::has($menu['route']);
                         $active = $available && request()->routeIs($menu['match']);
-                        $href = $available ? route($menu['route']) : '#';
+                        $href = '#';
+                        if ($available) {
+                            try {
+                                $href = route($menu['route']);
+                            } catch (\Illuminate\Routing\Exceptions\UrlGenerationException) {
+                                $available = false;
+                            }
+                        }
                     @endphp
 
                     <a

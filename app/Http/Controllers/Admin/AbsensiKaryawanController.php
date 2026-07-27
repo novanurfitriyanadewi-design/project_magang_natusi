@@ -29,10 +29,7 @@ class AbsensiKaryawanController extends Controller
         $baseStats = AbsensiKaryawan::whereDate('tanggal', $tanggal);
         $stats = [
             'hadir' => (clone $baseStats)->where('status', 'hadir')->count(),
-            'terlambat' => (clone $baseStats)
-                ->whereNotNull('jam_masuk')
-                ->whereTime('jam_masuk', '>', '08:00:00')
-                ->count(),
+            'terlambat' => (clone $baseStats)->where('status', 'terlambat')->count(),
             'izin_sakit' => (clone $baseStats)->whereIn('status', ['izin', 'sakit'])->count(),
             'alpha' => (clone $baseStats)->where('status', 'alpha')->count(),
         ];
@@ -42,6 +39,12 @@ class AbsensiKaryawanController extends Controller
         return view('admin.absensi-karyawan.index', compact('absensi', 'stats', 'tanggal', 'karyawanList'));
     }
 
+    public function create()
+    {
+        $karyawanList = Karyawan::orderBy('nama_karyawan')->get();
+        return view('admin.absensi-karyawan.create', compact('karyawanList'));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -49,13 +52,44 @@ class AbsensiKaryawanController extends Controller
             'tanggal' => 'required|date',
             'jam_masuk' => 'nullable',
             'jam_pulang' => 'nullable',
-            'status' => 'required|in:hadir,izin,sakit,alpha',
+            'status' => 'required|in:hadir,terlambat,izin,sakit,alpha',
             'keterangan' => 'nullable|string',
         ]);
 
         AbsensiKaryawan::create($validated);
 
-        return back()->with('success', 'Absensi karyawan berhasil ditambahkan.');
+        return redirect()->route('admin.absensi-karyawan.index')
+            ->with('success', 'Absensi karyawan berhasil ditambahkan.');
+    }
+
+    public function show(AbsensiKaryawan $absensiKaryawan)
+    {
+        $absensiKaryawan->load('karyawan');
+        return view('admin.absensi-karyawan.show', compact('absensiKaryawan'));
+    }
+
+    public function edit(AbsensiKaryawan $absensiKaryawan)
+    {
+        $absensiKaryawan->load('karyawan');
+        $karyawanList = Karyawan::orderBy('nama_karyawan')->get();
+        return view('admin.absensi-karyawan.edit', compact('absensiKaryawan', 'karyawanList'));
+    }
+
+    public function update(Request $request, AbsensiKaryawan $absensiKaryawan)
+    {
+        $validated = $request->validate([
+            'id_karyawan' => 'required|exists:karyawan,id_karyawan',
+            'tanggal' => 'required|date',
+            'jam_masuk' => 'nullable',
+            'jam_pulang' => 'nullable',
+            'status' => 'required|in:hadir,terlambat,izin,sakit,alpha',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        $absensiKaryawan->update($validated);
+
+        return redirect()->route('admin.absensi-karyawan.index')
+            ->with('success', 'Absensi karyawan berhasil diperbarui.');
     }
 
     public function destroy(AbsensiKaryawan $absensiKaryawan)

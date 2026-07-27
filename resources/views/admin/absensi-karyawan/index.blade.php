@@ -20,6 +20,7 @@
             </p>
         </div>
         <div class="flex gap-2">
+            <a href="{{ route('admin.absensi-karyawan.create') }}" class="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-emerald-700 active:scale-95"><span class="material-symbols-outlined text-[20px]">add</span>Tambah</a>
             <a href="{{ route('admin.absensi-karyawan.export', ['tanggal' => $tanggal, 'search' => request('search')]) }}" class="flex items-center gap-2 rounded-lg bg-sky-700 px-4 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-sky-800 active:scale-95"><span class="material-symbols-outlined text-[20px]">download</span>Export</a>
         </div>
     </section>
@@ -205,11 +206,12 @@
                         @php
                             $statusMap = [
                                 'hadir' => ['label' => 'Hadir', 'bg' => '#dcfce7', 'text' => '#166534'],
+                                'terlambat' => ['label' => 'Terlambat', 'bg' => '#fee2e2', 'text' => '#991b1b'],
                                 'izin' => ['label' => 'Izin', 'bg' => '#fef9c3', 'text' => '#854d0e'],
                                 'sakit' => ['label' => 'Sakit', 'bg' => '#e0f2fe', 'text' => '#075985'],
-                                'alpha' => ['label' => 'Alpha', 'bg' => '#fee2e2', 'text' => '#991b1b'],
+                                'alpha' => ['label' => 'Alpha', 'bg' => '#f1f5f9', 'text' => '#475569'],
                             ];
-                            $badge = $statusMap[$item->status] ?? $statusMap['hadir'];
+                            $badge = $statusMap[$item->status] ?? $statusMap['alpha'];
                         @endphp
                         <tr class="transition-colors hover:bg-slate-50/50">
                             <td class="px-6 py-4">
@@ -224,13 +226,21 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <form action="{{ route('admin.absensi-karyawan.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus data absensi ini?')" class="inline-block">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100">
-                                        Hapus
-                                    </button>
-                                </form>
+                                <div class="flex items-center justify-end gap-1">
+                                    <a href="{{ route('admin.absensi-karyawan.show', $item) }}" class="rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs font-bold text-sky-700 transition hover:bg-sky-100">
+                                        Detail
+                                    </a>
+                                    <a href="{{ route('admin.absensi-karyawan.edit', $item) }}" class="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-700 transition hover:bg-amber-100">
+                                        Edit
+                                    </a>
+                                    <form action="{{ route('admin.absensi-karyawan.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus data absensi ini?')" class="inline-block">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
