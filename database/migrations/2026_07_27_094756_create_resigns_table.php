@@ -10,11 +10,17 @@ return new class extends Migration
     {
         Schema::create('resigns', function (Blueprint $table) {
             $table->id();
-            // Menggunakan foreignId agar otomatis mendeteksi tipe data primary key tabel karyawan
-            $table->foreignId('karyawan_id')->constrained('karyawan')->onDelete('cascade');
+
+            $table->unsignedBigInteger('karyawan_id');
+
+            $table->foreign('karyawan_id')
+                ->references('id_karyawan')
+                ->on('karyawan')
+                ->onDelete('cascade');
+
             $table->text('alasan');
             $table->date('tanggal_efektif');
-            $table->string('status')->default('pending'); // pending, diproses, menunggu_approval, disetujui, ditolak
+            $table->string('status')->default('pending');
             $table->text('catatan_hrd')->nullable();
             $table->timestamps();
         });

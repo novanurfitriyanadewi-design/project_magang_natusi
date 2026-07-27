@@ -48,7 +48,7 @@
                 class="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
             >
                 <span class="material-symbols-outlined text-[18px]">description</span>
-                Panduan Materi & Tugas
+                Panduan Materi & Tugas 1 
             </a>
 
             <!-- Tombol Template Excel -->
