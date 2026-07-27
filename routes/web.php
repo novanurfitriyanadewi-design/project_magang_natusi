@@ -38,7 +38,7 @@ use App\Http\Controllers\Peserta\TugasController as PesertaTugasController;
 
 // Karyawan Controllers
 use App\Http\Controllers\Karyawan\DashboardController as KaryawanDashboardController;
-use App\Http\Controllers\Karyawan\ResignController;
+// use App\Http\Controllers\Karyawan\ResignController;
 use App\Http\Controllers\Karyawan\PengumumanController; // Sesuaikan jika ada
 use App\Http\Controllers\Karyawan\AturanController;
 use Illuminate\Support\Facades\Route;
@@ -386,11 +386,11 @@ Route::middleware(['auth', 'role:karyawan'])
         
         // Tambahkan rute-rute berikut agar tidak error:
         Route::get('/absensi', [KaryawanDashboardController::class, 'absensiIndex'])->name('absensi.index');
-        Route::post('/absensi/clock-in', [KaryawanDashboardController::class, 'clockIn'])->name('absensi.clockin');
+        Route::post('/absensi/clock-in', [KaryawanDashboardController::class, 'clockIn'])->name('absensi.clockin');// 
         
-        Route::get('/resign/create', [ResignController::class, 'create'])->name('resign.create');
-        Route::post('/resign', [ResignController::class, 'store'])->name('resign.store');
-        Route::get('/resign/{resign}', [ResignController::class, 'show'])->name('resign.show');
+//         Route::get('/resign/create', [ResignController::class, 'create'])->name('resign.create');
+//         Route::post('/resign', [ResignController::class, 'store'])->name('resign.store');
+//         Route::get('/resign/{resign}', [ResignController::class, 'show'])->name('resign.show');
 
         Route::get('/cuti', [KaryawanDashboardController::class, 'cutiIndex'])->name('cuti.index'); // Sesuaikan controller
         Route::get('/payslip', [KaryawanDashboardController::class, 'payslipIndex'])->name('payslip.index'); // Sesuaikan controller
@@ -453,4 +453,14 @@ Route::middleware(['auth', 'role:pelamar,pelamar_karyawan,karyawan,peserta'])->g
 */
 
 require __DIR__ . '/auth.php';
+
+
+use App\Http\Controllers\Admin\PembayaranKaryawanController;
+
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    Route::get('/pembayaran-karyawan', [PembayaranKaryawanController::class, 'index'])->name('pembayaran-karyawan.index');
+    Route::post('/pembayaran-karyawan', [PembayaranKaryawanController::class, 'store'])->name('pembayaran-karyawan.store');
+    Route::delete('/pembayaran-karyawan/{pembayaranKaryawan}', [PembayaranKaryawanController::class, 'destroy'])->name('pembayaran-karyawan.destroy');
+});
+
 
