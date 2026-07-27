@@ -8,32 +8,24 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('karyawan', function (Blueprint $table) {
-            $table->id('id_karyawan');
-            
-            // Relasi ke id_permintaan di tabel permintaan_lamaran
-            $table->unsignedBigInteger('permintaan_id')->nullable();
-            
-            $table->string('nip')->unique()->nullable();
-            $table->string('nama_karyawan');
-            $table->string('email')->unique();
-            $table->string('no_hp')->nullable();
-            $table->text('alamat')->nullable();
-            $table->string('jabatan')->nullable();
-            $table->enum('status', ['aktif', 'nonaktif'])->default('aktif');
-            
+        Schema::create('permintaan_lamaran', function (Blueprint $table) {
+            $table->id('id_permintaan');
+            $table->foreignId('user_id')->nullable()->constrained('users', 'id_user')->nullOnDelete();
+            $table->string('nama_pemohon');
+            $table->string('email');
+            $table->string('no_induk', 50);
+            $table->string('nama_sekolah');
+            $table->string('posisi');
+            $table->string('no_hp', 20);
+            $table->text('pesan')->nullable();
+            $table->date('tanggal_lamar')->nullable();
+            $table->enum('status', ['menunggu', 'interview', 'disetujui', 'ditolak'])->default('menunggu');
             $table->timestamps();
-
-            // Foreign key constraint ke id_permintaan
-            $table->foreign('permintaan_id')
-                  ->references('id_permintaan')
-                  ->on('permintaan_lamaran')
-                  ->onDelete('set null');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('karyawan');
+        Schema::dropIfExists('permintaan_lamaran');
     }
 };

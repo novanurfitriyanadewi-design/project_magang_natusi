@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PermintaanLamaran extends Model
 {
@@ -24,9 +25,15 @@ class PermintaanLamaran extends Model
         'no_hp',
         'pesan',
         'status',
+        'username_karyawan',
+        'password_karyawan',
+        'jadwal_interview',
+        'lokasi_interview',
         'akun_dibuat',
         'cv_path',
         'portfolio_path',
+        'alasan_penolakan',
+        'catatan_revisi',
     ];
 
     protected $casts = [
@@ -41,6 +48,11 @@ class PermintaanLamaran extends Model
             'user_id',
             'id_user'
         );
+    }
+
+    public function karyawan(): HasOne
+    {
+        return $this->hasOne(Karyawan::class, 'permintaan_id', 'id_permintaan');
     }
 
     public function getInitialsAttribute(): string

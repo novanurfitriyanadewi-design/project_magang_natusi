@@ -17,9 +17,7 @@ class PermintaanMagangController extends Controller
 {
     public function index(Request $request)
     {
-        $total_pendaftar = DB::table('permintaan_magang')
-            ->where('status', '!=', 'ditolak')
-            ->count();
+        $total_pendaftar = PermintaanMagang::query()->count();
 
         $total_disetujui = DB::table('permintaan_magang')
             ->where('status', 'disetujui')
@@ -27,7 +25,6 @@ class PermintaanMagangController extends Controller
 
         $query = DB::table('permintaan_magang as pm')
             ->leftJoin('peserta_magang as ps', 'ps.permintaan_id', '=', 'pm.id_permintaan')
-            ->where('pm.status', '!=', 'ditolak')
             ->select([
                 'pm.*',
                 'ps.alamat',
@@ -35,7 +32,7 @@ class PermintaanMagangController extends Controller
 
         $status = $request->string('status')->toString();
 
-        if (in_array($status, ['menunggu', 'disetujui'], true)) {
+        if (in_array($status, ['menunggu', 'perlu_revisi', 'disetujui', 'ditolak'], true)) {
             $query->where('pm.status', $status);
         }
 
@@ -69,7 +66,9 @@ class PermintaanMagangController extends Controller
     public function action(Request $request, int $id): RedirectResponse
     {
         $validated = $request->validate([
-            'action' => ['required', 'in:approve,reject,accept'],
+            'action' => ['required', 'in:approve,reject,revision,accept'],
+            'alasan_penolakan' => ['required_if:action,reject', 'nullable', 'string', 'max:2000'],
+            'catatan_revisi' => ['required_if:action,revision', 'nullable', 'string', 'max:2000'],
         ]);
 
         $result = DB::transaction(function () use ($validated, $id): array {
@@ -85,11 +84,21 @@ class PermintaanMagangController extends Controller
                 ];
             }
 
-            if ($permintaan->status !== 'menunggu') {
+            if (! in_array($permintaan->status, ['menunggu', 'perlu_revisi'], true)) {
                 return [
                     'type' => 'error',
                     'message' => 'Pengajuan magang ini sudah pernah diproses.',
                 ];
+            }
+
+            if ($validated['action'] === 'revision') {
+                $permintaan->update([
+                    'status' => 'perlu_revisi',
+                    'catatan_revisi' => $validated['catatan_revisi'],
+                ]);
+                $this->kirimNotifikasiHasil($permintaan, 'Pengajuan Magang Perlu Revisi', 'Admin meminta revisi berkas: '.$validated['catatan_revisi'], 'peringatan');
+
+                return ['type' => 'success', 'message' => "Catatan revisi untuk {$permintaan->nama_pemohon} berhasil dikirim."];
             }
 
             $disetujui = in_array(
@@ -102,12 +111,13 @@ class PermintaanMagangController extends Controller
                 $permintaan->update([
                     'status' => 'ditolak',
                     'akun_dibuat' => false,
+                    'alasan_penolakan' => $validated['alasan_penolakan'],
                 ]);
 
                 $this->kirimNotifikasiHasil(
                     $permintaan,
                     'Pengajuan Magang Belum Disetujui',
-                    'Mohon maaf, pengajuan magang Anda belum dapat disetujui. Silakan hubungi Admin untuk informasi lebih lanjut.',
+                    'Mohon maaf, pengajuan magang Anda belum dapat disetujui. Alasan: '.$validated['alasan_penolakan'],
                     'peringatan'
                 );
 
@@ -157,6 +167,8 @@ class PermintaanMagangController extends Controller
                 'username_peserta' => $username,
                 'password_awal' => $passwordAwal,
                 'akun_dibuat' => true,
+                'alasan_penolakan' => null,
+                'catatan_revisi' => null,
             ]);
 
             $this->kirimNotifikasiHasil(

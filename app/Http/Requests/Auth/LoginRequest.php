@@ -55,31 +55,44 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => 'Email, username, atau kata sandi salah.',
+                'email' => 'Email, username, atau kata sandi yang Anda masukkan salah.',
             ]);
         }
 
-        // 2. Dapatkan data user yang sedang mencoba login
+        // 2. Dapatkan data user yang berhasil diautentikasi
         $user = Auth::user();
 
-        // 3. Pengecekan Status untuk Karyawan yang masih Pending / Ditolak
-        if ($user->status === 'pending') {
-            Auth::logout(); // Keluarkan kembali session login-nya
-            
-            throw ValidationException::withMessages([
-                'email' => 'Akun Anda masih dalam proses peninjauan oleh Admin. Silakan tunggu konfirmasi.',
-            ]);
+        // 3. Pengecekan Status User (jika ada kolom status pada tabel users / karyawan)
+        if (isset($user->status)) {
+            if (in_array($user->status, ['pending', 'menunggu'], true)) {
+                $this->logoutAndInvalidate();
+
+                throw ValidationException::withMessages([
+                    'email' => 'Akun Anda masih dalam proses peninjauan oleh Admin. Silakan periksa status pengajuan Anda secara berkala.',
+                ]);
+            }
+
+            if (in_array($user->status, ['ditolak', 'nonaktif'], true)) {
+                $this->logoutAndInvalidate();
+
+                throw ValidationException::withMessages([
+                    'email' => 'Akun Anda telah ditolak atau dinonaktifkan. Silakan hubungi Administrator.',
+                ]);
+            }
         }
 
-        if ($user->status === 'ditolak') {
-            Auth::logout();
-            
-            throw ValidationException::withMessages([
-                'email' => 'Pengajuan akun Anda telah ditolak. Silakan hubungi Administrator.',
-            ]);
-        }
-
+        // Reset hit limiter jika autentikasi dan status pengguna valid
         RateLimiter::clear($this->throttleKey());
+    }
+
+    /**
+     * Logout user and invalidate the current session safely.
+     */
+    protected function logoutAndInvalidate(): void
+    {
+        Auth::logout();
+        $this->session()->invalidate();
+        $this->session()->regenerateToken();
     }
 
     /**

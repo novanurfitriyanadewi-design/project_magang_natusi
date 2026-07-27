@@ -7,6 +7,7 @@ use App\Models\Notifikasi;
 use App\Models\PermintaanMagang;
 use App\Models\PermintaanLamaran;
 use App\Models\User;
+use App\Models\RiwayatBerkasMagang;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,30 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    public function uploadRevisi(Request $request, PermintaanMagang $permintaan): RedirectResponse
+    {
+        abort_unless($permintaan->user_id === $request->user()->id_user, 403);
+        abort_unless($permintaan->status === 'perlu_revisi', 422, 'Pengajuan ini tidak sedang memerlukan revisi.');
+
+        $validated = $request->validate([
+            'jenis_berkas' => ['required', 'string', 'max:100'],
+            'berkas' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+        ]);
+
+        $version = (int) $permintaan->riwayatBerkas()->max('versi') + 1;
+        $path = $request->file('berkas')->store("permintaan-magang/{$permintaan->id_permintaan}", 'public');
+
+        RiwayatBerkasMagang::query()->create([
+            'permintaan_id' => $permintaan->id_permintaan,
+            'jenis_berkas' => $validated['jenis_berkas'],
+            'path' => $path,
+            'versi' => $version,
+        ]);
+
+        $permintaan->update(['status' => 'menunggu', 'catatan_revisi' => null]);
+
+        return back()->with('success', 'Berkas revisi berhasil dikirim dan pengajuan kembali menunggu peninjauan.');
+    }
     public function create(): View
     {
         $role = session('register_role', 'pelamar');
@@ -36,25 +61,25 @@ class RegisteredUserController extends Controller
     {
         $user = $request->user();
 
-        abort_unless(
-            $user->role === 'pelamar',
-            403,
-            'Halaman status hanya tersedia untuk pelamar.'
-        );
-
         $permintaan = null;
         if (class_exists(PermintaanLamaran::class)) {
             $permintaan = PermintaanLamaran::query()
-                ->where('user_id', $user->id_user)
-                ->orWhere('email', $user->email)
+                ->where(function ($query) use ($user) {
+                    $query->where('user_id', $user->id_user)
+                        ->orWhere('email', $user->email)
+                        ->orWhereHas('karyawan', fn ($karyawan) => $karyawan->where('user_id', $user->id_user));
+                })
                 ->latest('id_permintaan')
                 ->first();
         }
 
         if (! $permintaan) {
             $permintaan = PermintaanMagang::query()
-                ->where('user_id', $user->id_user)
-                ->orWhere('email', $user->email)
+                ->where(function ($query) use ($user) {
+                    $query->where('user_id', $user->id_user)
+                        ->orWhere('email', $user->email)
+                        ->orWhereHas('peserta', fn ($peserta) => $peserta->where('user_id', $user->id_user));
+                })
                 ->latest('id_permintaan')
                 ->first();
         }
