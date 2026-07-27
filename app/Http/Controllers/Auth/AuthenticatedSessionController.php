@@ -30,22 +30,44 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // Redirect berdasarkan Role User yang sudah disesuaikan dengan Route milikmu
+        if ($user->wajib_ganti_password) {
+            return redirect()->route('profile.edit')->with('warning', 'Demi keamanan, silakan ganti password awal Anda sebelum melanjutkan.');
+        }
+
+        // 1. Cek apakah pengguna adalah Karyawan / Peserta yang BARU DISETUJUI
+        // Agar mereka diarahkan ke halaman status pendaftaran dulu untuk melihat username & password baru
+        $permintaanLamaran = null;
+        if (class_exists('\App\Models\PermintaanLamaran')) {
+            $permintaanLamaran = \App\Models\PermintaanLamaran::where('email', $user->email)
+                ->latest()
+                ->first();
+        }
+
+        $permintaanMagang = \App\Models\PermintaanMagang::where('email', $user->email)
+            ->latest()
+            ->first();
+
+        // Jika statusnya baru disetujui (APPROVED) dan belum dikonfirmasi masuk ke dashboard
+        $isNewlyApprovedKaryawan = $permintaanLamaran && in_array($permintaanLamaran->status, ['APPROVED', 'disetujui']);
+        $isNewlyApprovedMagang   = $permintaanMagang && in_array($permintaanMagang->status, ['APPROVED', 'disetujui']);
+
+        if (($user->role === 'karyawan' && $isNewlyApprovedKaryawan) || ($user->role === 'peserta' && $isNewlyApprovedMagang)) {
+            // Jika dipaksa ingin melihat status pengajuan dulu
+            if (!$request->session()->has('has_seen_credentials')) {
+                return redirect()->route('pengajuan.status');
+            }
+        }
+
+        // 2. Redirect Berdasarkan Role Pengguna
         return match ($user->role) {
-            'superadmin' => redirect()->intended(route('superadmin.dashboard')),
-            'admin'      => redirect()->intended(route('admin.dashboard')),
-            'pelamar'    => redirect()->intended(route('pengajuan.status')),
-
-            // FIX: pendaftar karyawan (termasuk yang statusnya masih interview)
-            // pakai role 'pelamar_karyawan', dulu belum ada case-nya jadi kepentok default.
+            'superadmin'       => redirect()->intended(route('superadmin.dashboard')),
+            'admin'            => redirect()->intended(route('admin.dashboard')),
+            'pelamar',
             'pelamar_karyawan' => redirect()->intended(route('pengajuan.status')),
-
-            // PERBAIKAN DI SINI (Sesuaikan ke nama route peserta-magang yang ada)
-            'peserta'    => redirect()->intended(route('peserta-magang.dashboard')), // atau route('peserta-magang.tugas.index')
-
-            'karyawan'   => redirect()->intended(route('dashboard')),
-            default      => redirect()->route('login')->withErrors([
-                'email'  => 'Role akun tidak dikenali. Silakan hubungi administrator.',
+            'peserta'          => redirect()->intended(route('peserta-magang.dashboard')),
+            'karyawan'         => redirect()->intended(route('karyawan.dashboard')),
+            default            => redirect()->route('login')->withErrors([
+                'email' => 'Role akun tidak dikenali. Silakan hubungi administrator.',
             ]),
         };
     }

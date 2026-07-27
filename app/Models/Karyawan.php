@@ -5,19 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Karyawan extends Model
 {
     use HasFactory;
 
-    // Menyesuaikan nama tabel di database
     protected $table = 'karyawan';
-
-    // Menyesuaikan primary key (default Laravel adalah 'id')
     protected $primaryKey = 'id_karyawan';
 
-    // Kolom yang diizinkan untuk diisi secara massal (mass assignment)
     protected $fillable = [
+        'user_id',
         'permintaan_id',
         'nip',
         'nama_karyawan',
@@ -28,14 +26,16 @@ class Karyawan extends Model
         'status',
     ];
 
-    /**
-     * Relasi ke tabel permintaan_lamaran (Inverse One-to-One atau One-to-Many)
-     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id_user');
+    }
+
     public function permintaanLamaran(): BelongsTo
     {
-        // (NamaModel::class, 'foreign_key', 'owner_key')
         return $this->belongsTo(PermintaanLamaran::class, 'permintaan_id', 'id_permintaan');
     }
+
      public function statusMeta(): array
     {
         return match ($this->status) {
@@ -49,5 +49,11 @@ class Karyawan extends Model
     {
         $words = preg_split('/\s+/', trim($this->nama_karyawan));
         return mb_strtoupper(mb_substr($words[0] ?? '', 0, 1) . mb_substr($words[1] ?? '', 0, 1));
+
+
+    public function absensi(): MorphMany
+    {
+        return $this->morphMany(Absensi::class, 'absentable');
+
     }
 }

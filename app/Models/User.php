@@ -74,6 +74,10 @@ class User extends Authenticatable
             'id_user'
         );
     }
+    public function karyawan(): HasOne
+    {
+        return $this->hasOne(Karyawan::class, 'user_id', 'id_user');
+    }
     public function tugas(): HasMany
     {
         return $this->hasMany(

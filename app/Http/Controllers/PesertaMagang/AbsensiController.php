@@ -105,6 +105,8 @@ class AbsensiController extends Controller
             'status'      => ['required', Rule::in(['hadir', 'sakit', 'izin'])],
             'latitude'    => ['required_if:status,hadir', 'nullable', 'numeric'],
             'longitude'   => ['required_if:status,hadir', 'nullable', 'numeric'],
+            'alamat'      => ['nullable', 'string', 'max:500'],
+            'foto'        => ['required_if:status,hadir', 'nullable', 'image', 'max:5120'],
             'jarak_meter' => ['nullable', 'numeric'],
             'keterangan'  => ['nullable', 'string', 'max:500'],
             'bukti'       => [
@@ -119,6 +121,7 @@ class AbsensiController extends Controller
 
         $suratSakit = null;
         $suratIzin = null;
+        $foto = $request->hasFile('foto') ? $request->file('foto')->store('absensi/foto', 'public') : null;
 
         if ($request->hasFile('bukti')) {
             $path = $request->file('bukti')->store('absensi/bukti', 'public');
@@ -137,6 +140,8 @@ class AbsensiController extends Controller
             'status'      => $validated['status'],
             'latitude'    => $validated['latitude'] ?? null,
             'longitude'   => $validated['longitude'] ?? null,
+            'alamat'      => $validated['alamat'] ?? null,
+            'foto'        => $foto,
             'jarak_meter' => $validated['jarak_meter'] ?? null,
             'surat_sakit' => $suratSakit,
             'surat_izin'  => $suratIzin,

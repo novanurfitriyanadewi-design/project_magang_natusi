@@ -29,7 +29,7 @@
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-rose-600"></div>
             <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Terlambat</span>
-            <p class="text-2xl font-bold text-slate-900 mt-2">{{ $stats['total_terlambat'] }}</p>
+            <p class="text-2xl font-bold text-slate-900 mt-2">{{ $stats['total_overdue'] }}</p>
         </div>
     </div>
 

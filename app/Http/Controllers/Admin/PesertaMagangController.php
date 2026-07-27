@@ -103,12 +103,15 @@ class PesertaMagangController extends Controller
             );
     }
 
-    public function downloadTemplate(): BinaryFileResponse
+    public function downloadTemplatePeserta()
     {
-        return Excel::download(
-            new TemplatePesertaMagangExport(),
-            'template_import_peserta_magang_cv_natusi.xlsx'
-        );
+        $file = public_path('template/peserta magang.xlsx');
+
+        if (!file_exists($file)) {
+            abort(404, 'File template tidak ditemukan.');
+        }
+
+        return response()->download($file, 'peserta magang.xlsx');
     }
 
     public function updateStatus(Request $request, PesertaMagang $pesertaMagang): RedirectResponse

@@ -4,7 +4,7 @@
 
 @section('content')
 <div
-    class="space-y-5"
+    class="space-y-5"x-data="{ importOpen: false }"
     x-data="{
         importOpen: @json($errors->has('file_excel')),
         importLoading: false,
@@ -27,10 +27,8 @@
         closeDetail() {
             this.detailOpen = false;
         }
-    }"
-    x-effect="document.body.classList.toggle('overflow-hidden', importOpen || importLoading || detailOpen)"
-    @keydown.escape.window="if (!importLoading) { importOpen = false; closeImportResult(); closeDetail(); }"
->
+    }">
+
     <section class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
             <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
@@ -377,8 +375,7 @@
                 </div>
                 <button
                     type="button"
-                    @click="if (!importLoading) importOpen = false"
-                    :disabled="importLoading"
+                    @click="importOpen = false"
                     class="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <span class="material-symbols-outlined">close</span>
@@ -418,9 +415,8 @@
                 <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                     <button
                         type="button"
-                        @click="if (!importLoading) importOpen = false"
-                        :disabled="importLoading"
-                        class="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        @click.stop="importOpen = false; importLoading = false"
+                        class="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100"
                     >
                         Batal
                     </button>
@@ -428,12 +424,17 @@
                         type="submit"
                         :disabled="importLoading"
                         class="inline-flex min-w-[145px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(2,132,199,0.22)] transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-80"
-                    >
+                    > upload
                         <template x-if="!importLoading">
-                            <span class="inline-flex items-center gap-2">
+                             <span
+                                x-show="!importLoading"
+                                class="inline-flex items-center gap-2"
+                            >
+                            
                                 <span class="material-symbols-outlined text-[19px]">upload</span>
-                                Import Data
+                                <span>Import Data</span>
                             </span>
+
                         </template>
                         <template x-if="importLoading">
                             <span class="inline-flex items-center gap-2">

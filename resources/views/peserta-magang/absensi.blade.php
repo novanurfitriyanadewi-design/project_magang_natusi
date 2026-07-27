@@ -116,6 +116,13 @@
 
                                 <input type="hidden" name="latitude" :value="lat">
                                 <input type="hidden" name="longitude" :value="lng">
+                                <input type="hidden" name="alamat" :value="lat && lng ? `Koordinat ${lat.toFixed(6)}, ${lng.toFixed(6)}` : ''">
+
+                                <div class="mt-4">
+                                    <label class="block text-sm font-semibold text-slate-900 mb-2">Foto Kehadiran</label>
+                                    <input type="file" name="foto" accept="image/*" capture="user" class="block w-full text-sm">
+                                    @error('foto')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                                </div>
 
                                 @error('latitude')
                                     <p class="text-xs text-red-600 mt-2">Lokasi wajib dideteksi sebelum submit.</p>

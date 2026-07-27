@@ -23,7 +23,6 @@
             ['label' => 'Permintaan Magang', 'route' => 'admin.permintaan.index', 'match' => 'admin.permintaan.*', 'icon' => 'inbox', 'tour' => 'internship-requests'],
             ['label' => 'Permintaan Lamaran', 'route' => 'admin.permintaan-lamaran.index', 'match' => 'admin.permintaan-lamaran.*', 'icon' => 'inbox', 'tour' => 'permintaan-lamaran'],
 
-
             [
                 'label' => 'Karyawan',
                 'icon' => 'users',
@@ -48,7 +47,6 @@
                     ['label' => 'Pembayaran Sumbangan', 'route' => 'admin.pembayaran.index', 'match' => 'admin.pembayaran.*', 'tour' => 'pembayaran-peserta'],
                     ['label' => 'Kelola Tugas', 'route' => 'admin.tugas.index', 'match' => 'admin.tugas.*', 'tour' => 'manage-tasks'],
                     ['label' => 'Pengumpulan Tugas', 'route' => 'admin.pengumpulan-tugas.index', 'match' => 'admin.pengumpulan-tugas.*', 'tour' => 'task-submissions'],
-                   
                 ],
             ],
 
@@ -132,7 +130,6 @@
 @endphp
 
 <style>
-    /* Scrollbar menu sidebar: tetap terlihat agar pengguna mengetahui menu dapat digulir. */
     .natusi-sidebar-scrollbar {
         scrollbar-width: thin;
         scrollbar-color: rgba(186, 230, 253, 0.82) rgba(255, 255, 255, 0.10);
@@ -206,7 +203,6 @@
                         $groupActive = collect($menu['children'])->contains(fn ($c) => request()->routeIs($c['match']));
                     @endphp
 
-                    {{-- ITEM GROUP (dropdown) --}}
                     <div>
                         <button
                             type="button"
@@ -281,7 +277,6 @@
                         $href = $available ? route($menu['route']) : '#';
                     @endphp
 
-                    {{-- ITEM BIASA (tanpa children) --}}
                     <a
                         href="{{ $href }}"
                         data-tour="{{ $menu['tour'] ?? '' }}"

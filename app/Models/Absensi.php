@@ -19,6 +19,8 @@ class Absensi extends Model
         'status',
         'latitude',
         'longitude',
+        'alamat',
+        'foto',
         'jarak_meter',
         'surat_izin',
         'surat_sakit',

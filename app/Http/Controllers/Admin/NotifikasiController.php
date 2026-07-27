@@ -8,7 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
-class NotifikasiController extends ApiCrudController
+class NotifikasiController extends Controller
 {
     protected string $modelClass = Notifikasi::class;
     protected array $with = ['user'];

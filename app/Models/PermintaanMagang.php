@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PermintaanMagang extends Model
 {
@@ -27,6 +28,8 @@ class PermintaanMagang extends Model
         'username_peserta',
         'password_awal',
         'akun_dibuat',
+        'alasan_penolakan',
+        'catatan_revisi',
     ];
 
     protected function casts(): array
@@ -52,5 +55,10 @@ class PermintaanMagang extends Model
             'permintaan_id',
             'id_permintaan'
         );
+    }
+
+    public function riwayatBerkas(): HasMany
+    {
+        return $this->hasMany(RiwayatBerkasMagang::class, 'permintaan_id', 'id_permintaan');
     }
 }

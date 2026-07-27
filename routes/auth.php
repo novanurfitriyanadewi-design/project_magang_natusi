@@ -59,6 +59,9 @@ Route::middleware('auth')->group(function () {
         [RegisteredUserController::class, 'status']
     )->name('pengajuan.status');
 
+    Route::post('pengajuan/{permintaan}/berkas-revisi', [RegisteredUserController::class, 'uploadRevisi'])
+        ->name('pengajuan.revisi.upload');
+
     Route::get(
         'verify-email',
         EmailVerificationPromptController::class

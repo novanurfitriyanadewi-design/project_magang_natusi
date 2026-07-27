@@ -6,7 +6,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php
-        $isEmployee = auth()->check() && (auth()->user()->role === 'karyawan' || auth()->user()->role === 'pelamar_karyawan');
+        $user = auth()->user();
+        $isEmployee = auth()->check() && (
+            ($user->role ?? '') === 'karyawan' ||
+            ($user->role ?? '') === 'pelamar_karyawan'
+        );
     @endphp
 
     <title>Status Pengajuan {{ $isEmployee ? 'Karyawan' : 'Magang' }} | CV Natusi Portal</title>
@@ -21,6 +25,7 @@
 
 <body class="min-h-screen bg-[#f6f8ff] font-['Inter'] text-slate-900 antialiased">
 @php
+    $permintaan = $permintaan ?? null;
     $status = strtolower($permintaan->status ?? 'menunggu');
     $notifications = $notifications ?? collect();
     $unreadNotificationCount = $unreadNotificationCount ?? 0;
@@ -28,6 +33,16 @@
 
     // Deteksi Role Pendaftaran
     $isEmployee = $isEmployee ?? (session('register_role') === 'karyawan' || ($permintaan->role ?? '') === 'karyawan');
+
+    // Format Tanggal Interview Aman
+    $jadwalFormatted = null;
+    if (!empty($permintaan?->jadwal_interview)) {
+        try {
+            $jadwalFormatted = \Illuminate\Support\Carbon::parse($permintaan->jadwal_interview)->translatedFormat('d M Y, H:i');
+        } catch (\Exception $e) {
+            $jadwalFormatted = $permintaan->jadwal_interview;
+        }
+    }
 
     $statusMeta = match ($status) {
         'interview' => [
@@ -38,10 +53,8 @@
             'icon_bg' => 'bg-indigo-100 text-indigo-700',
             'badge_class' => 'border-indigo-200 bg-indigo-50 text-indigo-700',
             'information_title' => 'Anda Diundang untuk Interview',
-            'information' => $permintaan->jadwal_interview
-                ? 'Silakan datang ke kantor pada '
-                    . \Illuminate\Support\Carbon::parse($permintaan->jadwal_interview)->translatedFormat('d M Y, H:i')
-                    . ' di ' . $permintaan->lokasi_interview . '. Mohon datang tepat waktu dan membawa berkas pendukung.'
+            'information' => $jadwalFormatted
+                ? 'Silakan datang ke kantor pada ' . $jadwalFormatted . ' WIB di ' . ($permintaan->lokasi_interview ?? 'kantor CV Natusi') . '. Mohon datang tepat waktu dan membawa berkas pendukung.'
                 : 'Tim HRD CV Natusi akan segera menghubungi Anda untuk menentukan jadwal interview.',
         ],
         'disetujui' => [
@@ -64,7 +77,17 @@
             'icon_bg' => 'bg-rose-100 text-rose-700',
             'badge_class' => 'border-rose-200 bg-rose-50 text-rose-700',
             'information_title' => 'Pengajuan Belum Dapat Disetujui',
-            'information' => 'Silakan hubungi Tim HRD CV Natusi apabila memerlukan informasi lebih lanjut mengenai hasil evaluasi lamaran Anda.',
+            'information' => $permintaan->alasan_penolakan ?: 'Silakan hubungi Tim HRD CV Natusi apabila memerlukan informasi lebih lanjut mengenai hasil evaluasi lamaran Anda.',
+        ],
+        'perlu_revisi' => [
+            'title' => 'PERLU REVISI BERKAS',
+            'badge' => 'PERLU REVISI',
+            'icon' => '!',
+            'border' => 'border-l-amber-500',
+            'icon_bg' => 'bg-amber-100 text-amber-700',
+            'badge_class' => 'border-amber-200 bg-amber-50 text-amber-700',
+            'information_title' => 'Admin Meminta Revisi',
+            'information' => $permintaan->catatan_revisi ?: 'Silakan unggah berkas yang diminta oleh Admin.',
         ],
         default => [
             'title' => 'MENUNGGU KONFIRMASI',
@@ -200,123 +223,161 @@
                     </div>
                 @endif
 
-                {{-- Card Status Utama --}}
-                <section class="overflow-hidden rounded-2xl border border-slate-200 border-l-4 {{ $statusMeta['border'] }} bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
-                    <div class="flex flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
-                        <div class="flex items-center gap-4">
-                            <span class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-2xl font-black {{ $statusMeta['icon_bg'] }}">{{ $statusMeta['icon'] }}</span>
-                            <div class="min-w-0">
-                                <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                                    Status Pengajuan {{ $isEmployee ? 'Karyawan' : 'Magang' }}
+                @if(!$permintaan)
+                    {{-- Alert jika $permintaan tidak dikirim dari Controller --}}
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-amber-800">
+                        <p class="font-bold">Data Pengajuan Tidak Ditemukan</p>
+                        <p class="text-xs mt-1">Anda belum mengajukan pendaftaran atau data sedang diproses.</p>
+                    </div>
+                @else
+                    {{-- Card Status Utama --}}
+                    <section class="overflow-hidden rounded-2xl border border-slate-200 border-l-4 {{ $statusMeta['border'] }} bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
+                        <div class="flex flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex items-center gap-4">
+                                <span class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-2xl font-black {{ $statusMeta['icon_bg'] }}">{{ $statusMeta['icon'] }}</span>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                                        Status Pengajuan {{ $isEmployee ? 'Karyawan' : 'Magang' }}
+                                    </p>
+                                    <div class="mt-1 flex flex-wrap items-center gap-3">
+                                        <h1 class="text-xl font-extrabold tracking-tight text-slate-950 sm:text-2xl">{{ $statusMeta['title'] }}</h1>
+                                        <span class="inline-flex rounded-full border px-3 py-1 text-[10px] font-extrabold {{ $statusMeta['badge_class'] }}">{{ $statusMeta['badge'] }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <span class="text-xs font-semibold text-slate-400">ID #{{ str_pad($permintaan->id_permintaan ?? $permintaan->id ?? 0, 5, '0', STR_PAD_LEFT) }}</span>
+                        </div>
+                    </section>
+
+                    {{-- Banner Informasi --}}
+                    <section class="rounded-2xl border border-sky-200 bg-sky-50 px-5 py-5 shadow-sm">
+                        <div class="flex items-start gap-4">
+                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-700 font-black text-white">i</span>
+                            <div>
+                                <h2 class="text-base font-extrabold text-sky-800">{{ $statusMeta['information_title'] }}</h2>
+                                <p class="mt-2 text-sm leading-6 text-slate-600">{{ $statusMeta['information'] }}</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {{-- Kartu Jadwal Interview --}}
+                    @if($status === 'interview' && !empty($permintaan->jadwal_interview))
+                        <section class="overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-[0_16px_38px_rgba(79,70,229,0.10)]">
+                            <header class="border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-5">
+                                <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-indigo-700">Jadwal Interview</p>
+                                <h2 class="mt-1 text-lg font-extrabold text-slate-950">Catat waktu dan lokasi berikut</h2>
+                            </header>
+
+                            <div class="grid gap-4 px-6 py-6 sm:grid-cols-2">
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                                    <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Tanggal &amp; Jam</p>
+                                    <p class="mt-2 text-lg font-black text-slate-900">
+                                        {{ $jadwalFormatted }} WIB
+                                    </p>
+                                </div>
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                                    <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Lokasi</p>
+                                    <p class="mt-2 text-lg font-black text-slate-900">{{ $permintaan->lokasi_interview ?? '-' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-indigo-100 bg-indigo-50 px-6 py-4 text-xs leading-5 text-indigo-800">
+                                Mohon datang 15 menit lebih awal dan membawa dokumen pendukung (KTP, CV, portofolio jika ada).
+                            </div>
+                        </section>
+                    @endif
+
+                    @if($status === 'perlu_revisi' && !$isEmployee)
+                        <form method="POST" action="{{ route('pengajuan.revisi.upload', $permintaan) }}" enctype="multipart/form-data" class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                            @csrf
+                            <p class="text-sm font-bold text-amber-900">Unggah Berkas Revisi</p>
+                            <input name="jenis_berkas" required placeholder="Jenis berkas, mis. surat pengantar" class="mt-3 w-full rounded-lg border-amber-200 text-sm" />
+                            <input type="file" name="berkas" required accept=".pdf,.jpg,.jpeg,.png" class="mt-3 block w-full text-sm" />
+                            @error('berkas')<p class="mt-2 text-xs text-rose-600">{{ $message }}</p>@enderror
+                            <button class="mt-3 rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white">Kirim Berkas Baru</button>
+                        </form>
+                    @endif
+
+                   {{-- Kartu Kredensial Akun --}}
+@if($status === 'disetujui')
+    @php
+        // Ambil data username dan password dengan fallback ke properti yang digunakan controller
+        $usernameAkun = $permintaan->username_karyawan ?? $permintaan->username_peserta ?? $permintaan->email ?? null;
+        $passwordAkun = $permintaan->password_karyawan ?? $permintaan->password_awal ?? null;
+    @endphp
+
+    <section class="overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-[0_16px_38px_rgba(16,185,129,0.10)]">
+        <header class="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5">
+            <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">
+                Akun {{ $isEmployee ? 'Karyawan' : 'Peserta Magang' }} Baru
+            </p>
+            <h2 class="mt-1 text-lg font-extrabold text-slate-950">Simpan kredensial berikut untuk login</h2>
+        </header>
+
+        <div class="grid gap-4 px-6 py-6 sm:grid-cols-2">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Username / Email Login</p>
+                <p class="mt-2 break-all font-mono text-lg font-black text-slate-900">{{ $usernameAkun ?? '-' }}</p>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Password Baru</p>
+                <p class="mt-2 break-all font-mono text-lg font-black text-emerald-700 bg-emerald-100 px-3 py-1 rounded-lg inline-block">
+                    {{ $passwordAkun ?? 'Password telah diset' }}
+                </p>
+            </div>
+        </div>
+
+        <div class="border-t border-emerald-100 bg-emerald-50 px-6 py-4 flex items-center justify-end">
+            <form method="POST" action="{{ route('logout') }}" class="shrink-0">
+                @csrf
+                <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-extrabold text-white transition hover:bg-emerald-700 shadow-sm">
+                    Keluar
+                </button>
+            </form>
+        </div>
+    </section>
+@endif
+
+                    {{-- Detail Berkas Pengajuan --}}
+                    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
+                        <header class="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-5">
+                            <h2 class="text-lg font-extrabold text-slate-950">Detail Pengajuan</h2>
+                            <span class="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-500">
+                                Dikirim {{ $permintaan->created_at ? \Illuminate\Support\Carbon::parse($permintaan->created_at)->translatedFormat('d M Y, H:i') : '-' }}
+                            </span>
+                        </header>
+
+                        <div class="grid gap-x-10 gap-y-6 px-6 py-6 sm:grid-cols-2">
+                            @php
+                                $details = [
+                                    ['label' => 'Nama Lengkap', 'value' => $permintaan->nama_pemohon ?? null],
+                                    ['label' => 'Alamat Email', 'value' => $permintaan->email ?? null],
+                                    ['label' => $isEmployee ? 'Pendidikan Terakhir' : 'Asal Sekolah / Universitas', 'value' => $permintaan->nama_sekolah ?? null],
+                                    ['label' => $isEmployee ? 'Bidang / Keahlian' : 'Jurusan', 'value' => $permintaan->jurusan ?? null],
+                                    ['label' => $isEmployee ? 'Posisi Yang Dilamar' : 'NIS / NIM', 'value' => $permintaan->no_induk ?? null],
+                                    ['label' => 'Nomor Telepon / WA', 'value' => $permintaan->no_hp ?? null],
+                                ];
+                            @endphp
+
+                            @foreach($details as $item)
+                                <div>
+                                    <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{{ $item['label'] }}</p>
+                                    <p class="mt-2 break-words text-sm font-semibold text-slate-800">{{ filled($item['value']) ? $item['value'] : '-' }}</p>
+                                </div>
+                            @endforeach
+
+                            <div class="sm:col-span-2">
+                                <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">
+                                    {{ $isEmployee ? 'Ringkasan Diri / Pengalaman' : 'Deskripsi / Pertanyaan' }}
                                 </p>
-                                <div class="mt-1 flex flex-wrap items-center gap-3">
-                                    <h1 class="text-xl font-extrabold tracking-tight text-slate-950 sm:text-2xl">{{ $statusMeta['title'] }}</h1>
-                                    <span class="inline-flex rounded-full border px-3 py-1 text-[10px] font-extrabold {{ $statusMeta['badge_class'] }}">{{ $statusMeta['badge'] }}</span>
+                                <div class="mt-2 min-h-20 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm italic leading-6 text-slate-600">
+                                    {{ filled($permintaan->pesan ?? null) ? $permintaan->pesan : 'Tidak ada catatan tambahan.' }}
                                 </div>
                             </div>
                         </div>
-
-                        <span class="text-xs font-semibold text-slate-400">ID #{{ str_pad($permintaan->id_permintaan, 5, '0', STR_PAD_LEFT) }}</span>
-                    </div>
-                </section>
-
-                {{-- Banner Informasi --}}
-                <section class="rounded-2xl border border-sky-200 bg-sky-50 px-5 py-5 shadow-sm">
-                    <div class="flex items-start gap-4">
-                        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-700 font-black text-white">i</span>
-                        <div>
-                            <h2 class="text-base font-extrabold text-sky-800">{{ $statusMeta['information_title'] }}</h2>
-                            <p class="mt-2 text-sm leading-6 text-slate-600">{{ $statusMeta['information'] }}</p>
-                        </div>
-                    </div>
-                </section>
-
-                {{-- Kartu Jadwal Interview (Hanya Tampil Jika Status Interview) --}}
-                @if($status === 'interview' && $permintaan->jadwal_interview)
-                    <section class="overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-[0_16px_38px_rgba(79,70,229,0.10)]">
-                        <header class="border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-5">
-                            <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-indigo-700">Jadwal Interview</p>
-                            <h2 class="mt-1 text-lg font-extrabold text-slate-950">Catat waktu dan lokasi berikut</h2>
-                        </header>
-
-                        <div class="grid gap-4 px-6 py-6 sm:grid-cols-2">
-                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
-                                <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Tanggal &amp; Jam</p>
-                                <p class="mt-2 text-lg font-black text-slate-900">
-                                    {{ \Illuminate\Support\Carbon::parse($permintaan->jadwal_interview)->translatedFormat('d M Y, H:i') }} WIB
-                                </p>
-                            </div>
-                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
-                                <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Lokasi</p>
-                                <p class="mt-2 text-lg font-black text-slate-900">{{ $permintaan->lokasi_interview ?? '-' }}</p>
-                            </div>
-                        </div>
-
-                        <div class="border-t border-indigo-100 bg-indigo-50 px-6 py-4 text-xs leading-5 text-indigo-800">
-                            Mohon datang 15 menit lebih awal dan membawa dokumen pendukung (KTP, CV, portofolio jika ada).
-                        </div>
                     </section>
                 @endif
-
-                {{-- Kartu Kredensial Akun (Hanya Tampil Jika Diterima) --}}
-                @if($status === 'disetujui' && $permintaan->akun_dibuat && filled($permintaan->username_peserta) && filled($permintaan->password_awal))
-                    <section class="overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-[0_16px_38px_rgba(16,185,129,0.10)]">
-                        <header class="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5">
-                            <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">
-                                Akun {{ $isEmployee ? 'Karyawan' : 'Peserta Magang' }}
-                            </p>
-                            <h2 class="mt-1 text-lg font-extrabold text-slate-950">Simpan username dan password berikut</h2>
-                        </header>
-
-                        <div class="grid gap-4 px-6 py-6 sm:grid-cols-2">
-                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
-                                <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Username</p>
-                                <p class="mt-2 break-all font-mono text-lg font-black text-slate-900">{{ $permintaan->username_peserta }}</p>
-                            </div>
-                            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
-                                <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Password Awal</p>
-                                <p class="mt-2 break-all font-mono text-lg font-black text-slate-900">{{ $permintaan->password_awal }}</p>
-                            </div>
-                        </div>
-
-                        <div class="border-t border-emerald-100 bg-emerald-50 px-6 py-4 text-xs leading-5 text-emerald-800">
-                            Keluar dari akun pelamar, lalu masuk kembali menggunakan username dan password di atas untuk mengakses portal kerja. Jangan lupa memperbarui password awal Anda melalui menu profil.
-                        </div>
-                    </section>
-                @endif
-
-                {{-- Detail Berkas Pengajuan --}}
-                <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
-                    <header class="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-5">
-                        <h2 class="text-lg font-extrabold text-slate-950">Detail Pengajuan</h2>
-                        <span class="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-500">Dikirim {{ $permintaan->created_at?->translatedFormat('d M Y, H:i') }}</span>
-                    </header>
-
-                    <div class="grid gap-x-10 gap-y-6 px-6 py-6 sm:grid-cols-2">
-                        @foreach([
-                            ['Nama Lengkap', $permintaan->nama_pemohon],
-                            ['Alamat Email', $permintaan->email],
-                            [$isEmployee ? 'Pendidikan Terakhir' : 'Asal Sekolah / Universitas', $permintaan->nama_sekolah],
-                            [$isEmployee ? 'Bidang / Keahlian' : 'Jurusan', $permintaan->jurusan],
-                            [$isEmployee ? 'Posisi Yang Dilamar' : 'NIS / NIM', $permintaan->no_induk],
-                            ['Nomor Telepon / WA', $permintaan->no_hp],
-                        ] as [$label, $value])
-                            <div>
-                                <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{{ $label }}</p>
-                                <p class="mt-2 break-words text-sm font-semibold text-slate-800">{{ filled($value) ? $value : '-' }}</p>
-                            </div>
-                        @endforeach
-
-                        <div class="sm:col-span-2">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">
-                                {{ $isEmployee ? 'Ringkasan Diri / Pengalaman' : 'Deskripsi / Pertanyaan' }}
-                            </p>
-                            <div class="mt-2 min-h-20 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm italic leading-6 text-slate-600">
-                                {{ filled($permintaan->pesan) ? $permintaan->pesan : 'Tidak ada catatan tambahan.' }}
-                            </div>
-                        </div>
-                    </div>
-                </section>
             </div>
 
             {{-- Sidebar --}}
@@ -343,7 +404,7 @@
 
     <footer class="border-t border-slate-200 bg-white">
         <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 text-[10px] text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-            <p>© {{ now()->year }} <strong>CV Natusi</strong>. Portal Pendaftaran {{ $isEmployee ? 'Karyawan' : 'Magang' }}.</p>
+            <p>© {{ date('Y') }} <strong>CV Natusi</strong>. Portal Pendaftaran {{ $isEmployee ? 'Karyawan' : 'Magang' }}.</p>
             <p>Status diperbarui setiap kali halaman dimuat ulang.</p>
         </div>
     </footer>

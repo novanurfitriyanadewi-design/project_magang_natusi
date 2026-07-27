@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugas
 use App\Http\Controllers\Admin\TugasController as AdminTugasController;
 use App\Http\Controllers\Admin\PermintaanMagangController as AdminPermintaanMagangController;
 use App\Http\Controllers\Admin\DataAbsensiController as AdminDataAbsensiController;
+use App\Http\Controllers\Admin\AbsensiKaryawanController as AdminAbsensiKaryawanController;
 use App\Http\Controllers\Admin\DataPembayaranController as AdminDataPembayaranController;
 use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetodePembayaranController;
 use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTugasController;
@@ -35,6 +36,11 @@ use App\Http\Controllers\PesertaMagang\PembayaranController as PesertaMagangPemb
 use App\Http\Controllers\PesertaMagang\LaporanMingguanController as PesertaMagangLaporanMingguanController;
 use App\Http\Controllers\Peserta\TugasController as PesertaTugasController;
 
+// Karyawan Controllers
+use App\Http\Controllers\Karyawan\DashboardController as KaryawanDashboardController;
+use App\Http\Controllers\Karyawan\ResignController;
+use App\Http\Controllers\Karyawan\PengumumanController; // Sesuaikan jika ada
+use App\Http\Controllers\Karyawan\AturanController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,7 +52,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', static fn () => redirect()->route('login'));
 
 Route::middleware('guest')->group(function (): void {
-    // Session helper untuk membedakan pendaftaran Pelamar Magang vs Karyawan
     Route::get('/register/pelamar', function () {
         session(['register_role' => 'pelamar']);
         return redirect()->route('register');
@@ -68,11 +73,12 @@ Route::middleware('auth')->get('/dashboard', function () {
     $user = auth()->user();
 
     return match ($user?->role) {
-        'superadmin'                   => redirect()->route('superadmin.dashboard'),
-        'admin', 'karyawan'            => redirect()->route('admin.dashboard'), // Hanya Karyawan RESMI (sudah di-approve)
-        'pelamar', 'pelamar_karyawan'  => redirect()->route('pengajuan.status'), // Calon Karyawan & Pelamar Magang ke Status
-        'peserta'                      => redirect()->route('peserta-magang.dashboard'),
-        default                        => view('dashboard'),
+        'superadmin'                => redirect()->route('superadmin.dashboard'),
+        'admin'                     => redirect()->route('admin.dashboard'),
+        'karyawan'                  => redirect()->route('karyawan.dashboard'),
+        'pelamar', 'pelamar_karyawan' => redirect()->route('pengajuan.status'),
+        'peserta'                   => redirect()->route('peserta-magang.dashboard'),
+        default                     => view('dashboard'),
     };
 })->name('dashboard');
 
@@ -102,8 +108,6 @@ Route::middleware('auth')->group(function (): void {
         ->name('profile.photo.show');
 
     // Notifikasi
-    Route::patch('/notifikasi/baca-semua', [NotifikasiController::class, 'tandaiSemuaDibacaWeb'])
-        ->name('notifikasi.read-all');
 
     Route::patch('/notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'tandaiDibacaWeb'])
         ->whereNumber('notifikasi')
@@ -179,7 +183,7 @@ Route::middleware(['auth', 'role:admin,karyawan'])
 
         /* Data Peserta Magang */
         Route::get('/peserta/template', function () {
-            $templatePath = public_path('template/template_peserta_magang.xlsx');
+            $templatePath = public_path('template/peserta_magang.xlsx');
 
             abort_unless(
                 file_exists($templatePath),
@@ -189,7 +193,7 @@ Route::middleware(['auth', 'role:admin,karyawan'])
 
             return response()->download(
                 $templatePath,
-                'template_peserta_magang.xlsx'
+                'peserta_magang.xlsx'
             );
         })->name('peserta.template');
 
@@ -202,6 +206,7 @@ Route::middleware(['auth', 'role:admin,karyawan'])
         Route::resource('peserta', AdminPesertaMagangController::class)
             ->except(['create'])
             ->parameters(['peserta' => 'peserta_magang']);
+
 
         /* Permintaan Magang */
         Route::get('/permintaan', [AdminPermintaanMagangController::class, 'index'])
@@ -250,6 +255,9 @@ Route::middleware(['auth', 'role:admin,karyawan'])
         Route::get('/tugas/template/download', [AdminTugasController::class, 'downloadTemplate'])
             ->name('tugas.template.download');
 
+        Route::get('/tugas/template-excel/download', [AdminTugasController::class, 'downloadTemplateExcel'])
+            ->name('tugas.template-excel.download');
+
         Route::post('/tugas/template-laporan', [AdminTugasController::class, 'storeTemplateLaporan'])
             ->name('tugas.template-laporan.store');
 
@@ -282,6 +290,15 @@ Route::middleware(['auth', 'role:admin,karyawan'])
         Route::get('/absensi', [AdminDataAbsensiController::class, 'index'])
             ->name('absensi.index');
 
+        /* Absensi Karyawan */
+        Route::get('/absensi-karyawan', [AdminAbsensiKaryawanController::class, 'index'])
+            ->name('absensi-karyawan.index');
+        Route::post('/absensi-karyawan', [AdminAbsensiKaryawanController::class, 'store'])
+            ->name('absensi-karyawan.store');
+        Route::delete('/absensi-karyawan/{absensiKaryawan}', [AdminAbsensiKaryawanController::class, 'destroy'])
+            ->name('absensi-karyawan.destroy');
+        Route::get('/absensi-karyawan/export', [AdminAbsensiKaryawanController::class, 'export'])
+            ->name('absensi-karyawan.export');
         /* Metode Pembayaran */
         Route::get('/metode-pembayaran', [AdminDataMetodePembayaranController::class, 'index'])
             ->name('metode-pembayaran.index');
@@ -357,34 +374,71 @@ Route::middleware(['auth', 'role:peserta'])
 
 /*
 |--------------------------------------------------------------------------
-| Status Pengajuan Pelamar (Magang & Karyawan)
+| Dashboard Karyawan
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'role:pelamar,pelamar_karyawan'])->group(function () {
+Route::middleware(['auth', 'role:karyawan'])
+    ->prefix('karyawan')
+    ->name('karyawan.')
+    ->group(function (): void {
+        Route::get('/dashboard', [KaryawanDashboardController::class, 'index'])->name('dashboard');
+        
+        // Tambahkan rute-rute berikut agar tidak error:
+        Route::get('/absensi', [KaryawanDashboardController::class, 'absensiIndex'])->name('absensi.index');
+        Route::post('/absensi/clock-in', [KaryawanDashboardController::class, 'clockIn'])->name('absensi.clockin');
+        
+        Route::get('/resign/create', [ResignController::class, 'create'])->name('resign.create');
+        Route::post('/resign', [ResignController::class, 'store'])->name('resign.store');
+        Route::get('/resign/{resign}', [ResignController::class, 'show'])->name('resign.show');
+
+        Route::get('/cuti', [KaryawanDashboardController::class, 'cutiIndex'])->name('cuti.index'); // Sesuaikan controller
+        Route::get('/payslip', [KaryawanDashboardController::class, 'payslipIndex'])->name('payslip.index'); // Sesuaikan controller
+        Route::get('/reimbursement', [KaryawanDashboardController::class, 'reimbursementIndex'])->name('reimbursement.index'); // Sesuaikan controller
+        Route::get('/profil/edit', [ProfileController::class, 'edit'])->name('profil.edit'); // Sesuaikan controller
+        
+        Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
+        Route::get('/pengumuman/{pengumuman}', [PengumumanController::class, 'show'])->name('pengumuman.show');
+
+        Route::get('/aturan', [AturanController::class, 'index'])->name('aturan.index');
+        Route::get('/helpdesk', [KaryawanDashboardController::class, 'helpdeskIndex'])->name('helpdesk.index'); // Sesuaikan controller
+    });
+/*
+|--------------------------------------------------------------------------
+| Status Pengajuan Pelamar & Karyawan / Peserta Baru
+|--------------------------------------------------------------------------
+*/
+
+// PERBAIKAN: Role karyawan dan peserta ditambahkan agar bisa membuka halaman ini setelah disetujui
+Route::middleware(['auth', 'role:pelamar,pelamar_karyawan,karyawan,peserta'])->group(function () {
     Route::get('/pengajuan/status', function () {
         $user = auth()->user();
 
+        // Mark session bahwa pengguna sudah melihat kredensial
+        session(['has_seen_credentials' => true]);
+
         // 1. Coba cari di PermintaanMagang lebih dulu
-        $permintaan = \App\Models\PermintaanMagang::where('email', $user->email)
-            ->latest()
+        $permintaan = \App\Models\PermintaanMagang::where('user_id', $user->id_user)
+            ->orWhere('email', $user->email)
+            ->latest('id_permintaan')
             ->first();
 
         // 2. Jika tidak ada dan ada model PermintaanLamaran (karyawan), ambil dari sana
         if (! $permintaan && class_exists('\App\Models\PermintaanLamaran')) {
-            $permintaan = \App\Models\PermintaanLamaran::where('email', $user->email)
-                ->latest()
+            $permintaan = \App\Models\PermintaanLamaran::where('user_id', $user->id_user)
+                ->orWhere('email', $user->email)
+                ->latest('id_permintaan')
                 ->first();
         }
 
         // 3. Mengambil notifikasi terkait user
-        $notifications = \App\Models\Notifikasi::where('user_id', $user->id)
+        $notifications = \App\Models\Notifikasi::where('user_id', $user->id_user)
             ->latest()
             ->get();
 
         $unreadNotificationCount = $notifications->where('dibaca', false)->count();
 
-        return view('pelamar.status-pengajuan', [
+        return view('auth.status-pengajuan', [
             'permintaan' => $permintaan,
             'notifications' => $notifications,
             'unreadNotificationCount' => $unreadNotificationCount,
@@ -399,3 +453,4 @@ Route::middleware(['auth', 'role:pelamar,pelamar_karyawan'])->group(function () 
 */
 
 require __DIR__ . '/auth.php';
+
