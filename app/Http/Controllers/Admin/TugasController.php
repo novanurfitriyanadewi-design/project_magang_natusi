@@ -47,7 +47,7 @@ class TugasController extends Controller
             ->latest('id_template_laporan')
             ->get();
 
-        return view('admin-tugas', compact('tugasList', 'templateLaporan'));
+        return view('admin.admin-tugas', compact('tugasList', 'templateLaporan'));
     }
 
     public function store(Request $request)
