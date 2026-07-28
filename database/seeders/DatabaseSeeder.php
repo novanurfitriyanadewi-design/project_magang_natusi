@@ -24,10 +24,5 @@ class DatabaseSeeder extends Seeder
                 'wajib_ganti_password' => false,
             ]
         );
-
-        // 2. Menjalankan PesertaMagangSeeder
-        $this->call([
-            PesertaMagangSeeder::class,
-        ]);
     }
 }

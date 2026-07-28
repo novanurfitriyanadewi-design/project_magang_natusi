@@ -58,6 +58,16 @@ class User extends Authenticatable
         return $this->role === 'peserta';
     }
 
+    public function isPembinaPKL(): bool
+    {
+        return $this->role === 'pembina_pkl';
+    }
+
+    public function isKaryawan(): bool
+    {
+        return $this->role === 'karyawan';
+    }
+
     public function permintaanMagang(): HasMany
     {
         return $this->hasMany(

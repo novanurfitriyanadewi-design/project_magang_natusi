@@ -14,6 +14,7 @@ use App\Http\Controllers\PermintaanMagangController;
 use App\Http\Controllers\PesertaMagangController;
 use App\Http\Controllers\TugasController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Admin\NotifikasiController as AdminNotifikasiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/status', fn () => response()->json([
@@ -32,6 +33,11 @@ Route::middleware('auth.api')->group(function () {
     Route::get('/notifikasi-saya', [NotifikasiController::class, 'milikSaya']);
     Route::put('/notifikasi/tandai-semua-dibaca', [NotifikasiController::class, 'tandaiSemuaDibaca']);
     Route::put('/notifikasi/{id}/dibaca', [NotifikasiController::class, 'tandaiDibaca']);
+
+    // Admin Notifikasi API
+    Route::get('/admin/notifikasi/milik-saya', [AdminNotifikasiController::class, 'milikSaya']);
+    Route::post('/admin/notifikasi/{id}/tandai-dibaca', [AdminNotifikasiController::class, 'tandaiDibaca']);
+    Route::post('/admin/notifikasi/tandai-semua-dibaca', [AdminNotifikasiController::class, 'tandaiSemuaDibaca']);
 
     Route::get('/aturan-perusahaan-aktif', [AturanPerusahaanController::class, 'aktif']);
 });
