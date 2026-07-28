@@ -3,107 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notifikasi;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NotifikasiController extends Controller
 {
-    protected string $modelClass = Notifikasi::class;
-    protected array $with = ['user'];
-    protected array $files = [];
-
-    protected function rules(?Model $model = null): array
+    public function markAllRead()
     {
-        return [
-            'user_id' => ['required', 'exists:users,id_user'],
-            'judul' => ['required', 'string', 'max:255'],
-            'pesan' => ['required', 'string'],
-            'kategori' => ['required', 'in:pengajuan,pembayaran,penugasan,absensi,akun'],
-            'tipe' => ['required', 'in:info,peringatan,sukses'],
-            'referensi_id' => ['nullable', 'integer'],
-            'dibaca' => ['sometimes', 'boolean'],
-        ];
-    }
+        Notifikasi::where('user_id', Auth::id())
+            ->where('dibaca', 0)
+            ->update(['dibaca' => 1]);
 
-    public function milikSaya(Request $request): JsonResponse
-    {
-        return response()->json([
-            'success' => true,
-            'data' => Notifikasi::query()
-                ->where('user_id', $request->user()->id_user)
-                ->latest('id_notifikasi')
-                ->paginate(20),
-        ]);
-    }
-
-    public function tandaiDibaca(
-        Request $request,
-        int|string $id
-    ): JsonResponse {
-        $notifikasi = Notifikasi::query()
-            ->where('user_id', $request->user()->id_user)
-            ->findOrFail($id);
-
-        $notifikasi->update(['dibaca' => true]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Notifikasi telah dibaca.',
-            'data' => $notifikasi,
-        ]);
-    }
-
-    public function tandaiSemuaDibaca(Request $request): JsonResponse
-    {
-        Notifikasi::query()
-            ->where('user_id', $request->user()->id_user)
-            ->where('dibaca', false)
-            ->update([
-                'dibaca' => true,
-                'updated_at' => now(),
-            ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Semua notifikasi telah dibaca.',
-        ]);
-    }
-
-    /**
-     * Menandai satu notifikasi milik pengguna web sebagai dibaca.
-     */
-    public function tandaiDibacaWeb(
-        Request $request,
-        Notifikasi $notifikasi
-    ): RedirectResponse {
-        abort_unless(
-            (int) $notifikasi->user_id === (int) $request->user()->id_user,
-            403,
-            'Anda tidak memiliki akses ke notifikasi ini.'
-        );
-
-        if (! $notifikasi->dibaca) {
-            $notifikasi->update(['dibaca' => true]);
-        }
-
-        return back()->with('success', 'Notifikasi telah ditandai sebagai dibaca.');
-    }
-
-    /**
-     * Menandai seluruh notifikasi pengguna web sebagai dibaca.
-     */
-    public function tandaiSemuaDibacaWeb(Request $request): RedirectResponse
-    {
-        Notifikasi::query()
-            ->where('user_id', $request->user()->id_user)
-            ->where('dibaca', false)
-            ->update([
-                'dibaca' => true,
-                'updated_at' => now(),
-            ]);
-
-        return back()->with('success', 'Semua notifikasi telah ditandai sebagai dibaca.');
+        return back();
     }
 }
+

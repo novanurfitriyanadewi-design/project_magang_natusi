@@ -464,3 +464,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 });
 
 
+
+Route::middleware('auth')->patch('/notifikasi/read-all', [NotifikasiController::class, 'markAllRead'])->name('notifikasi.read-all');
+
+
+use App\Http\Controllers\Admin\ResignController as AdminResignController;
+
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    Route::get('/resign', [AdminResignController::class, 'index'])->name('resign.index');
+    Route::patch('/resign/{resign}/setujui', [AdminResignController::class, 'setujui'])->name('resign.setujui');
+    Route::patch('/resign/{resign}/tolak', [AdminResignController::class, 'tolak'])->name('resign.tolak');
+});
