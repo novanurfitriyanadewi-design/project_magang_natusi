@@ -9,6 +9,7 @@ use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAtur
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
+use App\Http\Controllers\Superadmin\SuperadminDivisiController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -171,6 +172,12 @@ Route::middleware(['auth', 'role:superadmin'])
             ->name('metode-pembayaran.bank.update');
         Route::delete('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'destroyBank'])
             ->name('metode-pembayaran.bank.destroy');
+
+            /* Kelola Divisi */
+            Route::get('/divisi', [SuperadminDivisiController::class, 'index'])->name('divisi.index');
+            Route::post('/divisi', [SuperadminDivisiController::class, 'store'])->name('divisi.store');
+            Route::put('/divisi/{divisi}', [SuperadminDivisiController::class, 'update'])->name('divisi.update');
+            Route::delete('/divisi/{divisi}', [SuperadminDivisiController::class, 'destroy'])->name('divisi.destroy');
     });
 
 /*

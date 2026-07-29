@@ -10,7 +10,8 @@
         detailKaryawan: {},
         editKaryawan: {
             action: '', nama_karyawan: '', nip: '', email: '',
-            no_hp: '', alamat: '', jabatan: '', status: 'aktif', tanggal_bergabung: ''
+            no_hp: '', alamat: '', jabatan: '', status: 'aktif',
+            tanggal_bergabung: '', divisi_id: ''
         },
         openDetail(k) { this.detailKaryawan = k; this.detailOpen = true; },
         openEdit(k) { this.editKaryawan = k; this.editOpen = true; },
@@ -82,6 +83,18 @@
             >
         </div>
 
+        <div class="min-w-[160px]">
+            <label class="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">Divisi</label>
+            <select name="divisi_id" class="w-full rounded-lg border-slate-300 text-sm focus:border-sky-500 focus:ring-sky-500">
+                <option value="">Semua Divisi</option>
+                @foreach ($divisiList as $divisi)
+                    <option value="{{ $divisi->id_divisi }}" @selected((string) request('divisi_id') === (string) $divisi->id_divisi)>
+                        {{ $divisi->nama_divisi }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
         <div class="min-w-[150px]">
             <label class="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">Status</label>
             <select name="status" class="w-full rounded-lg border-slate-300 text-sm focus:border-sky-500 focus:ring-sky-500">
@@ -113,6 +126,7 @@
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Nama Karyawan</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">NIP</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Jabatan</th>
+                        <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Divisi</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">No. HP</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Tgl Bergabung</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Status</th>
@@ -136,6 +150,15 @@
                             </td>
                             <td class="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-600">{{ $karyawan->nip ?? '-' }}</td>
                             <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{{ $karyawan->jabatan ?? '-' }}</td>
+                            <td class="whitespace-nowrap px-5 py-4">
+                                @if ($karyawan->divisi)
+                                    <span class="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700">
+                                        {{ $karyawan->divisi->nama_divisi }}
+                                    </span>
+                                @else
+                                    <span class="text-xs text-slate-400">Belum ada</span>
+                                @endif
+                            </td>
                             <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{{ $karyawan->no_hp ?? '-' }}</td>
                             <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
                                 {{ $karyawan->tanggal_bergabung?->translatedFormat('d M Y') ?? '-' }}
@@ -159,6 +182,7 @@
                                             no_hp: @js($karyawan->no_hp ?? '-'),
                                             alamat: @js($karyawan->alamat ?? '-'),
                                             jabatan: @js($karyawan->jabatan ?? '-'),
+                                            divisi: @js($karyawan->divisi->nama_divisi ?? 'Belum ada'),
                                             status: @js($meta['label']),
                                             tanggal: @js(optional($karyawan->tanggal_bergabung)->translatedFormat('d M Y') ?? '-'),
                                         })"
@@ -179,6 +203,7 @@
                                             jabatan: @js($karyawan->jabatan),
                                             status: @js($karyawan->status),
                                             tanggal_bergabung: @js(optional($karyawan->tanggal_bergabung)->format('Y-m-d')),
+                                            divisi_id: @js($karyawan->divisi_id ?? ''),
                                         })"
                                     >
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -188,7 +213,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-5 py-10 text-center text-sm text-slate-400">Belum ada data karyawan.</td>
+                            <td colspan="8" class="px-5 py-10 text-center text-sm text-slate-400">Belum ada data karyawan.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -218,6 +243,7 @@
                 <div class="flex justify-between"><span class="text-slate-400">Email</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.email"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">No. HP</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.no_hp"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">Jabatan</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.jabatan"></span></div>
+                <div class="flex justify-between"><span class="text-slate-400">Divisi</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.divisi"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">Alamat</span><span class="font-semibold text-slate-800 text-right" x-text="detailKaryawan.alamat"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">Tgl Bergabung</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.tanggal"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">Status</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.status"></span></div>
@@ -258,6 +284,15 @@
                 <div>
                     <label class="mb-1 block text-sm font-bold text-slate-700">Jabatan</label>
                     <input type="text" name="jabatan" x-model="editKaryawan.jabatan" class="w-full rounded-xl border-slate-300 focus:border-sky-500 focus:ring-sky-500">
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-bold text-slate-700">Divisi</label>
+                    <select name="divisi_id" x-model="editKaryawan.divisi_id" class="w-full rounded-xl border-slate-300 focus:border-sky-500 focus:ring-sky-500">
+                        <option value="">Belum ada divisi</option>
+                        @foreach ($divisiList as $divisi)
+                            <option value="{{ $divisi->id_divisi }}">{{ $divisi->nama_divisi }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="sm:col-span-2">
                     <label class="mb-1 block text-sm font-bold text-slate-700">Alamat</label>

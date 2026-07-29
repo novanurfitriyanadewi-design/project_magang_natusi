@@ -56,4 +56,9 @@ class Karyawan extends Model
         return $this->morphMany(Absensi::class, 'absentable');
 
     }
+    // app/Models/Karyawan.php — tambahkan di dalam class yang sudah ad
+    public function divisi()
+{
+    return $this->belongsTo(divisi::class, 'divisi_id', 'id_divisi');
+}
 }

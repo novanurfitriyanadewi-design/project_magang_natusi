@@ -4,16 +4,21 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Karyawan;
+use App\Models\Divisi;
 use Illuminate\Http\Request;
 
 class KaryawanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Karyawan::query();
+        $query = Karyawan::query()->with('divisi');
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('divisi_id')) {
+            $query->where('divisi_id', $request->divisi_id);
         }
 
         if ($request->filled('search')) {
@@ -41,9 +46,11 @@ class KaryawanController extends Controller
             ->whereYear('created_at', now()->year)
             ->count();
 
+        $divisiList = Divisi::orderBy('nama_divisi')->get();
+
         return view('admin.karyawan.index', compact(
             'karyawans', 'totalKaryawan', 'karyawanAktif',
-            'karyawanNonAktif', 'karyawanBaruBulanIni'
+            'karyawanNonAktif', 'karyawanBaruBulanIni', 'divisiList'
         ));
     }
 
@@ -58,6 +65,7 @@ class KaryawanController extends Controller
             'jabatan'           => ['nullable', 'string', 'max:255'],
             'status'            => ['required', 'in:aktif,nonaktif'],
             'tanggal_bergabung' => ['nullable', 'date'],
+            'divisi_id'         => ['nullable', 'exists:divisi,id_divisi'],
         ]);
 
         $karyawan->update($validated);
