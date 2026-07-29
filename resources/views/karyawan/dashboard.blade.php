@@ -1,13 +1,13 @@
-@extends('layouts.portal') 
+@extends('layouts.portal')
 
-@section('title', 'Dashboard Karyawan') 
+@section('title', 'Dashboard Karyawan')
 
-@section('content') 
-<div class="max-w-[1440px] mx-auto w-full"> 
+@section('content')
+<div class="max-w-[1440px] mx-auto w-full">
 
     {{-- Welcome Header --}}
-    <section class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4"> 
-        <div> 
+    <section class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-950">
                 Selamat {{ Carbon\Carbon::now()->hour < 11 ? 'Pagi' : (Carbon\Carbon::now()->hour < 15 ? 'Siang' : (Carbon\Carbon::now()->hour < 18 ? 'Sore' : 'Malam')) }}, {{ explode(' ', $user->name)[0] ?? $user->name }}!
             </h1>
@@ -25,7 +25,7 @@
             @else
                 <form method="POST" action="{{ route('karyawan.absensi.clockin') }}">
                     @csrf
-                    <button type="submit" class="bg-sky-700 text-white px-6 py-2.5 rounded-lg text-xs font-extrabold flex items-center gap-2 hover:bg-sky-800 transition-all active:scale-95">
+                    <button type="submit" class="bg-teal-700 text-white px-6 py-2.5 rounded-lg text-xs font-extrabold flex items-center gap-2 hover:bg-teal-800 transition-all active:scale-95 shadow-sm">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>
                         Clock In
                     </button>
@@ -44,55 +44,62 @@
     {{-- Bento Grid --}}
     <div class="grid grid-cols-12 gap-6">
 
-        {{-- Attendance Summary --}}
-        <div class="col-span-12 lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-6 relative shadow-[0_12px_32px_rgba(15,23,42,0.06)] border-l-4 border-l-sky-700">
+        {{-- Attendance Summary (Large Card) --}}
+        <div class="col-span-12 lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-6 relative shadow-[0_12px_32px_rgba(15,23,42,0.06)] border-l-4 border-l-teal-600">
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h2 class="text-lg font-extrabold text-slate-950">Ringkasan Kehadiran</h2>
                     <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 mt-1">Progres Bulan Berjalan</p>
                 </div>
-                <span class="bg-sky-50 text-sky-700 px-3 py-1 rounded-full text-xs font-extrabold">{{ $bulanLabel }}</span>
+                <span class="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-xs font-extrabold">{{ $bulanLabel }}</span>
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-                <div class="bg-slate-50 p-4 rounded-xl">
-                    <span class="text-[11px] font-bold text-slate-500 block mb-1">Hadir</span>
-                    <span class="text-2xl font-black text-sky-700">{{ $jumlahHadir }}</span>
-                    <span class="text-[11px] text-slate-400 block mt-1">Hari kerja</span>
+                {{-- Hadir (Emerald Green) --}}
+                <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-4 rounded-xl text-white relative overflow-hidden shadow-sm">
+                    <span class="text-[11px] font-bold text-emerald-100 block mb-1">Hadir</span>
+                    <span class="text-2xl font-black block">{{ $jumlahHadir }}</span>
+                    <span class="text-[11px] text-emerald-100 block mt-1">Hari kerja</span>
                 </div>
-                <div class="bg-slate-50 p-4 rounded-xl">
-                    <span class="text-[11px] font-bold text-slate-500 block mb-1">Telat</span>
-                    <span class="text-2xl font-black text-rose-600">{{ $jumlahTelat }}</span>
-                    <span class="text-[11px] text-slate-400 block mt-1">Lebih dari 15 menit</span>
+
+                {{-- Telat (Warm Amber/Orange) --}}
+                <div class="bg-gradient-to-br from-amber-500 to-orange-500 p-4 rounded-xl text-white relative overflow-hidden shadow-sm">
+                    <span class="text-[11px] font-bold text-amber-100 block mb-1">Telat</span>
+                    <span class="text-2xl font-black block">{{ $jumlahTelat }}</span>
+                    <span class="text-[11px] text-amber-100 block mt-1">Lebih dari 15 menit</span>
                 </div>
-                <div class="bg-slate-50 p-4 rounded-xl">
-                    <span class="text-[11px] font-bold text-slate-500 block mb-1">Izin</span>
-                    <span class="text-2xl font-black text-amber-600">{{ $jumlahIzin }}</span>
-                    <span class="text-[11px] text-slate-400 block mt-1">Cuti terjadwal</span>
+
+                {{-- Izin (Sky / Light Blue) --}}
+                <div class="bg-gradient-to-br from-sky-500 to-blue-600 p-4 rounded-xl text-white relative overflow-hidden shadow-sm">
+                    <span class="text-[11px] font-bold text-sky-100 block mb-1">Izin</span>
+                    <span class="text-2xl font-black block">{{ $jumlahIzin }}</span>
+                    <span class="text-[11px] text-sky-100 block mt-1">Cuti terjadwal</span>
                 </div>
-                <div class="bg-slate-50 p-4 rounded-xl">
-                    <span class="text-[11px] font-bold text-slate-500 block mb-1">Rata-rata Jam</span>
-                    <span class="text-2xl font-black text-slate-900">{{ $rataRataJam }}</span>
-                    <span class="text-[11px] text-slate-400 block mt-1">Jam/hari</span>
+
+                {{-- Rata-rata Jam (Indigo / Deep Blue) --}}
+                <div class="bg-gradient-to-br from-indigo-500 to-violet-600 p-4 rounded-xl text-white relative overflow-hidden shadow-sm">
+                    <span class="text-[11px] font-bold text-indigo-100 block mb-1">Rata-rata Jam</span>
+                    <span class="text-2xl font-black block">{{ $rataRataJam }}</span>
+                    <span class="text-[11px] text-indigo-100 block mt-1">Jam/hari</span>
                 </div>
             </div>
 
             <div class="space-y-3">
                 <div class="flex justify-between items-center">
                     <span class="text-xs font-extrabold text-slate-700">Progres Target Bulanan</span>
-                    <span class="text-xs font-extrabold text-sky-700">{{ $progressPersen }}%</span>
+                    <span class="text-xs font-extrabold text-teal-700">{{ $progressPersen }}%</span>
                 </div>
                 <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="h-full bg-sky-700 rounded-full transition-all duration-1000" style="width: {{ $progressPersen }}%"></div>
+                    <div class="h-full bg-teal-600 rounded-full transition-all duration-1000" style="width: {{ $progressPersen }}%"></div>
                 </div>
             </div>
         </div>
 
-        {{-- Resignation Status --}}
+        {{-- Resignation Status (Compact) --}}
         <div class="col-span-12 md:col-span-6 lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-6 shadow-[0_12px_32px_rgba(15,23,42,0.06)] flex flex-col">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-extrabold text-slate-950">Status Pengajuan Resign</h3>
-                <svg class="h-5 w-5 text-sky-700" viewBox="0 0 24 24" fill="none"><path d="M9 4h9a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H9m0-16H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4m0-16v16m6-8h-9m6-3l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <h3 class="text-lg font-extrabold text-slate-950">Status Resign</h3>
+                <svg class="h-5 w-5 text-indigo-600" viewBox="0 0 24 24" fill="none"><path d="M9 4h9a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H9m0-16H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4m0-16v16m6-8h-9m6-3l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
 
             @if(!$resignAktif)
@@ -103,13 +110,13 @@
                     <p class="text-sm font-extrabold text-slate-800">Tidak Ada Pengajuan Aktif</p>
                     <p class="text-xs text-slate-500 mt-2 px-4">Anda belum memiliki pengajuan resign yang sedang diproses.</p>
                 </div>
-                <a href="{{ Route::has('karyawan.resign.create') ? route('karyawan.resign.create') : '#' }}" class="w-full text-center py-3 border border-sky-700 text-sky-700 rounded-lg text-xs font-extrabold hover:bg-sky-50 transition-all mt-4">
+                <a href="{{ Route::has('karyawan.resign.create') ? route('karyawan.resign.create') : '#' }}" class="w-full text-center py-3 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 rounded-lg text-xs font-extrabold transition-all mt-4">
                     Ajukan Resign
                 </a>
             @else
                 <div class="flex-1 flex flex-col items-center justify-center text-center py-6">
                     <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mb-4">
-                        <svg class="h-8 w-8 text-amber-600" viewBox="0 0 24 24" fill="none"><path d="M12 8v4m0 4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg>
+                        <svg class="h-8 w-8 text-amber-500" viewBox="0 0 24 24" fill="none"><path d="M12 8v4m0 4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg>
                     </div>
                     <p class="text-sm font-extrabold text-slate-800">Sedang Diproses</p>
                     <p class="text-xs text-slate-500 mt-2 px-4">Pengajuan resign Anda tanggal {{ $resignAktif->created_at->translatedFormat('d M Y') }} sedang ditinjau HRD.</p>
@@ -120,18 +127,18 @@
             @endif
         </div>
 
-        {{-- Announcements --}}
+        {{-- Announcements (Tall Card) --}}
         <div class="col-span-12 md:col-span-6 lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-[0_12px_32px_rgba(15,23,42,0.06)] flex flex-col h-full">
             <div class="p-6 border-b border-slate-100">
                 <h3 class="text-lg font-extrabold text-slate-950 flex items-center gap-2">
-                    <svg class="h-5 w-5 text-rose-600" viewBox="0 0 24 24" fill="none"><path d="M4 10v4a1 1 0 0 0 1 1h2l5 4V5L7 9H5a1 1 0 0 0-1 1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                    <svg class="h-5 w-5 text-teal-600" viewBox="0 0 24 24" fill="none"><path d="M4 10v4a1 1 0 0 0 1 1h2l5 4V5L7 9H5a1 1 0 0 0-1 1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
                     Pengumuman
                 </h3>
             </div>
             <div class="p-6 space-y-5 flex-1 overflow-y-auto">
                 @forelse($pengumuman as $item)
-                    <div class="relative pl-4 border-l-2 {{ $loop->first ? 'border-sky-500' : 'border-slate-200' }}">
-                        <span class="text-[11px] font-bold {{ $loop->first ? 'text-sky-700' : 'text-slate-400' }} block mb-1">
+                    <div class="relative pl-4 border-l-2 {{ $loop->first ? 'border-teal-500' : 'border-slate-200' }}">
+                        <span class="text-[11px] font-bold {{ $loop->first ? 'text-teal-700' : 'text-slate-400' }} block mb-1">
                             {{ $item->published_at?->translatedFormat('d M Y, H:i') ?? '-' }}
                         </span>
                         <h4 class="text-xs font-extrabold text-slate-900 mb-1">{{ $item->judul }}</h4>
@@ -142,47 +149,59 @@
                 @endforelse
             </div>
             <div class="p-4 bg-slate-50 text-center rounded-b-2xl">
-                <a href="{{ Route::has('karyawan.pengumuman.index') ? route('karyawan.pengumuman.index') : '#' }}" class="text-sky-700 text-xs font-extrabold hover:underline">Lihat Semua Pengumuman</a>
+                <a href="{{ Route::has('karyawan.pengumuman.index') ? route('karyawan.pengumuman.index') : '#' }}" class="text-teal-700 text-xs font-extrabold hover:underline">Lihat Semua Pengumuman</a>
             </div>
         </div>
 
-        {{-- Quick Links --}}
+        {{-- Quick Links (Asymmetric Layout) --}}
         <div class="col-span-12 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-sky-700 text-white p-6 rounded-2xl relative overflow-hidden">
+            {{-- Company Rules Card (Deep Emerald/Teal) --}}
+            <div class="bg-gradient-to-br from-emerald-600 via-teal-700 to-slate-800 text-white p-6 rounded-2xl relative overflow-hidden shadow-sm flex flex-col justify-between">
                 <div class="relative z-10">
                     <h3 class="text-lg font-extrabold mb-2">Aturan Perusahaan</h3>
                     <p class="text-sm opacity-90 mb-6">Cek buku panduan terbaru untuk info etika kerja dan prosedur operasional.</p>
-                    <a href="{{ Route::has('karyawan.aturan.index') ? route('karyawan.aturan.index') : '#' }}" class="inline-flex items-center gap-2 bg-white text-sky-700 px-4 py-2 rounded-lg text-xs font-extrabold hover:shadow-lg transition-all">
+                </div>
+                <div class="relative z-10">
+                    <a href="{{ Route::has('karyawan.aturan.index') ? route('karyawan.aturan.index') : '#' }}" class="inline-flex items-center gap-2 bg-white/90 hover:bg-white text-teal-800 px-4 py-2 rounded-lg text-xs font-extrabold hover:shadow-lg transition-all">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M14 4h6v6M20 4l-8 8M6 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         Baca Panduan
                     </a>
                 </div>
+                <svg class="h-32 w-32 absolute -right-4 -bottom-4 text-white/10" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h9l3 3v15H6V3Zm3 7h6M9 14h6M9 18h4"/></svg>
             </div>
 
+            {{-- Resources Grid (Differentiated Colors) --}}
             <div class="grid grid-cols-2 gap-4">
-                <a href="{{ Route::has('karyawan.payslip.index') ? route('karyawan.payslip.index') : '#' }}" class="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col items-center justify-center text-center hover:border-sky-700 transition-all group">
-                    <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-sky-50 transition-colors">
-                        <svg class="h-5 w-5 text-sky-700" viewBox="0 0 24 24" fill="none"><path d="M7 4h7l4 4v12H7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                {{-- Slip Gaji (Deep Blue to Indigo) --}}
+                <a href="{{ Route::has('karyawan.payslip.index') ? route('karyawan.payslip.index') : '#' }}" class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 rounded-2xl flex flex-col items-center justify-center text-center hover:scale-[1.02] hover:shadow-lg transition-all group">
+                    <div class="w-12 h-12 bg-white/15 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none"><path d="M7 4h7l4 4v12H7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
                     </div>
-                    <span class="text-xs font-extrabold text-slate-800">Slip Gaji</span>
+                    <span class="text-xs font-extrabold">Slip Gaji</span>
                 </a>
-                <a href="{{ Route::has('karyawan.reimbursement.index') ? route('karyawan.reimbursement.index') : '#' }}" class="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col items-center justify-center text-center hover:border-sky-700 transition-all group">
-                    <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-sky-50 transition-colors">
-                        <svg class="h-5 w-5 text-sky-700" viewBox="0 0 24 24" fill="none"><path d="M12 8v8m-4-4h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/></svg>
+
+                {{-- Reimbursement (Emerald Green) --}}
+                <a href="{{ Route::has('karyawan.reimbursement.index') ? route('karyawan.reimbursement.index') : '#' }}" class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-6 rounded-2xl flex flex-col items-center justify-center text-center hover:scale-[1.02] hover:shadow-lg transition-all group">
+                    <div class="w-12 h-12 bg-white/15 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none"><path d="M12 8v8m-4-4h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/></svg>
                     </div>
-                    <span class="text-xs font-extrabold text-slate-800">Reimbursement</span>
+                    <span class="text-xs font-extrabold">Reimbursement</span>
                 </a>
-                <a href="{{ Route::has('karyawan.cuti.create') ? route('karyawan.cuti.create') : '#' }}" class="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col items-center justify-center text-center hover:border-sky-700 transition-all group">
-                    <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-sky-50 transition-colors">
-                        <svg class="h-5 w-5 text-sky-700" viewBox="0 0 24 24" fill="none"><rect height="16" rx="2" stroke="currentColor" stroke-width="1.6" width="16" x="4" y="4"/><path d="M4 9h16M9 4v3M15 4v3" stroke="currentColor" stroke-width="1.6"/></svg>
+
+                {{-- Ajukan Cuti (Amber to Orange) --}}
+                <a href="{{ Route::has('karyawan.cuti.create') ? route('karyawan.cuti.create') : '#' }}" class="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-6 rounded-2xl flex flex-col items-center justify-center text-center hover:scale-[1.02] hover:shadow-lg transition-all group">
+                    <div class="w-12 h-12 bg-white/15 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none"><rect height="16" rx="2" stroke="currentColor" stroke-width="1.6" width="16" x="4" y="4"/><path d="M4 9h16M9 4v3M15 4v3" stroke="currentColor" stroke-width="1.6"/></svg>
                     </div>
-                    <span class="text-xs font-extrabold text-slate-800">Ajukan Cuti</span>
+                    <span class="text-xs font-extrabold">Ajukan Cuti</span>
                 </a>
-                <a href="{{ Route::has('karyawan.helpdesk.index') ? route('karyawan.helpdesk.index') : '#' }}" class="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col items-center justify-center text-center hover:border-sky-700 transition-all group">
-                    <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-sky-50 transition-colors">
-                        <svg class="h-5 w-5 text-sky-700" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1.4.9-1.4 1.7v.3M12 17h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+
+                {{-- Bantuan (Violet to Indigo) --}}
+                <a href="{{ Route::has('karyawan.helpdesk.index') ? route('karyawan.helpdesk.index') : '#' }}" class="bg-gradient-to-br from-violet-600 to-indigo-600 text-white p-6 rounded-2xl flex flex-col items-center justify-center text-center hover:scale-[1.02] hover:shadow-lg transition-all group">
+                    <div class="w-12 h-12 bg-white/15 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1.4.9-1.4 1.7v.3M12 17h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
                     </div>
-                    <span class="text-xs font-extrabold text-slate-800">Bantuan</span>
+                    <span class="text-xs font-extrabold">Bantuan</span>
                 </a>
             </div>
         </div>

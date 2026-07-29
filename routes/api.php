@@ -7,14 +7,14 @@ use App\Http\Controllers\BankController;
 use App\Http\Controllers\JamOperasionalController;
 use App\Http\Controllers\LaporanMingguanController;
 use App\Http\Controllers\NominalPembayaranController;
-use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\AdminPeserta\NotifikasiController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\PengumpulanTugasController;
 use App\Http\Controllers\PermintaanMagangController;
 use App\Http\Controllers\PesertaMagangController;
 use App\Http\Controllers\TugasController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\Admin\NotifikasiController as AdminNotifikasiController;
+use App\Http\Controllers\AdminPeserta\NotifikasiController as AdminNotifikasiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/status', fn () => response()->json([
