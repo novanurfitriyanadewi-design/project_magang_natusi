@@ -475,3 +475,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::patch('/resign/{resign}/setujui', [AdminResignController::class, 'setujui'])->name('resign.setujui');
     Route::patch('/resign/{resign}/tolak', [AdminResignController::class, 'tolak'])->name('resign.tolak');
 });
+
+use App\Http\Controllers\Admin\LaporanAbsensiKaryawanController;
+
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    Route::get('/laporan/absensi-karyawan', [LaporanAbsensiKaryawanController::class, 'index'])->name('laporan.absensi-karyawan');
+    Route::get('/laporan/absensi-karyawan/export', [LaporanAbsensiKaryawanController::class, 'export'])->name('laporan.absensi-karyawan.export');
+});
+
+use App\Http\Controllers\Admin\LaporanKaryawanController;
+Route::middleware(['auth','role:admin'])->get('/admin/laporan-karyawan', [LaporanKaryawanController::class, 'index'])->name('admin.laporan-karyawan.index');
+
