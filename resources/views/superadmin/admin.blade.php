@@ -13,6 +13,7 @@
                 nama: @js(old('form_context') === 'edit' ? old('nama', '') : ''),
                 username: @js(old('form_context') === 'edit' ? old('username', '') : ''),
                 email: @js(old('form_context') === 'edit' ? old('email', '') : ''),
+                role: @js(old('form_context') === 'edit' ? old('role', '') : ''),
             },
             openEdit(admin) {
                 this.editAdmin = admin;
@@ -129,6 +130,7 @@
                         <tr>
                             <th scope="col" class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Nama Admin</th>
                             <th scope="col" class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Username</th>
+                            <th scope="col" class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Role</th>
                             <th scope="col" class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Tanggal Dibuat</th>
                             <th scope="col" class="px-5 py-3.5 text-center text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Aksi</th>
                         </tr>
@@ -150,6 +152,21 @@
                                 <td class="whitespace-nowrap px-5 py-4">
                                     <span class="inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700 ring-1 ring-sky-100">{{ '@'.$admin->username }}</span>
                                 </td>
+                                <td class="whitespace-nowrap px-5 py-4">
+                                    @php
+                                        $roleLabel = match ($admin->role) {
+                                            'admin_karyawan' => 'Admin Karyawan',
+                                            'admin_peserta' => 'Admin Peserta Magang',
+                                            default => 'Admin',
+                                        };
+                                        $roleColor = match ($admin->role) {
+                                            'admin_karyawan' => 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+                                            'admin_peserta' => 'bg-violet-50 text-violet-700 ring-violet-100',
+                                            default => 'bg-sky-50 text-sky-700 ring-sky-100',
+                                        };
+                                    @endphp
+                                    <span class="inline-flex rounded-full {{ $roleColor }} px-3 py-1 text-xs font-bold ring-1">{{ $roleLabel }}</span>
+                                </td>
                                 <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
                                     {{ $admin->created_at?->translatedFormat('d M Y') ?? '-' }}
                                     <span class="block text-xs text-slate-400">{{ $admin->created_at?->format('H:i') }}</span>
@@ -167,6 +184,7 @@
                                                 nama: @js($admin->nama),
                                                 username: @js($admin->username),
                                                 email: @js($admin->email),
+                                                role: @js($admin->role),
                                             })"
                                         >
                                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="m5 16.5-.8 3.3 3.3-.8L18 8.5 15.5 6 5 16.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m13.8 7.7 2.5 2.5" stroke="currentColor" stroke-width="1.8"/></svg>
@@ -221,7 +239,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-5 py-16 text-center">
+                                <td colspan="5" class="px-5 py-16 text-center">
                                     <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-sky-50 text-sky-500">
                                         <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M16 10h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                                     </span>
@@ -692,6 +710,43 @@
                                     @endif
                                 </div>
 
+                                <div>
+                                    <label
+                                        for="create-role"
+                                        class="
+                                            mb-1.5 block text-sm
+                                            font-bold text-slate-700
+                                        "
+                                    >
+                                        Role Administrator
+                                    </label>
+
+                                    <select
+                                        id="create-role"
+                                        name="role"
+                                        required
+                                        class="
+                                            w-full rounded-xl
+                                            border-slate-300
+                                            focus:border-sky-500
+                                            focus:ring-sky-500
+                                        "
+                                    >
+                                        <option value="" disabled {{ old('form_context') !== 'create' || old('role') === '' ? 'selected' : '' }}>Pilih role admin</option>
+                                        <option value="admin" {{ old('form_context') === 'create' && old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+                                        <option value="admin_karyawan" {{ old('form_context') === 'create' && old('role') === 'admin_karyawan' ? 'selected' : '' }}>Admin Karyawan</option>
+                                        <option value="admin_peserta" {{ old('form_context') === 'create' && old('role') === 'admin_peserta' ? 'selected' : '' }}>Admin Peserta Magang</option>
+                                    </select>
+
+                                    @if (old('form_context') === 'create')
+                                        @error('role')
+                                            <p class="mt-1 text-xs text-rose-600">
+                                                {{ $message }}
+                                            </p>
+                                        @enderror
+                                    @endif
+                                </div>
+
                                 <div class="grid gap-4 sm:grid-cols-2">
                                     <div>
                                         <label
@@ -1016,6 +1071,44 @@
 
                                     @if (old('form_context') === 'edit')
                                         @error('email')
+                                            <p class="mt-1 text-xs text-rose-600">
+                                                {{ $message }}
+                                            </p>
+                                        @enderror
+                                    @endif
+                                </div>
+
+                                <div>
+                                    <label
+                                        for="edit-role"
+                                        class="
+                                            mb-1.5 block text-sm
+                                            font-bold text-slate-700
+                                        "
+                                    >
+                                        Role Administrator
+                                    </label>
+
+                                    <select
+                                        id="edit-role"
+                                        name="role"
+                                        x-model="editAdmin.role"
+                                        required
+                                        class="
+                                            w-full rounded-xl
+                                            border-slate-300
+                                            focus:border-sky-500
+                                            focus:ring-sky-500
+                                        "
+                                    >
+                                        <option value="" disabled>Pilih role admin</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="admin_karyawan">Admin Karyawan</option>
+                                        <option value="admin_peserta">Admin Peserta Magang</option>
+                                    </select>
+
+                                    @if (old('form_context') === 'edit')
+                                        @error('role')
                                             <p class="mt-1 text-xs text-rose-600">
                                                 {{ $message }}
                                             </p>

@@ -90,46 +90,51 @@
             ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
         'admin_karyawan' => [
-    ['label' => 'Dashboard', 'route' => 'admin-karyawan.dashboard', 'match' => 'admin-karyawan.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
-    ['label' => 'Permintaan Lamaran', 'route' => 'admin-karyawan.permintaan-lamaran.index', 'match' => 'admin-karyawan.permintaan-lamaran.*', 'icon' => 'inbox', 'tour' => 'permintaan-lamaran'],
-    ['label' => 'Data Karyawan', 'route' => 'admin-karyawan.karyawan.index', 'match' => 'admin-karyawan.karyawan.*', 'icon' => 'users', 'tour' => 'data-karyawan'],
-    ['label' => 'Absensi Karyawan', 'route' => 'admin-karyawan.absensi-karyawan.index', 'match' => 'admin-karyawan.absensi-karyawan.*', 'icon' => 'attendance-user', 'tour' => 'absensi-karyawan'],
-    ['label' => 'Pembayaran Gaji', 'route' => 'admin-karyawan.pembayaran-karyawan.index', 'match' => 'admin-karyawan.pembayaran-karyawan.*', 'icon' => 'payment', 'tour' => 'pembayaran-karyawan'],
-    ['label' => 'Pengajuan Resign', 'route' => 'admin-karyawan.resign.index', 'match' => 'admin-karyawan.resign.*', 'icon' => 'clock', 'tour' => 'resign'],
-    [
-        'label' => 'Laporan',
-        'icon' => 'rules',
-        'match' => 'admin-karyawan.laporan.*',
-        'tour' => 'reports',
-        'children' => [
-            // PERBAIKAN: Diubah dari admin-karyawan.laporan-karyawan.index -> admin-karyawan.laporan.karyawan
-            ['label' => 'Laporan Karyawan', 'route' => 'admin-karyawan.laporan.karyawan', 'match' => 'admin-karyawan.laporan.karyawan*', 'tour' => 'report-karyawan'],
-            
-            // PERBAIKAN: Diubah dari admin-karyawan.laporan.absensi-karyawan -> admin-karyawan.laporan.absensi
-            ['label' => 'Laporan Absensi Karyawan', 'route' => 'admin-karyawan.laporan.absensi', 'match' => 'admin-karyawan.laporan.absensi*', 'tour' => 'report-attendance-karyawan'],
+            ['label' => 'Dashboard', 'route' => 'admin-karyawan.dashboard', 'match' => 'admin-karyawan.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
+            ['label' => 'Permintaan Lamaran', 'route' => 'admin-karyawan.permintaan-lamaran.index', 'match' => 'admin-karyawan.permintaan-lamaran.*', 'icon' => 'inbox', 'tour' => 'permintaan-lamaran'],
+            ['label' => 'Data Karyawan', 'route' => 'admin-karyawan.karyawan.index', 'match' => 'admin-karyawan.karyawan.*', 'icon' => 'users', 'tour' => 'data-karyawan'],
+            ['label' => 'Absensi Karyawan', 'route' => 'admin-karyawan.absensi-karyawan.index', 'match' => 'admin-karyawan.absensi-karyawan.*', 'icon' => 'attendance-user', 'tour' => 'absensi-karyawan'],
+            ['label' => 'Pembayaran Gaji', 'route' => 'admin-karyawan.pembayaran-karyawan.index', 'match' => 'admin-karyawan.pembayaran-karyawan.*', 'icon' => 'payment', 'tour' => 'pembayaran-karyawan'],
+            ['label' => 'Pengajuan Resign', 'route' => 'admin-karyawan.resign.index', 'match' => 'admin-karyawan.resign.*', 'icon' => 'clock', 'tour' => 'resign'],
+            [
+                'label' => 'Laporan',
+                'icon' => 'rules',
+                'match' => 'admin-karyawan.laporan.*',
+                'tour' => 'reports',
+                'children' => [
+                    ['label' => 'Laporan Karyawan', 'route' => 'admin-karyawan.laporan.karyawan', 'match' => 'admin-karyawan.laporan.karyawan*', 'tour' => 'report-karyawan'],
+                    ['label' => 'Laporan Absensi Karyawan', 'route' => 'admin-karyawan.laporan.absensi', 'match' => 'admin-karyawan.laporan.absensi*', 'tour' => 'report-attendance-karyawan'],
+                ],
+            ],
+            ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
-    ],
-    ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
-],
         'karyawan' => [
             ['label' => 'Dashboard', 'route' => 'karyawan.dashboard', 'match' => 'karyawan.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
             ['label' => 'Absensi', 'route' => 'karyawan.absensi.index', 'match' => 'karyawan.absensi.*', 'icon' => 'attendance-user', 'tour' => 'absensi'],
             ['label' => 'Pengumuman', 'route' => 'karyawan.pengumuman.index', 'match' => 'karyawan.pengumuman.*', 'icon' => 'announcement', 'tour' => 'pengumuman'],
-            ['label' => 'Aturan Perusahaan', 'route' => 'karyawan.aturan.index', 'match' => 'karyawan.aturan.*', 'icon' => 'rules', 'tour' => 'aturan'],
-            ['label' => 'Cuti', 'route' => 'karyawan.cuti.index', 'match' => 'karyawan.cuti.*', 'icon' => 'clock', 'tour' => 'cuti'],
-            ['label' => 'Slip Gaji', 'route' => 'karyawan.payslip.index', 'match' => 'karyawan.payslip.*', 'icon' => 'payment', 'tour' => 'payslip'],
-            ['label' => 'Reimbursement', 'route' => 'karyawan.reimbursement.index', 'match' => 'karyawan.reimbursement.*', 'icon' => 'reimbursement', 'tour' => 'reimbursement'],
             [
-                'label' => 'Resign',
-                'icon' => 'users',
-                'match' => 'karyawan.resign.*',
-                'tour' => 'resign',
+                'label' => 'Pengajuan',
+                'icon' => 'tasks',
+                'match' => 'karyawan.cuti.*',
+                'tour' => 'pengajuan',
                 'children' => [
+                    ['label' => 'Ajukan Cuti', 'route' => 'karyawan.cuti.index', 'match' => 'karyawan.cuti.*', 'tour' => 'cuti'],
                     ['label' => 'Ajukan Resign', 'route' => 'karyawan.resign.create', 'match' => 'karyawan.resign.create', 'tour' => 'resign-create'],
                     ['label' => 'Status Resign', 'route' => 'karyawan.resign.show', 'match' => 'karyawan.resign.*', 'tour' => 'resign-status'],
                 ],
             ],
-            ['label' => 'Profile', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
+            [
+                'label' => 'Keuangan',
+                'icon' => 'payment',
+                'match' => 'karyawan.payslip.*',
+                'tour' => 'keuangan',
+                'children' => [
+                    ['label' => 'Slip Gaji', 'route' => 'karyawan.payslip.index', 'match' => 'karyawan.payslip.*', 'tour' => 'payslip'],
+                    ['label' => 'Reimbursement', 'route' => 'karyawan.reimbursement.index', 'match' => 'karyawan.reimbursement.*', 'tour' => 'reimbursement'],
+                ],
+            ],
+            ['label' => 'Aturan Perusahaan', 'route' => 'karyawan.aturan.index', 'match' => 'karyawan.aturan.*', 'icon' => 'rules', 'tour' => 'aturan'],
+            ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
             ['label' => 'Bantuan', 'route' => 'karyawan.helpdesk.index', 'match' => 'karyawan.helpdesk.*', 'icon' => 'help', 'tour' => 'helpdesk'],
         ],
         default => [
@@ -332,8 +337,6 @@
                                         }
                                     @endphp
 
-                                    
-                                    
                                     <a
                                         href="{{ $childHref }}"
                                         data-tour="{{ $menu['tour'] ?? '' }}"
@@ -372,7 +375,6 @@
                         }
                     @endphp
 
-                    
                     <a
                         href="{{ $href }}"
                         data-tour="{{ $menu['tour'] ?? '' }}"
