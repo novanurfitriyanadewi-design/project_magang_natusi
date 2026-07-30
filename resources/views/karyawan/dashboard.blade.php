@@ -85,7 +85,7 @@
             </div>
 
             <div class="space-y-3">
-                <div class="flex justify-between items-center">
+                <divxa class="flex justify-between items-center">
                     <span class="text-xs font-extrabold text-slate-700">Progres Target Bulanan</span>
                     <span class="text-xs font-extrabold text-teal-700">{{ $progressPersen }}%</span>
                 </div>
