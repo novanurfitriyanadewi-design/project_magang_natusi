@@ -1,0 +1,1855 @@
+﻿
+===== C:\xampp\htdocs\project_magang_natusi\resources\views\admin\laporan\absensi-karyawan.blade.php =====
+@extends('layouts.portal')
+
+@section('title', 'Laporan Absensi Karyawan')
+
+@section('content')
+<div class="space-y-6">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+        <header>
+            <h1 class="mt-5 text-2xl font-bold tracking-tight text-slate-950">Laporan Absensi</h1>
+            <p class="mt-1 text-sm text-slate-500">Rekapitulasi performa kehadiran karyawan CV Natusi.</p>
+        </header>
+    </div>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <form method="GET" action="{{ route('admin.laporan.absensi-karyawan') }}" class="flex flex-wrap items-end gap-4">
+            <div>
+                <label class="mb-1 block text-xs font-semibold text-slate-600">Dari Tanggal</label>
+                <input type="date" name="dari_tanggal" value="{{ $dariTgl }}" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            </div>
+            <div>
+                <label class="mb-1 block text-xs font-semibold text-slate-600">Sampai Tanggal</label>
+                <input type="date" name="sampai_tanggal" value="{{ $sampaiTgl }}" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            </div>
+            <div>
+                <label class="mb-1 block text-xs font-semibold text-slate-600">Jabatan</label>
+                <select name="jabatan" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                    <option value="">Semua Jabatan</option>
+                    @foreach ($jabatanList as $j)
+                        <option value="{{ $j }}" {{ $jabatan === $j ? 'selected' : '' }}>{{ $j }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex-1 min-w-[180px]">
+                <label class="mb-1 block text-xs font-semibold text-slate-600">Cari Nama Karyawan</label>
+                <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama..." class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+            </div>
+            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-800">
+                <span class="material-symbols-outlined text-[18px]">filter_alt</span>
+                Terapkan
+            </button>
+            <a href="{{ route('admin.laporan.absensi-karyawan.export', request()->query()) }}" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-slate-800">
+                <span class="material-symbols-outlined text-[18px]">download</span>
+                Export Excel
+            </a>
+        </form>
+    </section>
+
+    <div class="grid gap-4 md:grid-cols-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm border-l-4 border-l-blue-700">
+            <p class="text-xs text-slate-500">Total Kehadiran</p>
+            <p class="mt-1 text-2xl font-bold text-slate-900">{{ $stats['tingkat_kehadiran'] }}%</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm border-l-4 border-l-red-500">
+            <p class="text-xs text-slate-500">Rata-rata Terlambat</p>
+            <p class="mt-1 text-2xl font-bold text-slate-900">{{ $stats['rata_terlambat_menit'] }} Menit</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p class="text-xs text-slate-500">Total Izin/Sakit</p>
+            <p class="mt-1 text-2xl font-bold text-slate-900">{{ $stats['total_izin_sakit'] }} Hari</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm border-l-4 border-l-red-500">
+            <p class="text-xs text-slate-500">Total Alpha</p>
+            <p class="mt-1 text-2xl font-bold text-slate-900">{{ $stats['total_alpha'] }} Hari</p>
+        </div>
+    </div>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="text-base font-bold text-slate-900">Tren Kehadiran Bulanan ({{ now()->year }})</h2>
+        <div class="mt-6 flex items-end gap-2 h-48">
+            @php
+                $bulanLabel = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            @endphp
+            @foreach ($monthlyRate as $bulan => $rate)
+                <div class="flex-1 flex flex-col items-center justify-end gap-1">
+                    @if ($rate > 0)
+                        <span class="text-[10px] font-bold text-blue-700">{{ $rate }}%</span>
+                    @endif
+                    <div class="w-full rounded-t-md bg-blue-600" style="height: {{ max(2, $rate) }}%"></div>
+                    <span class="text-[10px] text-slate-400">{{ $bulanLabel[$bulan - 1] }}</span>
+                </div>
+            @endforeach
+        </div>
+    </section>
+
+    <section class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70">
+        <div class="border-b border-slate-100 px-6 py-4">
+            <h2 class="text-base font-bold text-slate-900">Daftar Ringkasan Absensi</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-[960px] w-full border-collapse text-left text-sm">
+                <thead>
+                    <tr class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                        <th class="px-6 py-4 font-semibold">No</th>
+                        <th class="px-6 py-4 font-semibold">Karyawan</th>
+                        <th class="px-6 py-4 font-semibold">NIP</th>
+                        <th class="px-6 py-4 font-semibold">Jabatan</th>
+                        <th class="px-6 py-4 font-semibold text-center">Hadir</th>
+                        <th class="px-6 py-4 font-semibold text-center">Terlambat</th>
+                        <th class="px-6 py-4 font-semibold text-center">Izin/Sakit</th>
+                        <th class="px-6 py-4 font-semibold text-center">Alpha</th>
+                        <th class="px-6 py-4 font-semibold text-center">Persentase</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse ($rekap as $index => $item)
+                        <tr class="hover:bg-slate-50/70 transition-colors">
+                            <td class="px-6 py-4 text-slate-500">{{ $rekap->firstItem() + $index }}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+                                        {{ strtoupper(substr($item->karyawan->nama_karyawan ?? '-', 0, 1)) }}
+                                    </span>
+                                    <div>
+                                        <p class="font-semibold text-slate-800">{{ $item->karyawan->nama_karyawan ?? '-' }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-slate-600">{{ $item->karyawan->nip ?? '-' }}</td>
+                            <td class="px-6 py-4 text-slate-600">{{ $item->karyawan->jabatan ?? '-' }}</td>
+                            <td class="px-6 py-4 text-center font-semibold text-slate-700">{{ $item->total_hadir }}</td>
+                            <td class="px-6 py-4 text-center font-semibold text-amber-600">{{ $item->total_terlambat }}</td>
+                            <td class="px-6 py-4 text-center font-semibold text-slate-700">{{ $item->total_izin + $item->total_sakit }}</td>
+                            <td class="px-6 py-4 text-center font-semibold text-red-600">{{ $item->total_alpha }}</td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="font-bold {{ $item->persentase >= 90 ? 'text-emerald-600' : ($item->persentase >= 75 ? 'text-amber-600' : 'text-red-600') }}">
+                                    {{ $item->persentase }}%
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="9" class="px-6 py-10 text-center text-sm text-slate-400">Tidak ada data untuk filter ini.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($rekap->hasPages())
+            <div class="border-t border-slate-100 px-6 py-4">
+                {{ $rekap->links() }}
+            </div>
+        @endif
+    </section>
+</div>
+@endsection
+
+===== C:\xampp\htdocs\project_magang_natusi\resources\views\admin\laporan\absensi.blade.php =====
+@extends('layouts.portal')
+
+@section('title', 'Laporan Absensi - CV Natusi')
+
+@section('content')
+<div class="p-6 space-y-6">
+
+    {{-- Header --}}
+    <section class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-[#006191]">Laporan Absensi</h1>
+            <p class="text-slate-500 text-sm">Ringkasan performa kehadiran seluruh peserta magang.</p>
+        </div>
+    </section>
+
+    {{-- Filter --}}
+    <section class="bg-white p-4 rounded-xl border border-slate-200">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+            <div>
+                <label class="text-xs font-semibold text-slate-500">Kategori</label>
+                <select name="kategori" class="w-full border border-slate-200 rounded-lg text-sm mt-1 p-2">
+                    <option value="">Semua Kategori</option>
+                    @foreach ($kategoriList as $k)
+                        <option value="{{ $k }}" @selected(($kategori ?? '') === $k)>{{ $k }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="text-xs font-semibold text-slate-500">Status</label>
+                <select name="status" class="w-full border border-slate-200 rounded-lg text-sm mt-1 p-2">
+                    <option value="">Semua Status</option>
+                    <option value="hadir" @selected(($status ?? '') === 'hadir')>Hadir</option>
+                    <option value="terlambat" @selected(($status ?? '') === 'terlambat')>Terlambat</option>
+                    <option value="izin" @selected(($status ?? '') === 'izin')>Izin</option>
+                    <option value="sakit" @selected(($status ?? '') === 'sakit')>Sakit</option>
+                    <option value="alfa" @selected(($status ?? '') === 'alfa')>Alfa</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="text-xs font-semibold text-slate-500">Dari tanggal</label>
+                <input type="date" name="dari_tanggal" value="{{ $dariTgl ?? '' }}" class="w-full border border-slate-200 rounded-lg text-sm mt-1 p-2">
+            </div>
+
+            <div>
+                <label class="text-xs font-semibold text-slate-500">Sampai tanggal</label>
+                <input type="date" name="sampai_tanggal" value="{{ $sampaiTgl ?? '' }}" class="w-full border border-slate-200 rounded-lg text-sm mt-1 p-2">
+            </div>
+
+            <button type="submit" class="bg-[#006191] text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-[#004b70] transition-colors">Terapkan Filter</button>
+        </form>
+    </section>
+
+    {{-- Statistik --}}
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 border-l-4 border-l-[#006191]">
+            <p class="text-xs font-bold text-slate-500 uppercase">Total Kehadiran</p>
+            <h3 class="text-2xl font-bold mt-1">{{ $stats['tingkat_kehadiran'] ?? 0 }}%</h3>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 border-l-4 border-l-[#bb0014]">
+            <p class="text-xs font-bold text-slate-500 uppercase">Rata-rata Terlambat</p>
+            <h3 class="text-2xl font-bold mt-1">{{ $stats['rata_terlambat_menit'] ?? 0 }} <span class="text-sm font-normal text-slate-500">menit</span></h3>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 border-l-4 border-l-[#4d5d70]">
+            <p class="text-xs font-bold text-slate-500 uppercase">Total Izin/Sakit</p>
+            <h3 class="text-2xl font-bold mt-1">{{ $stats['total_izin_sakit'] ?? 0 }}</h3>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 border-l-4 border-l-[#0b1c30]">
+            <p class="text-xs font-bold text-slate-500 uppercase">Tingkat Ketidakhadiran</p>
+            <h3 class="text-2xl font-bold mt-1">{{ $stats['tingkat_ketidakhadiran'] ?? 0 }}%</h3>
+        </div>
+    </section>
+
+    {{-- Grafik tren --}}
+    <section class="bg-white p-6 rounded-xl border border-slate-200">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold">Trend Frekuensi Kehadiran ({{ now()->year }})</h3>
+            <span class="flex items-center gap-1 text-xs"><span class="w-3 h-3 rounded-full bg-[#006191] inline-block"></span> Kehadiran (%)</span>
+        </div>
+
+        <div class="h-56 flex items-end justify-between gap-3 px-2">
+            @php $bulanLabel = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']; @endphp
+            @foreach ($monthlyRate as $bulan => $persen)
+                <div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                    <div class="w-full flex items-end h-full">
+                        <div class="w-full bg-[#006191] rounded-t transition-all duration-300" style="height: {{ max(4, $persen) }}%;" title="{{ $persen }}%"></div>
+                    </div>
+                    <span class="text-[10px] text-slate-500 mt-2">{{ $bulanLabel[$bulan - 1] }}</span>
+                </div>
+            @endforeach
+        </div>
+    </section>
+
+    {{-- Tabel rekap per peserta --}}
+    <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h3 class="text-lg font-semibold">Data Detail Peserta</h3>
+            <form method="GET">
+                {{-- Maintain filter params --}}
+                <input type="hidden" name="kategori" value="{{ $kategori ?? '' }}">
+                <input type="hidden" name="status" value="{{ $status ?? '' }}">
+                <input type="hidden" name="dari_tanggal" value="{{ $dariTgl ?? '' }}">
+                <input type="hidden" name="sampai_tanggal" value="{{ $sampaiTgl ?? '' }}">
+
+                <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Cari peserta..."
+                       class="border border-slate-200 rounded-lg text-sm px-3 py-2 w-full sm:w-64">
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                    <tr>
+                        <th class="px-6 py-3">Nama Peserta</th>
+                        <th class="px-6 py-3">Kategori</th>
+                        <th class="px-6 py-3 text-center">Total Hadir</th>
+                        <th class="px-6 py-3 text-center">Persentase</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                    @forelse ($rekap as $r)
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-3">
+                                <div class="font-semibold text-slate-800">{{ $r->peserta->user->nama ?? '-' }}</div>
+                                <div class="text-xs text-slate-500">{{ $r->peserta->tingkat_pendidikan ?? '-' }}</div>
+                            </td>
+                            <td class="px-6 py-3">
+                                <span class="bg-slate-100 px-3 py-1 rounded-full text-xs text-[#006191] font-medium">{{ $r->peserta->tingkat_pendidikan ?? '-' }}</span>
+                            </td>
+                            <td class="px-6 py-3 text-center font-medium">{{ $r->total_hadir + $r->total_terlambat }}/{{ $r->total_absen }}</td>
+                            <td class="px-6 py-3">
+                                <div class="flex flex-col items-center gap-1">
+                                    @php
+                                        $color = $r->persentase >= 90 ? 'text-green-600' : ($r->persentase >= 75 ? 'text-amber-600' : 'text-red-600');
+                                        $bar   = $r->persentase >= 90 ? 'bg-green-500' : ($r->persentase >= 75 ? 'bg-amber-500' : 'bg-red-500');
+                                    @endphp
+                                    <span class="font-semibold text-sm {{ $color }}">{{ $r->persentase }}%</span>
+                                    <div class="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="h-full {{ $bar }}" style="width: {{ $r->persentase }}%;"></div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">Belum ada data absensi.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div class="px-6 py-4 border-t border-slate-200">
+            {{ $rekap->links() }}
+        </div>
+    </section>
+
+</div>
+@endsection
+
+===== C:\xampp\htdocs\project_magang_natusi\resources\views\admin\absensi.blade.php =====
+@php
+    
+@endphp
+@extends('layouts.portal')
+@extends('layouts.portal')
+
+@section('title', 'Data Absensi - CV Natusi Admin Portal')
+
+@section('content')
+
+{{-- Statistik Ringkasan Absensi Hari Ini --}}
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 animate-fade-in">
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between relative overflow-hidden">
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-green-600"></div>
+        <div>
+            <p class="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">Total Hadir</p>
+            <h3 class="text-3xl font-bold text-slate-900 mt-2">124</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px] text-green-600">trending_up</span>
+                85% dari total peserta
+            </p>
+        </div>
+        <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-600">
+            <span class="material-symbols-outlined">check_circle</span>
+        </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between relative overflow-hidden">
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-600"></div>
+        <div>
+            <p class="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">Terlambat</p>
+            <h3 class="text-3xl font-bold text-red-600 mt-2">12</h3>
+            <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px] text-red-500">warning</span>
+                Perlu evaluasi
+            </p>
+        </div>
+        <div class="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center text-red-600">
+            <span class="material-symbols-outlined">schedule</span>
+        </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between relative overflow-hidden">
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-500"></div>
+        <div>
+            <p class="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">Izin & Sakit</p>
+            <h3 class="text-3xl font-bold text-slate-700 mt-2">12</h3>
+            <p class="text-xs text-slate-400 mt-1">Total pengajuan hari ini</p>
+        </div>
+        <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-600">
+            <span class="material-symbols-outlined">medical_services</span>
+        </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between relative overflow-hidden">
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
+        <div>
+            <p class="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">Belum Absen</p>
+            <h3 class="text-3xl font-bold text-slate-700 mt-2">8</h3>
+            <p class="text-xs text-slate-400 mt-1">Menunggu konfirmasi</p>
+        </div>
+        <div class="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-amber-500">
+            <span class="material-symbols-outlined">pending</span>
+        </div>
+    </div>
+</section>
+
+{{-- Kotak Pembungkus Utama Data --}}
+<section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+    <div class="overflow-x-auto">
+        <table class="w-full border-collapse text-left">
+            <thead>
+                <tr class="border-b border-slate-200 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <th class="px-6 py-3.5">Nama Peserta</th>
+                    <th class="px-6 py-3.5">Asal Instansi</th>
+                    <th class="px-6 py-3.5">Jam Absen</th>
+                    <th class="px-6 py-3.5">Status</th>
+                    <th class="px-6 py-3.5">Keterangan Lokasi</th>
+                    <th class="px-6 py-3.5 text-right">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm text-slate-600">
+                @forelse($data_absensi as $index => $item)
+                    <tr class="hover:bg-slate-50/75 transition duration-150">
+                        <td class="px-6 py-4 font-medium text-slate-950">
+                            <div class="font-semibold">{{ $item['nama'] }}</div>
+                            <div class="text-xs text-slate-400 font-normal">{{ $item['role'] }}</div>
+                        </td>
+                        <td class="px-6 py-4">{{ $item['instansi'] }}</td>
+                        <td class="px-6 py-4 font-mono text-xs">{{ $item['jam'] }}</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold
+                                {{ $item['status'] == 'Hadir' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10' : '' }}
+                                {{ $item['status'] == 'Terlambat' ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/10' : '' }}
+                                {{ $item['status'] == 'Izin' ? 'bg-sky-50 text-sky-700 ring-1 ring-sky-600/10' : '' }}
+                                {{ $item['status'] == 'Alpa' ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-600/10' : '' }}
+                            ">
+                                {{ $item['status'] }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-xs">{{ $item['lokasi'] }}</td>
+                        <td class="px-6 py-4 text-right">
+                            @if($item['status'] == 'Hadir' || $item['status'] == 'Terlambat')
+                                <button onclick="toggleMap('map-row-{{ $index }}')" class="inline-flex items-center gap-1 text-xs font-bold text-[#006191] hover:text-[#004f77] transition duration-150">
+                                    <span class="material-symbols-outlined text-base">pin_drop</span> Lihat Lokasi
+                                </button>
+                            @else
+                                <span class="text-slate-400">-</span>
+                            @endif
+                        </td>
+                    </tr>
+                    
+                    {{-- Row untuk Dropdown Peta Google Maps --}}
+                    <tr id="map-row-{{ $index }}" class="hidden bg-slate-50/50">
+                        <td colspan="6" class="px-6 py-4">
+                            <div class="w-full h-48 rounded-xl border border-slate-200 overflow-hidden shadow-inner bg-slate-100 flex items-center justify-center">
+                                <span class="text-xs text-slate-400 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">map</span> [Simulasi Peta Lokasi Absen {{ $item['nama'] }}]
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="px-6 py-10 text-center text-slate-400 font-medium">
+                            Data nama tidak ditemukan atau tidak sesuai kriteria filter.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    {{-- Footer Info --}}
+    <div class="p-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
+        <span class="text-xs font-medium text-slate-500">Menampilkan {{ count($data_absensi) }} peserta terfilter</span>
+    </div>
+</section>
+
+{{-- Script Dropdown Map --}}
+<script>
+    function toggleMap(id) {
+        const row = document.getElementById(id);
+        if (row.classList.contains('hidden')) {
+            document.querySelectorAll('[id^="map-"]').forEach(r => r.classList.add('hidden'));
+            row.classList.remove('hidden');
+        } else {
+            row.classList.add('hidden');
+        }
+    }
+</script>
+
+@endsection
+
+===== C:\xampp\htdocs\project_magang_natusi\resources\views\peserta-magang\absensi.blade.php =====
+@extends('layouts.portal')
+
+@section('title', 'Presensi Harian')
+
+@section('content')
+
+
+
+    <div class="max-w-6xl mx-auto space-y-6">
+
+        {{-- Page Header --}}
+        <div class="flex flex-col gap-2">
+            <h1 class="headline text-2xl md:text-3xl font-bold text-slate-900">Presensi Harian</h1>
+            <p class="text-sm text-slate-500">Silakan lakukan pencatatan kehadiran Anda hari ini.</p>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+            {{-- Left Column --}}
+            <div class="xl:col-span-2 space-y-6">
+
+                {{-- Attendance Form --}}
+                <section class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-blue-600">edit_calendar</span>
+                        Input Kehadiran
+                    </h2>
+
+                    @if ($sudahAbsenHariIni)
+                        <div class="rounded-xl border border-green-200 bg-green-50 p-4 text-green-700 text-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            Anda sudah melakukan presensi untuk hari ini. Sampai jumpa besok!
+                        </div>
+                    @else
+                        <form method="POST" action="{{ route('peserta-magang.absensi.store') }}" enctype="multipart/form-data" class="space-y-6" x-data="{ status: 'hadir', lat: null, lng: null, locating: false }">
+                            @csrf
+
+                            {{-- Status Selection --}}
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <label class="relative group cursor-pointer">
+                                    <input type="radio" name="status" value="hadir" x-model="status" class="peer sr-only" checked>
+                                    <div class="p-4 rounded-xl border border-slate-200 flex flex-col items-center gap-2 transition-all peer-checked:border-blue-600 peer-checked:bg-blue-50 group-hover:bg-slate-50">
+                                        <span class="material-symbols-outlined text-3xl text-blue-600">check_circle</span>
+                                        <span class="font-semibold text-sm">Hadir</span>
+                                    </div>
+                                </label>
+                                <label class="relative group cursor-pointer">
+                                    <input type="radio" name="status" value="sakit" x-model="status" class="peer sr-only">
+                                    <div class="p-4 rounded-xl border border-slate-200 flex flex-col items-center gap-2 transition-all peer-checked:border-rose-600 peer-checked:bg-rose-50 group-hover:bg-slate-50">
+                                        <span class="material-symbols-outlined text-3xl text-rose-600">medical_services</span>
+                                        <span class="font-semibold text-sm">Sakit</span>
+                                    </div>
+                                </label>
+                                <label class="relative group cursor-pointer">
+                                    <input type="radio" name="status" value="izin" x-model="status" class="peer sr-only">
+                                    <div class="p-4 rounded-xl border border-slate-200 flex flex-col items-center gap-2 transition-all peer-checked:border-slate-600 peer-checked:bg-slate-100 group-hover:bg-slate-50">
+                                        <span class="material-symbols-outlined text-3xl text-slate-600">assignment_late</span>
+                                        <span class="font-semibold text-sm">Izin</span>
+                                    </div>
+                                </label>
+                            </div>
+                            @error('status')
+                                <p class="text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+
+                            {{-- File Upload â€” muncul kalau status sakit/izin --}}
+                            <div x-show="status === 'sakit' || status === 'izin'" x-cloak>
+                                <label class="block text-sm font-semibold text-slate-900 mb-2">Lampiran Bukti (Dokumen/Foto)</label>
+                                <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer">
+                                    <input type="file" name="bukti" id="file-input" class="hidden">
+                                    <label for="file-input" class="cursor-pointer">
+                                        <span class="material-symbols-outlined text-4xl text-slate-400 mb-2">cloud_upload</span>
+                                        <p class="text-sm text-slate-500">Klik untuk unggah atau seret file ke sini</p>
+                                        <p class="text-xs text-slate-400 mt-1">PDF, JPG, atau PNG (Maks. 5MB)</p>
+                                    </label>
+                                </div>
+                                @error('bukti')
+                                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Keterangan â€” muncul kalau status sakit/izin --}}
+                            <div x-show="status === 'sakit' || status === 'izin'" x-cloak>
+                                <label class="block text-sm font-semibold text-slate-900 mb-2">Keterangan</label>
+                                <textarea name="keterangan" rows="3" class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="Contoh: Demam, izin acara keluarga, dsb."></textarea>
+                            </div>
+
+                            {{-- Live Location â€” muncul kalau status hadir --}}
+                            <div x-show="status === 'hadir'" x-cloak class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-blue-600 text-xl">location_on</span>
+                                        <span class="font-semibold text-sm">Lokasi Saat Ini</span>
+                                    </div>
+                                    <button type="button" @click="
+                                        locating = true;
+                                        navigator.geolocation.getCurrentPosition(
+                                            (pos) => { lat = pos.coords.latitude; lng = pos.coords.longitude; locating = false; },
+                                            () => { locating = false; }
+                                        )
+                                    " class="text-blue-600 text-xs font-semibold hover:underline flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">refresh</span>
+                                        <span x-text="locating ? 'Mendeteksi...' : 'Perbarui'"></span>
+                                    </button>
+                                </div>
+
+                                <div class="aspect-video w-full rounded-lg bg-blue-50 border border-slate-200 flex flex-col items-center justify-center">
+                                    <span class="material-symbols-outlined text-4xl text-blue-600 mb-2">my_location</span>
+                                    <template x-if="lat && lng">
+                                        <p class="text-sm font-medium text-blue-600" x-text="'Lat: ' + lat.toFixed(6) + ', Lng: ' + lng.toFixed(6)"></p>
+                                    </template>
+                                    <template x-if="!lat || !lng">
+                                        <p class="text-sm text-slate-500">Klik "Perbarui" untuk mendeteksi lokasi Anda</p>
+                                    </template>
+                                </div>
+
+                                <input type="hidden" name="latitude" :value="lat">
+                                <input type="hidden" name="longitude" :value="lng">
+                                <input type="hidden" name="alamat" :value="lat && lng ? `Koordinat ${lat.toFixed(6)}, ${lng.toFixed(6)}` : ''">
+
+                                <div class="mt-4">
+                                    <label class="block text-sm font-semibold text-slate-900 mb-2">Foto Kehadiran</label>
+                                    <input type="file" name="foto" accept="image/*" capture="user" class="block w-full text-sm">
+                                    @error('foto')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                                </div>
+
+                                @error('latitude')
+                                    <p class="text-xs text-red-600 mt-2">Lokasi wajib dideteksi sebelum submit.</p>
+                                @enderror
+                            </div>
+
+                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-600/20">
+                                Submit Kehadiran
+                            </button>
+                        </form>
+                    @endif
+                </section>
+
+                {{-- History Table --}}
+                <section class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                    <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-blue-600">history</span>
+                            Riwayat Kehadiran
+                        </h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200">
+                                    <th class="px-6 py-4 font-semibold text-sm text-slate-700">Tanggal</th>
+                                    <th class="px-6 py-4 font-semibold text-sm text-slate-700">Status</th>
+                                    <th class="px-6 py-4 font-semibold text-sm text-slate-700">Waktu</th>
+                                    <th class="px-6 py-4 font-semibold text-sm text-slate-700">Lokasi/Bukti</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse ($riwayat as $item)
+                                    <tr>
+                                        <td class="px-6 py-4 text-sm text-slate-700">
+                                            {{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('l, d M Y') }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            @php
+                                                $badge = match ($item->status) {
+                                                    'hadir' => 'bg-green-100 text-green-800',
+                                                    'sakit' => 'bg-yellow-100 text-yellow-800',
+                                                    'izin'  => 'bg-slate-100 text-slate-700',
+                                                    default => 'bg-slate-100 text-slate-700',
+                                                };
+                                            @endphp
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $badge }}">
+                                                {{ ucfirst($item->status) }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-slate-700">
+                                            {{ $item->jam ? \Carbon\Carbon::parse($item->jam)->format('H:i') . ' WIB' : '-' }}
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">
+                                            @if ($item->status === 'hadir' && $item->latitude && $item->longitude)
+                                                <a href="https://maps.google.com/?q={{ $item->latitude }},{{ $item->longitude }}" target="_blank" class="text-blue-600 hover:underline">Lihat Map</a>
+                                            @elseif ($item->surat_sakit)
+                                                <a href="{{ Storage::url($item->surat_sakit) }}" target="_blank" class="text-blue-600 hover:underline">Lihat Bukti</a>
+                                            @elseif ($item->surat_izin)
+                                                <a href="{{ Storage::url($item->surat_izin) }}" target="_blank" class="text-blue-600 hover:underline">Lihat Bukti</a>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-500">
+                                            Belum ada riwayat presensi.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    @if ($riwayat->hasPages())
+                        <div class="p-4 border-t border-slate-100">
+                            {{ $riwayat->links() }}
+                        </div>
+                    @endif
+                </section>
+            </div>
+
+            {{-- Right Column: Info/Stats --}}
+            <div class="space-y-6">
+
+                {{-- Quick Stats --}}
+                <div class="bg-blue-600 rounded-xl p-6 text-white shadow-lg shadow-blue-600/20">
+                    <h3 class="text-lg font-bold mb-4">Statistik Bulan Ini</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="opacity-80 text-sm">Kehadiran</span>
+                            <span class="font-bold">{{ $stats['total_hadir'] }}/{{ $stats['total_hari_kerja'] }} Hari</span>
+                        </div>
+                        @php
+                            $persen = $stats['total_hari_kerja'] > 0
+                                ? min(100, round(($stats['total_hadir'] / $stats['total_hari_kerja']) * 100))
+                                : 0;
+                        @endphp
+                        <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden">
+                            <div class="bg-white h-full" style="width: {{ $persen }}%"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-white/10">
+                            <div>
+                                <p class="text-xs opacity-70">Sakit</p>
+                                <p class="text-lg font-bold">{{ $stats['total_sakit'] }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs opacity-70">Izin</p>
+                                <p class="text-lg font-bold">{{ $stats['total_izin'] }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Info Card --}}
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                    <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-blue-600 text-xl">info</span>
+                        Peraturan Absensi
+                    </h3>
+                    <ul class="text-sm text-slate-500 space-y-3">
+                        <li class="flex gap-2">
+                            <span class="text-blue-600 font-bold">â€¢</span>
+                            Batas waktu absensi pagi adalah pukul 08:30 WIB.
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-blue-600 font-bold">â€¢</span>
+                            Absensi 'Hadir' wajib dilakukan dari lokasi kantor yang terdaftar.
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-blue-600 font-bold">â€¢</span>
+                            Status 'Sakit' wajib melampirkan surat dokter asli.
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-blue-600 font-bold">â€¢</span>
+                            Keterlambatan lebih dari 3 kali akan mempengaruhi evaluasi performa.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+@endsection
+
+
+===== C:\xampp\htdocs\project_magang_natusi\resources\views\peserta-magang\laporan-mingguan.blade.php =====
+@extends('layouts.portal')
+
+@section('title', 'Laporan Mingguan')
+
+@section('content')
+
+    <section class="mb-6">
+        <h1 class="headline text-2xl md:text-3xl font-bold text-slate-900 mb-1">Laporan Mingguan</h1>
+        <p class="text-sm text-slate-500">Unggah rangkuman kegiatan Anda setiap minggu untuk ditinjau mentor.</p>
+    </section>
+
+    @if (session('success'))
+        <div class="mb-4 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-sm px-4 py-3">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm mb-6">
+        <div class="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div>
+                <h3 class="headline text-lg font-semibold text-slate-900">Upload Laporan: Minggu {{ $mingguSaatIni }}</h3>
+                <p class="text-sm text-slate-500">Format PDF/DOC/DOCX, maksimal 10MB.</p>
+            </div>
+            @if ($laporanMingguIni)
+                <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[11px] font-bold uppercase">Sudah Dikirim</span>
+            @else
+                <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-[11px] font-bold uppercase">Belum Dikirim</span>
+            @endif
+        </div>
+        <form method="POST" action="{{ route('peserta-magang.laporan-mingguan.store') }}" enctype="multipart/form-data" class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            @csrf
+
+            <div class="space-y-2">
+                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">File Laporan (PDF/DOC/DOCX)</label>
+                <div class="border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center p-8 bg-slate-50 hover:bg-slate-100 transition-colors">
+                    <span class="material-symbols-outlined text-blue-600 text-4xl mb-2">cloud_upload</span>
+                    <input type="file" name="laporan" accept=".pdf,.doc,.docx" class="text-sm" required>
+                </div>
+                @error('laporan')
+                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                @enderror
+
+                @if ($laporanMingguIni)
+                    <p class="text-xs text-slate-500 mt-2">
+                        Mengunggah ulang akan menggantikan laporan minggu ke-{{ $mingguSaatIni }} yang sebelumnya sudah dikirim
+                        ({{ $laporanMingguIni->dikumpulkan_pada?->format('d M Y, H:i') }}).
+                    </p>
+                @endif
+            </div>
+
+            <div class="flex flex-col justify-end">
+                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                    {{ $laporanMingguIni ? 'Kirim Ulang Laporan' : 'Kirim Laporan' }}
+                    <span class="material-symbols-outlined text-[20px]">send</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-200 bg-slate-50">
+            <h3 class="headline text-lg font-semibold text-slate-900">Riwayat Laporan</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50">
+                        <th class="px-6 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Minggu</th>
+                        <th class="px-6 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Tgl Pengiriman</th>
+                        <th class="px-6 py-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">File</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @forelse ($riwayat as $item)
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-6 py-4 text-sm font-semibold text-slate-900">Minggu {{ $item->minggu_ke }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-700">{{ $item->dikumpulkan_pada?->format('d M Y, H:i') ?? '-' }}</td>
+                            <td class="px-6 py-4">
+                                <a href="{{ Storage::url($item->laporan) }}" target="_blank" class="text-blue-600 text-sm font-semibold hover:underline">Lihat File</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="px-6 py-8 text-center text-sm text-slate-500">Belum ada laporan yang dikirim.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if ($riwayat->hasPages())
+            <div class="p-4 border-t border-slate-100">
+                {{ $riwayat->links() }}
+            </div>
+        @endif
+    </div>
+
+@endsection
+
+
+===== C:\xampp\htdocs\project_magang_natusi\resources\views\superadmin\jam-absensi.blade.php =====
+@extends('layouts.portal')
+
+@section('title', 'Kelola Jam Absensi')
+
+@section('content')
+    <style>
+        .natusi-time-input::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.65;
+            filter:
+                invert(41%)
+                sepia(86%)
+                saturate(1354%)
+                hue-rotate(170deg)
+                brightness(91%)
+                contrast(92%);
+        }
+
+        .natusi-time-input:disabled::-webkit-calendar-picker-indicator {
+            cursor: not-allowed;
+            opacity: 0.3;
+        }
+    </style>
+
+    <div
+        x-data="{
+            clock: '',
+            dateLabel: '',
+            timer: null,
+            reloading: false,
+            serverActive: @js($isActive),
+            openMinutes: @js(
+                ((int) substr($openTime, 0, 2) * 60)
+                + (int) substr($openTime, 3, 2)
+            ),
+            closeMinutes: @js(
+                ((int) substr($closeTime, 0, 2) * 60)
+                + (int) substr($closeTime, 3, 2)
+            ),
+
+            init() {
+                this.updateClock();
+
+                this.timer = setInterval(() => {
+                    this.updateClock();
+                }, 1000);
+            },
+
+            jakartaTimeParts() {
+                const formatter = new Intl.DateTimeFormat(
+                    'en-GB',
+                    {
+                        timeZone: 'Asia/Jakarta',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false,
+                    }
+                );
+
+                const parts = Object.fromEntries(
+                    formatter
+                        .formatToParts(new Date())
+                        .filter((part) => part.type !== 'literal')
+                        .map((part) => [part.type, part.value])
+                );
+
+                return {
+                    hour: Number(parts.hour),
+                    minute: Number(parts.minute),
+                    second: Number(parts.second),
+                };
+            },
+
+            isActiveNow(hour, minute) {
+                const currentMinutes = (hour * 60) + minute;
+
+                if (this.openMinutes === this.closeMinutes) {
+                    return false;
+                }
+
+                if (this.openMinutes < this.closeMinutes) {
+                    return currentMinutes >= this.openMinutes
+                        && currentMinutes < this.closeMinutes;
+                }
+
+                return currentMinutes >= this.openMinutes
+                    || currentMinutes < this.closeMinutes;
+            },
+
+            updateClock() {
+                const now = new Date();
+                const parts = this.jakartaTimeParts();
+
+                this.clock = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Jakarta',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false,
+                }).format(now);
+
+                this.dateLabel = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Jakarta',
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                }).format(now);
+
+                const liveActive = this.isActiveNow(
+                    parts.hour,
+                    parts.minute
+                );
+
+                /*
+                 * Ketika jam melewati batas buka/tutup, muat ulang
+                 * satu kali agar status dan input langsung berubah.
+                 */
+                if (
+                    liveActive !== this.serverActive
+                    && ! this.reloading
+                ) {
+                    this.reloading = true;
+                    window.location.reload();
+                }
+            },
+        }"
+    >
+        {{-- Judul halaman --}}
+        <section>
+            <span
+                class="
+                    inline-flex items-center gap-2 rounded-full
+                    bg-sky-100 px-3 py-1
+                    text-[10px] font-bold uppercase
+                    tracking-[0.16em] text-sky-700
+                "
+            >
+                <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
+                Operasional Harian
+            </span>
+
+            <h1
+                class="
+                    mt-3 text-2xl font-extrabold tracking-tight
+                    text-slate-950 sm:text-3xl
+                "
+            >
+                Kelola Jam Absensi
+            </h1>
+
+            <p class="mt-1 text-sm text-slate-500">
+                Atur rentang waktu pendaftaran kehadiran harian
+                untuk peserta magang dan karyawan.
+            </p>
+        </section>
+
+        {{-- Ringkasan --}}
+        <section class="mt-5 grid gap-4 md:grid-cols-3">
+            <article
+                class="
+                    relative overflow-hidden rounded-2xl
+                    bg-gradient-to-br from-blue-600 to-sky-500
+                    p-5 text-white
+                    shadow-[0_16px_38px_rgba(37,99,235,0.20)]
+                "
+            >
+                <div
+                    class="
+                        absolute -right-8 -top-8 h-32 w-32
+                        rounded-full border-[20px] border-white/10
+                    "
+                ></div>
+
+                <div class="relative flex items-start justify-between gap-4">
+                    <div>
+                        <p
+                            class="
+                                text-[11px] font-bold uppercase
+                                tracking-[0.16em] text-blue-100
+                            "
+                        >
+                            Jam Buka Absensi
+                        </p>
+
+                        <p class="mt-3 text-4xl font-extrabold">
+                            {{ $openTime }}
+                        </p>
+
+                        <p class="mt-1 text-sm text-blue-100">
+                            Waktu mulai pendaftaran
+                        </p>
+                    </div>
+
+                    <span
+                        class="
+                            grid h-12 w-12 place-items-center
+                            rounded-2xl bg-white/15 ring-1 ring-white/20
+                        "
+                    >
+                        <svg
+                            class="h-6 w-6"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M5 7h14M7 3v4M17 3v4M5 7v13h14V7"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                            <path
+                                d="M9 12h6M12 9v6"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </span>
+                </div>
+            </article>
+
+            <article
+                class="
+                    relative overflow-hidden rounded-2xl
+                    bg-gradient-to-br from-sky-600 to-cyan-500
+                    p-5 text-white
+                    shadow-[0_16px_38px_rgba(2,132,199,0.20)]
+                "
+            >
+                <div
+                    class="
+                        absolute -bottom-12 -right-8 h-36 w-36
+                        rounded-full border-[22px] border-white/10
+                    "
+                ></div>
+
+                <div class="relative flex items-start justify-between gap-4">
+                    <div>
+                        <p
+                            class="
+                                text-[11px] font-bold uppercase
+                                tracking-[0.16em] text-sky-100
+                            "
+                        >
+                            Jam Tutup Absensi
+                        </p>
+
+                        <p class="mt-3 text-4xl font-extrabold">
+                            {{ $closeTime }}
+                        </p>
+
+                        <p class="mt-1 text-sm text-sky-100">
+                            Batas akhir pendaftaran
+                        </p>
+                    </div>
+
+                    <span
+                        class="
+                            grid h-12 w-12 place-items-center
+                            rounded-2xl bg-white/15 ring-1 ring-white/20
+                        "
+                    >
+                        <svg
+                            class="h-6 w-6"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="8"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                            />
+                            <path
+                                d="M12 7v5l3 2"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </span>
+                </div>
+            </article>
+
+            <article
+                class="
+                    relative overflow-hidden rounded-2xl
+                    bg-gradient-to-br
+                    from-blue-800 via-sky-700 to-cyan-600
+                    p-5 text-white
+                    shadow-[0_16px_38px_rgba(30,64,175,0.20)]
+                "
+            >
+                <div
+                    class="
+                        absolute -right-10 -top-12 h-40 w-40
+                        rounded-full border-[22px] border-white/10
+                    "
+                ></div>
+
+                <div class="relative flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <p
+                            class="
+                                text-[11px] font-bold uppercase
+                                tracking-[0.16em] text-cyan-100
+                            "
+                        >
+                            Status Absensi
+                        </p>
+
+                        <p class="mt-3 truncate text-xl font-extrabold">
+                            {{ $isActive ? 'Sedang Aktif' : 'Tidak Aktif' }}
+                        </p>
+
+                        <p class="mt-2 text-sm text-cyan-100">
+                            {{
+                                $isActive
+                                    ? 'Pengaturan sementara dikunci'
+                                    : 'Pengaturan dapat diperbarui'
+                            }}
+                        </p>
+                    </div>
+
+                    <span
+                        class="
+                            grid h-12 w-12 shrink-0 place-items-center
+                            rounded-2xl bg-white/15 ring-1 ring-white/20
+                        "
+                    >
+                        @if ($isActive)
+                            <svg
+                                class="h-6 w-6"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                aria-hidden="true"
+                            >
+                                <rect
+                                    x="6"
+                                    y="10"
+                                    width="12"
+                                    height="10"
+                                    rx="2"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                />
+                                <path
+                                    d="M9 10V7a3 3 0 0 1 6 0v3"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                        @else
+                            <svg
+                                class="h-6 w-6"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="m5 16.5-.8 3.3 3.3-.8L18 8.5 15.5 6 5 16.5Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linejoin="round"
+                                />
+                                <path
+                                    d="m13.8 7.7 2.5 2.5"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                />
+                            </svg>
+                        @endif
+                    </span>
+                </div>
+            </article>
+        </section>
+
+        <section
+            class="
+                mt-5 grid items-stretch gap-5
+                lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.85fr)]
+            "
+        >
+            {{-- Form pengaturan --}}
+            <article
+                class="
+                    h-full overflow-hidden rounded-3xl
+                    border border-sky-100/90 bg-white/95
+                    shadow-[0_20px_50px_rgba(15,52,94,0.09)]
+                "
+            >
+                <header
+                    class="
+                        flex items-start justify-between gap-4
+                        border-b border-sky-100
+                        bg-gradient-to-r
+                        from-sky-50 via-blue-50 to-cyan-50
+                        px-6 py-5
+                    "
+                >
+                    <div>
+                        <p
+                            class="
+                                text-[10px] font-bold uppercase
+                                tracking-[0.18em] text-sky-700
+                            "
+                        >
+                            Pengaturan Waktu
+                        </p>
+
+                        <h2 class="mt-1 text-xl font-extrabold text-slate-950">
+                            Rentang Jam Absensi
+                        </h2>
+
+                        <p class="mt-1 text-sm text-slate-500">
+                            Perubahan berlaku pada pendaftaran kehadiran berikutnya.
+                        </p>
+                    </div>
+
+                    <span
+                        class="
+                            grid h-12 w-12 shrink-0 place-items-center
+                            rounded-2xl bg-white text-sky-700
+                            shadow-sm ring-1 ring-sky-100
+                        "
+                    >
+                        <svg
+                            class="h-6 w-6"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="8"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                            />
+                            <path
+                                d="M12 7v5l3 2"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </span>
+                </header>
+
+                <form
+                    method="POST"
+                    action="{{ route('superadmin.jam-absensi.update') }}"
+                >
+                    @csrf
+                    @method('PUT')
+
+                    <div class="space-y-5 p-6">
+                        @if ($errors->any())
+                            <div
+                                class="
+                                    rounded-2xl border border-rose-200
+                                    bg-rose-50 px-4 py-3
+                                    text-sm text-rose-700
+                                "
+                            >
+                                <p class="font-bold">
+                                    Pengaturan belum dapat disimpan.
+                                </p>
+
+                                <ul class="mt-1 list-inside list-disc">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        @if ($isActive)
+                            <div
+                                class="
+                                    flex items-start gap-3 rounded-2xl
+                                    border border-amber-200
+                                    bg-amber-50 px-4 py-3
+                                "
+                            >
+                                <span
+                                    class="
+                                        mt-0.5 grid h-9 w-9 shrink-0
+                                        place-items-center rounded-xl
+                                        bg-white text-amber-600
+                                        ring-1 ring-amber-200
+                                    "
+                                >
+                                    <svg
+                                        class="h-5 w-5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        aria-hidden="true"
+                                    >
+                                        <rect
+                                            x="6"
+                                            y="10"
+                                            width="12"
+                                            height="10"
+                                            rx="2"
+                                            stroke="currentColor"
+                                            stroke-width="1.8"
+                                        />
+                                        <path
+                                            d="M9 10V7a3 3 0 0 1 6 0v3"
+                                            stroke="currentColor"
+                                            stroke-width="1.8"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+                                </span>
+
+                                <div>
+                                    <p class="text-sm font-bold text-amber-800">
+                                        Pengaturan sedang dikunci
+                                    </p>
+
+                                    <p class="mt-1 text-sm leading-6 text-amber-700">
+                                        Jam absensi tidak dapat diubah selama
+                                        periode {{ $openTime }}â€“{{ $closeTime }}
+                                        sedang berlangsung.
+                                    </p>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="grid gap-5 md:grid-cols-2">
+                            <div>
+                                <label
+                                    for="jam-buka"
+                                    class="
+                                        mb-2 block text-sm font-bold
+                                        text-slate-700
+                                    "
+                                >
+                                    Jam buka absensi
+                                </label>
+
+                                <div class="relative">
+                                    <svg
+                                        class="
+                                            pointer-events-none absolute
+                                            left-4 top-1/2 h-5 w-5
+                                            -translate-y-1/2 text-sky-600
+                                        "
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        aria-hidden="true"
+                                    >
+                                        <circle
+                                            cx="12"
+                                            cy="12"
+                                            r="8"
+                                            stroke="currentColor"
+                                            stroke-width="1.8"
+                                        />
+                                        <path
+                                            d="M12 7v5l3 2"
+                                            stroke="currentColor"
+                                            stroke-width="1.8"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+
+                                    <input
+                                        id="jam-buka"
+                                        name="jam_buka"
+                                        type="time"
+                                        value="{{ old('jam_buka', $openTime) }}"
+                                        required
+                                        @disabled($isActive)
+                                        class="
+                                            natusi-time-input
+                                            h-12 w-full rounded-xl
+                                            border-slate-300 bg-white
+                                            pl-12 pr-4 text-slate-700
+                                            focus:border-sky-500
+                                            focus:ring-sky-500
+                                            disabled:cursor-not-allowed
+                                            disabled:bg-slate-100
+                                            disabled:text-slate-400
+                                        "
+                                    >
+                                </div>
+
+                                <p class="mt-2 text-xs text-slate-500">
+                                    Default sistem: 07:30 WIB
+                                </p>
+                            </div>
+
+                            <div>
+                                <label
+                                    for="jam-tutup"
+                                    class="
+                                        mb-2 block text-sm font-bold
+                                        text-slate-700
+                                    "
+                                >
+                                    Jam tutup absensi
+                                </label>
+
+                                <div class="relative">
+                                    <svg
+                                        class="
+                                            pointer-events-none absolute
+                                            left-4 top-1/2 h-5 w-5
+                                            -translate-y-1/2 text-sky-600
+                                        "
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        aria-hidden="true"
+                                    >
+                                        <circle
+                                            cx="12"
+                                            cy="12"
+                                            r="8"
+                                            stroke="currentColor"
+                                            stroke-width="1.8"
+                                        />
+                                        <path
+                                            d="M12 7v5l3 2"
+                                            stroke="currentColor"
+                                            stroke-width="1.8"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+
+                                    <input
+                                        id="jam-tutup"
+                                        name="jam_tutup"
+                                        type="time"
+                                        value="{{ old('jam_tutup', $closeTime) }}"
+                                        required
+                                        @disabled($isActive)
+                                        class="
+                                            natusi-time-input
+                                            h-12 w-full rounded-xl
+                                            border-slate-300 bg-white
+                                            pl-12 pr-4 text-slate-700
+                                            focus:border-sky-500
+                                            focus:ring-sky-500
+                                            disabled:cursor-not-allowed
+                                            disabled:bg-slate-100
+                                            disabled:text-slate-400
+                                        "
+                                    >
+                                </div>
+
+                                <p class="mt-2 text-xs text-slate-500">
+                                    Default sistem: 09:00 WIB
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer
+                        class="
+                            flex flex-col-reverse gap-3
+                            border-t border-sky-100
+                            bg-slate-50/60 px-6 py-4
+                            sm:flex-row sm:justify-end
+                        "
+                    >
+                        <button
+                            type="submit"
+                            form="reset-attendance-form"
+                            @disabled($isActive)
+                            class="
+                                rounded-xl border border-sky-100
+                                bg-white px-4 py-2.5
+                                text-sm font-bold text-sky-700
+                                shadow-sm transition
+                                hover:bg-sky-50
+                                disabled:cursor-not-allowed
+                                disabled:opacity-45
+                            "
+                        >
+                            Reset ke Default
+                        </button>
+
+                        <button
+                            type="submit"
+                            @disabled($isActive)
+                            class="
+                                inline-flex items-center justify-center gap-2
+                                rounded-xl
+                                bg-gradient-to-r
+                                from-sky-600 to-blue-600
+                                px-5 py-2.5
+                                text-sm font-bold text-white
+                                shadow-[0_10px_24px_rgba(2,132,199,0.24)]
+                                transition hover:-translate-y-0.5
+                                disabled:cursor-not-allowed
+                                disabled:opacity-45
+                                disabled:hover:translate-y-0
+                            "
+                        >
+                            <svg
+                                class="h-5 w-5"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M5 4h12l2 2v14H5V4Zm3 0v5h8V4M8 16h8"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+
+                            Simpan Perubahan
+                        </button>
+                    </footer>
+                </form>
+
+                <form
+                    id="reset-attendance-form"
+                    method="POST"
+                    action="{{ route('superadmin.jam-absensi.reset') }}"
+                    class="hidden"
+                >
+                    @csrf
+                    @method('PATCH')
+                </form>
+            </article>
+
+            {{-- Status --}}
+            <aside
+                class="
+                    relative h-full overflow-hidden rounded-3xl
+                    bg-gradient-to-br
+                    from-blue-800 via-sky-700 to-cyan-600
+                    p-6 text-white
+                    shadow-[0_20px_50px_rgba(30,64,175,0.22)]
+                "
+            >
+                <div
+                    class="
+                        pointer-events-none absolute
+                        -right-16 -top-20 h-52 w-52
+                        rounded-full border-[30px] border-white/[0.08]
+                    "
+                ></div>
+
+                <div class="relative">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p
+                                class="
+                                    text-[10px] font-bold uppercase
+                                    tracking-[0.18em] text-cyan-100
+                                "
+                            >
+                                Status Sistem
+                            </p>
+
+                            <h2 class="mt-1 text-xl font-extrabold">
+                                {{ $statusLabel }}
+                            </h2>
+                        </div>
+
+                        <span
+                            @class([
+                                'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] ring-1',
+                                'bg-emerald-400/15 text-emerald-100 ring-emerald-200/20' => $isActive,
+                                'bg-white/10 text-sky-100 ring-white/15' => ! $isActive,
+                            ])
+                        >
+                            <span
+                                @class([
+                                    'h-2 w-2 rounded-full',
+                                    'bg-emerald-400 shadow-[0_0_0_5px_rgba(52,211,153,0.12)]' => $isActive,
+                                    'bg-sky-200/70' => ! $isActive,
+                                ])
+                            ></span>
+
+                            {{ $isActive ? 'Online' : 'Standby' }}
+                        </span>
+                    </div>
+
+                    <div
+                        class="
+                            mt-6 rounded-2xl bg-white/10
+                            p-5 ring-1 ring-white/15
+                            backdrop-blur-sm
+                        "
+                    >
+                        <p class="text-xs font-semibold text-sky-100">
+                            Waktu sekarang
+                        </p>
+
+                        <p
+                            class="
+                                mt-2 font-mono text-4xl font-extrabold
+                                tracking-tight
+                            "
+                            x-text="clock"
+                        >
+                            {{ $now->format('H:i:s') }}
+                        </p>
+
+                        <p
+                            class="mt-1 text-sm text-sky-100/80"
+                            x-text="dateLabel"
+                        >
+                            {{ $now->translatedFormat('d F Y') }}
+                        </p>
+                    </div>
+
+                    <div class="mt-6">
+                        <div
+                            class="
+                                flex items-center justify-between
+                                text-xs text-sky-100
+                            "
+                        >
+                            <span>Progres periode absensi</span>
+                            <span class="font-bold">{{ $progress }}%</span>
+                        </div>
+
+                        <div
+                            class="
+                                mt-2 h-2 overflow-hidden rounded-full
+                                bg-white/15
+                            "
+                        >
+                            <div
+                                class="
+                                    h-full rounded-full
+                                    bg-gradient-to-r
+                                    from-cyan-300 to-emerald-300
+                                    transition-all duration-500
+                                "
+                                style="width: {{ $progress }}%"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <dl
+                        class="
+                            mt-auto divide-y divide-white/10
+                            rounded-2xl border border-white/10
+                            bg-white/[0.06] px-4
+                        "
+                    >
+                        <div
+                            class="
+                                flex items-center justify-between gap-4
+                                py-3 text-sm
+                            "
+                        >
+                            <dt class="text-sky-100/75">Rentang aktif</dt>
+                            <dd class="font-bold">
+                                {{ $openTime }}â€“{{ $closeTime }}
+                            </dd>
+                        </div>
+
+                        <div
+                            class="
+                                flex items-center justify-between gap-4
+                                py-3 text-sm
+                            "
+                        >
+                            <dt class="text-sky-100/75">Terakhir diperbarui</dt>
+                            <dd class="text-right font-bold">
+                                {{ $setting->updated_at?->translatedFormat('d M Y, H:i') ?? '-' }}
+                            </dd>
+                        </div>
+
+                        <div
+                            class="
+                                flex items-center justify-between gap-4
+                                py-3 text-sm
+                            "
+                        >
+                            <dt class="text-sky-100/75">Diperbarui oleh</dt>
+                            <dd class="text-right font-bold">
+                                {{ $setting->diperbarui_oleh ?? 'Sistem' }}
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </aside>
+        </section>
+
+        {{-- Catatan penting --}}
+        <section
+            class="
+                relative mt-5 overflow-hidden rounded-3xl
+                border border-amber-300
+                bg-gradient-to-r
+                from-amber-100 via-orange-100 to-rose-100
+                px-6 py-5
+                shadow-[0_16px_40px_rgba(245,158,11,0.22)]
+            "
+        >
+            <div
+                class="
+                    pointer-events-none absolute
+                    -right-14 -top-16 h-40 w-40
+                    rounded-full bg-orange-300/25 blur-2xl
+                "
+            ></div>
+
+            <div
+                class="
+                    pointer-events-none absolute
+                    -bottom-16 left-1/3 h-32 w-32
+                    rounded-full bg-rose-300/20 blur-2xl
+                "
+            ></div>
+
+            <div
+                class="
+                    relative flex flex-col gap-4
+                    sm:flex-row sm:items-start
+                "
+            >
+                <span
+                    class="
+                        grid h-14 w-14 shrink-0 place-items-center
+                        rounded-2xl bg-gradient-to-br
+                        from-amber-500 to-orange-600
+                        text-white shadow-lg
+                        ring-4 ring-white/70
+                    "
+                >
+                    <svg
+                        class="h-7 w-7"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                    >
+                        <path
+                            d="M12 3 2.8 19h18.4L12 3Z"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linejoin="round"
+                        />
+                        <path
+                            d="M12 9v4M12 16.5h.01"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                </span>
+
+                <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <p
+                            class="
+                                text-[10px] font-extrabold uppercase
+                                tracking-[0.18em] text-orange-800
+                            "
+                        >
+                            Catatan Penting
+                        </p>
+
+                        <span
+                            class="
+                                inline-flex rounded-full
+                                bg-orange-600 px-2.5 py-1
+                                text-[9px] font-extrabold
+                                uppercase tracking-[0.12em]
+                                text-white shadow-sm
+                            "
+                        >
+                            Perhatian
+                        </span>
+                    </div>
+
+                    <h2
+                        class="
+                            mt-2 text-lg font-extrabold
+                            text-slate-950 sm:text-xl
+                        "
+                    >
+                        Jam absensi tidak dapat diubah saat periode aktif
+                    </h2>
+
+                    <p
+                        class="
+                            mt-2 max-w-5xl text-sm
+                            leading-6 text-slate-700
+                        "
+                    >
+                        Ketika waktu sekarang berada di antara
+                        <strong>{{ $openTime }}</strong> dan
+                        <strong>{{ $closeTime }}</strong>, sistem otomatis
+                        mengunci input, tombol simpan, dan tombol reset.
+                        Perubahan baru dapat dilakukan setelah periode
+                        absensi berakhir.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </div>
+@endsection

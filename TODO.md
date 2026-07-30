@@ -1,18 +1,18 @@
-# TODO: Ubah 4 Card Metrics Dashboard Admin Karyawan
+# TODO: Perbaikan Laporan Absensi dan Karyawan
 
-## Step 1: Update Controller
-- [x] Tambah variabel `$karyawanNonAktif`
-- [x] Tambah variabel `$karyawanBaruBulanIni`
-- [x] Kirim variabel baru ke view via compact()
+## 1. Perbaiki route di view `absensi-karyawan.blade.php`
+- [x] Ubah form action dari `route('admin.laporan.absensi-karyawan')` → `route('admin-karyawan.laporan.absensi')`
+- [x] Ubah export link dari `route('admin.laporan.absensi-karyawan.export', ...)` → `route('admin-karyawan.laporan.absensi.export', ...)`
 
-## Step 2: Update Blade
-- [x] Ganti 4 card kecil di grid "Ringkasan Operasional Karyawan" dengan card gradien baru:
-  - Card 1: TOTAL KARYAWAN (violet-to-purple, icon `group`)
-  - Card 2: KARYAWAN AKTIF (emerald-to-teal, icon `check_circle`)
-  - Card 3: KARYAWAN NON-AKTIF (rose-to-red, icon `cancel`)
-  - Card 4: BARU BULAN INI (sky-to-blue, icon `person_add`)
+## 2. Buat Export class untuk Laporan Karyawan
+- [x] Buat file `app/Exports/LaporanKaryawanExport.php`
 
-## Step 3: Testing
-- [x] Jalankan `php artisan optimize:clear`
-- [x] Verifikasi tampilan dashboard
+## 3. Tambahkan method `export()` di `LaporanKaryawanController`
+- [x] Tambahkan method export dengan filter yang sama seperti method index
+
+## 4. Testing
+- [ ] Verifikasi halaman laporan karyawan bisa diakses (route: `admin-karyawan.laporan.karyawan`)
+- [ ] Verifikasi halaman laporan absensi bisa diakses (route: `admin-karyawan.laporan.absensi`)
+
+## Selesai ✅
 

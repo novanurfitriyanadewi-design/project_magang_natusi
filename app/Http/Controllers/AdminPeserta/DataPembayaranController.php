@@ -4,81 +4,63 @@ namespace App\Http\Controllers\AdminPeserta;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pembayaran;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class DataPembayaranController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request)
     {
-        $search = $request->get('search', '');
-        $status = $request->get('status', '');
-        $dariTgl = $request->get('dari_tanggal');
-        $sampaiTgl = $request->get('sampai_tanggal');
+        $status = $request->input('status', '');
+        $search = $request->input('search', '');
+        $dariTgl = $request->input('dari_tanggal', '');
+        $sampaiTgl = $request->input('sampai_tanggal', '');
 
-        $query = Pembayaran::query()->with(['bank', 'nominalPembayaran', 'peserta.user']);
+        // Query Utama
+        $query = Pembayaran::with(['peserta.user', 'peserta.permintaan']);
 
-        if ($search !== '') {
-            $query->whereHas('peserta.user', fn ($q) => $q->where('nama', 'like', "%{$search}%"));
-        }
-
-        if ($status !== '') {
+        if (!empty($status)) {
             $query->where('status', $status);
         }
 
-        if ($dariTgl) {
+        if (!empty($search)) {
+            $query->whereHas('peserta.user', function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%");
+            });
+        }
+
+        if (!empty($dariTgl)) {
             $query->whereDate('tgl_bayar', '>=', $dariTgl);
         }
 
-        if ($sampaiTgl) {
+        if (!empty($sampaiTgl)) {
             $query->whereDate('tgl_bayar', '<=', $sampaiTgl);
         }
 
-        $pembayarans = $query->latest('tgl_bayar')->paginate(10)->withQueryString();
+        $pembayarans = $query->latest()->paginate(10)->withQueryString();
 
-        // Kartu ringkasan
-        $totalDiterima = Pembayaran::where('status', 'lunas')
-            ->whereDate('tgl_bayar', '>=', now()->subDays(30))
-            ->sum('nominal');
+        // Data Ringkasan Stat
+        $totalBelumDiterima = Pembayaran::where('status', 'menunggu')->sum('nominal');
+        $countBelumDiterima = Pembayaran::where('status', 'menunggu')->count();
+        $totalDiterima = Pembayaran::where('status', 'lunas')->sum('nominal');
 
-        $belumDiterimaQuery = Pembayaran::where('status', 'menunggu');
-        $totalBelumDiterima = (clone $belumDiterimaQuery)->sum('nominal');
-        $countBelumDiterima = (clone $belumDiterimaQuery)->count();
+        // PENTING: Definisi variabel $tabStatus untuk Blade
+        $tabStatus = [
+            '' => 'Semua',
+            'menunggu' => 'Menunggu',
+            'lunas' => 'Lunas',
+            'ditolak' => 'Ditolak',
+        ];
 
         return view('admin-peserta.pembayaran.index', compact(
             'pembayarans',
-            'search',
-            'status',
-            'dariTgl',
-            'sampaiTgl',
-            'totalDiterima',
             'totalBelumDiterima',
-            'countBelumDiterima'
+            'countBelumDiterima',
+            'totalDiterima',
+            'tabStatus',
+            'status',
+            'search',
+            'dariTgl',
+            'sampaiTgl'
         ));
-    }
-
-    public function terima(Pembayaran $pembayaran): RedirectResponse
-    {
-        $pembayaran->update([
-            'status' => 'lunas',
-            'keterangan' => 'Pembayaran telah diverifikasi admin.',
-        ]);
-
-        return back()->with('success', 'Pembayaran berhasil dikonfirmasi lunas.');
-    }
-
-    public function tolak(Request $request, Pembayaran $pembayaran): RedirectResponse
-    {
-        $data = $request->validate([
-            'keterangan' => ['required', 'string', 'max:1000'],
-        ]);
-
-        $pembayaran->update([
-            'status' => 'ditolak',
-            'keterangan' => $data['keterangan'],
-        ]);
-
-        return back()->with('success', 'Pembayaran berhasil ditolak.');
     }
 }
