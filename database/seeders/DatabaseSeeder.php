@@ -25,6 +25,28 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        User::updateOrCreate(
+            ['username' => 'adminkaryawan'],
+            [
+                'nama' => 'Admin Karyawan',
+                'email' => 'adminkaryawan@cvnatusi.com',
+                'password' => Hash::make('password'),
+                'role' => 'admin_karyawan',
+                'wajib_ganti_password' => false,
+            ]
+        );
+
+        User::updateOrCreate(
+            ['username' => 'adminpesertamagang'],
+            [
+                'nama' => 'Admin Peserta Magang',
+                'email' => 'adminpesertamagang@cvnatusi.com',
+                'password' => Hash::make('password'),
+                'role' => 'admin_peserta',
+                'wajib_ganti_password' => false,
+            ]
+        );
+
         // 2. Menjalankan PesertaMagangSeeder
         $this->call([
             PesertaMagangSeeder::class,

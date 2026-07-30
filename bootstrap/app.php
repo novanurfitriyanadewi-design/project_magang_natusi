@@ -1,6 +1,8 @@
 <?php
 
 use App\Middleware\AuthenticateApiToken;
+use App\Middleware\AdminKaryawanMiddleware;
+use App\Middleware\AdminPesertaMiddleware;
 use App\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'auth.api' => AuthenticateApiToken::class,
+            'admin.karyawan' => AdminKaryawanMiddleware::class,
+            'admin.peserta' => AdminPesertaMiddleware::class,
             'role' => RoleMiddleware::class,
         ]);
     })

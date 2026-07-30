@@ -11,12 +11,20 @@ class Resign extends Model
 
     protected $table = 'resigns';
 
+    // Jika primary key Anda bukan "id", ubah sesuai nama kolom.
+    // Contoh:
+    // protected $primaryKey = 'id_resign';
+
     protected $fillable = [
         'karyawan_id',
         'alasan',
         'tanggal_efektif',
         'status',
         'catatan_hrd',
+    ];
+
+    protected $casts = [
+        'tanggal_efektif' => 'date',
     ];
 
     public function karyawan()

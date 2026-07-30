@@ -7,13 +7,14 @@ use App\Http\Controllers\BankController;
 use App\Http\Controllers\JamOperasionalController;
 use App\Http\Controllers\LaporanMingguanController;
 use App\Http\Controllers\NominalPembayaranController;
-use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\AdminPeserta\NotifikasiController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\PengumpulanTugasController;
 use App\Http\Controllers\PermintaanMagangController;
 use App\Http\Controllers\PesertaMagangController;
 use App\Http\Controllers\TugasController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminPeserta\NotifikasiController as AdminNotifikasiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/status', fn () => response()->json([
@@ -32,6 +33,11 @@ Route::middleware('auth.api')->group(function () {
     Route::get('/notifikasi-saya', [NotifikasiController::class, 'milikSaya']);
     Route::put('/notifikasi/tandai-semua-dibaca', [NotifikasiController::class, 'tandaiSemuaDibaca']);
     Route::put('/notifikasi/{id}/dibaca', [NotifikasiController::class, 'tandaiDibaca']);
+
+    // Admin Notifikasi API
+    Route::get('/admin/notifikasi/milik-saya', [AdminNotifikasiController::class, 'milikSaya']);
+    Route::post('/admin/notifikasi/{id}/tandai-dibaca', [AdminNotifikasiController::class, 'tandaiDibaca']);
+    Route::post('/admin/notifikasi/tandai-semua-dibaca', [AdminNotifikasiController::class, 'tandaiSemuaDibaca']);
 
     Route::get('/aturan-perusahaan-aktif', [AturanPerusahaanController::class, 'aktif']);
 });
