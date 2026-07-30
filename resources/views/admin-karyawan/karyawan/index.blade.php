@@ -32,46 +32,54 @@
     </div>
 
     <section class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <article class="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-            <div class="flex items-center justify-between">
-                <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Total Karyawan</p>
-                <span class="grid h-9 w-9 place-items-center rounded-xl bg-sky-50 text-sky-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M16 7.5h5M18.5 5v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                </span>
-            </div>
-            <p class="mt-3 text-3xl font-extrabold text-slate-950">{{ $totalKaryawan }}</p>
-        </article>
+    <article class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 p-5 text-white shadow-lg">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-indigo-100">Total Karyawan</p>
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M16 7.5h5M18.5 5v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </span>
+        </div>
+        <p class="mt-3 text-3xl font-extrabold">{{ $totalKaryawan }}</p>
+        <p class="mt-1 text-xs text-indigo-100">Seluruh personil terdaftar</p>
+        <span class="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 rounded-full bg-white/10"></span>
+    </article>
 
-        <article class="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-            <div class="flex items-center justify-between">
-                <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Karyawan Aktif</p>
-                <span class="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </span>
-            </div>
-            <p class="mt-3 text-3xl font-extrabold text-slate-950">{{ $karyawanAktif }}</p>
-        </article>
+    <article class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-5 text-white shadow-lg">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-100">Karyawan Aktif</p>
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+        </div>
+        <p class="mt-3 text-3xl font-extrabold">{{ $karyawanAktif }}</p>
+        <p class="mt-1 text-xs text-emerald-100">Sedang bekerja aktif</p>
+        <span class="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 rounded-full bg-white/10"></span>
+    </article>
 
-        <article class="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-            <div class="flex items-center justify-between">
-                <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Karyawan Non-Aktif</p>
-                <span class="grid h-9 w-9 place-items-center rounded-xl bg-rose-50 text-rose-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                </span>
-            </div>
-            <p class="mt-3 text-3xl font-extrabold text-slate-950">{{ $karyawanNonAktif }}</p>
-        </article>
+    <article class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 p-5 text-white shadow-lg">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-100">Karyawan Non-Aktif</p>
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </span>
+        </div>
+        <p class="mt-3 text-3xl font-extrabold">{{ $karyawanNonAktif }}</p>
+        <p class="mt-1 text-xs text-amber-100">Tidak lagi bertugas</p>
+        <span class="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 rounded-full bg-white/10"></span>
+    </article>
 
-        <article class="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-            <div class="flex items-center justify-between">
-                <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Baru Bulan Ini</p>
-                <span class="grid h-9 w-9 place-items-center rounded-xl bg-cyan-50 text-cyan-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
-                </span>
-            </div>
-            <p class="mt-3 text-3xl font-extrabold text-slate-950">{{ $karyawanBaruBulanIni }}</p>
-        </article>
-    </section>
+    <article class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 p-5 text-white shadow-lg">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-violet-100">Baru Bulan Ini</p>
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+            </span>
+        </div>
+        <p class="mt-3 text-3xl font-extrabold">{{ $karyawanBaruBulanIni }}</p>
+        <p class="mt-1 text-xs text-violet-100">Bergabung bulan ini</p>
+        <span class="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 rounded-full bg-white/10"></span>
+    </article>
+</section>
 
     <form method="GET" class="mt-5 flex flex-wrap items-end gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
         <div class="min-w-[180px] flex-1">
