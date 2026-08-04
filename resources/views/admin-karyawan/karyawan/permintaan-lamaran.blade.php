@@ -44,51 +44,43 @@
     @endif
 
     {{-- ================= STAT CARDS ================= --}}
-    <section class="mt-5 grid gap-4 sm:grid-cols-3">
-        <div class="rounded-2xl border border-white/80 bg-white/90 p-5 shadow-[0_16px_36px_rgba(15,52,94,0.06)]">
-            <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Total Pendaftar</p>
-            <p class="mt-2 text-3xl font-extrabold text-slate-950">{{ number_format($total_pendaftar) }}</p>
+<section class="mt-5 grid gap-4 sm:grid-cols-3">
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 p-5 text-white shadow-lg">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-100">Total Pendaftar</p>
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M16 7.5h5M18.5 5v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </span>
         </div>
-        <div class="rounded-2xl border border-white/80 bg-white/90 p-5 shadow-[0_16px_36px_rgba(15,52,94,0.06)]">
-            <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Sedang Interview</p>
-            <p class="mt-2 text-3xl font-extrabold text-indigo-600">{{ number_format($total_interview) }}</p>
-        </div>
-        <div class="rounded-2xl border border-white/80 bg-white/90 p-5 shadow-[0_16px_36px_rgba(15,52,94,0.06)]">
-            <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Sudah Disetujui</p>
-            <p class="mt-2 text-3xl font-extrabold text-emerald-600">{{ number_format($total_disetujui) }}</p>
-        </div>
-    </section>
+        <p class="mt-2 text-3xl font-extrabold">{{ number_format($total_pendaftar) }}</p>
+        <p class="mt-1 text-xs text-blue-100">Seluruh pelamar masuk</p>
+        <span class="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 rounded-full bg-white/10"></span>
+    </div>
 
-    {{-- ================= FILTER & SEARCH ================= --}}
-    <section class="mt-5 rounded-2xl border border-white/80 bg-white/90 p-4 shadow-[0_16px_36px_rgba(15,52,94,0.06)]">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex flex-wrap gap-2">
-                @foreach ($statusTabs as $value => $label)
-                    <a
-                        href="{{ request()->fullUrlWithQuery(['status' => $value, 'page' => null]) }}"
-                        class="rounded-xl px-4 py-2 text-xs font-bold transition {{ $activeStatus === $value ? 'bg-sky-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}"
-                    >
-                        {{ $label }}
-                    </a>
-                @endforeach
-            </div>
-
-            <form method="GET" action="{{ route('admin-karyawan.permintaan-lamaran.index') }}" class="flex items-center gap-2">
-                <input type="hidden" name="status" value="{{ $activeStatus }}">
-                <div class="relative">
-                    <input
-                        type="text"
-                        name="search"
-                        value="{{ $keyword }}"
-                        placeholder="Cari nama, email, posisi..."
-                        class="w-56 rounded-xl border border-slate-200 py-2 pl-9 pr-3 text-xs focus:border-sky-500 focus:ring-sky-500"
-                    >
-                    <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                </div>
-                <button type="submit" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">Cari</button>
-            </form>
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-fuchsia-600 to-purple-700 p-5 text-white shadow-lg">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-fuchsia-100">Sedang Interview</p>
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg>
+            </span>
         </div>
-    </section>
+        <p class="mt-2 text-3xl font-extrabold">{{ number_format($total_interview) }}</p>
+        <p class="mt-1 text-xs text-fuchsia-100">Menunggu jadwal/hasil</p>
+        <span class="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 rounded-full bg-white/10"></span>
+    </div>
+
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 p-5 text-white shadow-lg">
+        <div class="flex items-center justify-between">
+            <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-teal-100">Sudah Disetujui</p>
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+        </div>
+        <p class="mt-2 text-3xl font-extrabold">{{ number_format($total_disetujui) }}</p>
+        <p class="mt-1 text-xs text-teal-100">Resmi diterima</p>
+        <span class="pointer-events-none absolute -bottom-4 -right-4 h-20 w-20 rounded-full bg-white/10"></span>
+    </div>
+</section>
 
     {{-- ================= TABLE ================= --}}
     <section class="mt-5 overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[0_18px_45px_rgba(15,52,94,0.08)]">

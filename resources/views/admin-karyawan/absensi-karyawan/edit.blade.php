@@ -1,4 +1,4 @@
-@extends('layouts.admin-karyawan')
+@extends('layouts.portal')
 
 @section('title', 'Edit Absensi Karyawan')
 

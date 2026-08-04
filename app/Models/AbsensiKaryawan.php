@@ -22,6 +22,10 @@ class AbsensiKaryawan extends Model
         'keterangan',
     ];
 
+    protected $casts = [
+        'tanggal' => 'date',
+    ];
+
     public function karyawan(): BelongsTo
     {
         return $this->belongsTo(Karyawan::class, 'id_karyawan', 'id_karyawan');
