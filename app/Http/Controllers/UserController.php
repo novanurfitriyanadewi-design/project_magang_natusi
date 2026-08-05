@@ -52,7 +52,7 @@ class UserController extends Controller
     public function destroy(int|string $id): JsonResponse
     {
         $user=User::findOrFail($id);
-        if ($user->role === 'superadmin') return response()->json(['success'=>false,'message'=>'Akun superadmin tidak dapat dihapus.'],422);
+        if ($user->role === 'superadmin') return response()->json(['success'=>false,'message'=>'Akun Direktur Utama tidak dapat dihapus.'],422);
         $user->delete();
         return response()->json(['success'=>true,'message'=>'User berhasil dihapus.']);
     }

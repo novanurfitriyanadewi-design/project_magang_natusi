@@ -1,7 +1,10 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+
+// Profile & Shared Controllers
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\NotifikasiController;
 
 // Superadmin Controllers
 use App\Http\Controllers\Superadmin\AdminController as SuperadminAdminController;
@@ -9,24 +12,33 @@ use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAtur
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
+use App\Http\Controllers\Superadmin\SuperadminDivisiController;
 
-// Admin Controllers
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\PesertaMagangController as AdminPesertaMagangController;
-use App\Http\Controllers\Admin\LaporanPesertaController as AdminLaporanPesertaController;
-use App\Http\Controllers\Admin\LaporanPembayaranController as AdminLaporanPembayaranController;
-use App\Http\Controllers\Admin\LaporanAbsensiController as AdminLaporanAbsensiController;
-use App\Http\Controllers\Admin\LaporanPenugasanController as AdminLaporanPenugasanController;
-use App\Http\Controllers\Admin\TugasController as AdminTugasController;
-use App\Http\Controllers\Admin\PermintaanMagangController as AdminPermintaanMagangController;
-use App\Http\Controllers\Admin\DataAbsensiController as AdminDataAbsensiController;
-use App\Http\Controllers\Admin\AbsensiKaryawanController as AdminAbsensiKaryawanController;
-use App\Http\Controllers\Admin\DataPembayaranController as AdminDataPembayaranController;
-use App\Http\Controllers\Admin\DataMetodePembayaranController as AdminDataMetodePembayaranController;
-use App\Http\Controllers\Admin\PengumpulanTugasController as AdminPengumpulanTugasController;
-use App\Http\Controllers\Admin\PermintaanLamaranController as AdminPermintaanLamaranController;
-use App\Http\Controllers\Admin\KaryawanController;
-use App\Http\Controllers\Admin\NotifikasiController as AdminNotifikasiController;
+// Admin Peserta Controllers
+use App\Http\Controllers\AdminPeserta\DashboardController as AdminPesertaDashboardController;
+use App\Http\Controllers\AdminPeserta\PesertaMagangController as AdminPesertaMagangController;
+use App\Http\Controllers\AdminPeserta\LaporanPesertaController as AdminLaporanPesertaController;
+use App\Http\Controllers\AdminPeserta\LaporanPembayaranController as AdminLaporanPembayaranController;
+use App\Http\Controllers\AdminPeserta\LaporanAbsensiController as AdminLaporanAbsensiController;
+use App\Http\Controllers\AdminPeserta\LaporanPenugasanController as AdminLaporanPenugasanController;
+use App\Http\Controllers\AdminPeserta\TugasController as AdminTugasController;
+use App\Http\Controllers\AdminPeserta\PermintaanMagangController as AdminPermintaanMagangController;
+use App\Http\Controllers\AdminPeserta\DataAbsensiController as AdminDataAbsensiController;
+use App\Http\Controllers\AdminPeserta\DataPembayaranController as AdminDataPembayaranController;
+use App\Http\Controllers\AdminPeserta\DataMetodePembayaranController as AdminDataMetodePembayaranController;
+use App\Http\Controllers\AdminPeserta\PengumpulanTugasController as AdminPengumpulanTugasController;
+use App\Http\Controllers\AdminPeserta\NotifikasiController as AdminNotifikasiController;
+use App\Http\Controllers\AdminPeserta\NotifikasiController as UserNotifikasiController;
+
+// Admin Karyawan Controllers
+use App\Http\Controllers\AdminKaryawan\DashboardController as AdminKaryawanDashboardController;
+use App\Http\Controllers\AdminKaryawan\KaryawanController as AdminKaryawanController;
+use App\Http\Controllers\AdminKaryawan\AbsensiKaryawanController as AdminAbsensiKaryawanController;
+use App\Http\Controllers\AdminKaryawan\PermintaanLamaranController as AdminPermintaanLamaranController;
+use App\Http\Controllers\AdminKaryawan\PembayaranKaryawanController as AdminPembayaranKaryawanController;
+use App\Http\Controllers\AdminKaryawan\ResignController as AdminResignController;
+use App\Http\Controllers\AdminKaryawan\LaporanAbsensiKaryawanController;
+use App\Http\Controllers\AdminKaryawan\LaporanKaryawanController;
 
 // Peserta Magang Controllers
 use App\Http\Controllers\PesertaMagang\DashboardController as PesertaMagangDashboardController;
@@ -39,10 +51,8 @@ use App\Http\Controllers\Peserta\TugasController as PesertaTugasController;
 
 // Karyawan Controllers
 use App\Http\Controllers\Karyawan\DashboardController as KaryawanDashboardController;
-use App\Http\Controllers\Karyawan\ResignController;
-use App\Http\Controllers\Karyawan\PengumumanController; // Sesuaikan jika ada
+use App\Http\Controllers\Karyawan\PengumumanController;
 use App\Http\Controllers\Karyawan\AturanController;
-use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,7 +85,9 @@ Route::middleware('auth')->get('/dashboard', function () {
 
     return match ($user?->role) {
         'superadmin'                => redirect()->route('superadmin.dashboard'),
-        'admin'                     => redirect()->route('admin.dashboard'),
+        'admin',
+        'admin_peserta'             => redirect()->route('admin-peserta.dashboard'),
+        'admin_karyawan'            => redirect()->route('admin-karyawan.dashboard'),
         'karyawan'                  => redirect()->route('karyawan.dashboard'),
         'pelamar', 'pelamar_karyawan' => redirect()->route('pengajuan.status'),
         'peserta'                   => redirect()->route('peserta-magang.dashboard'),
@@ -109,12 +121,10 @@ Route::middleware('auth')->group(function (): void {
         ->name('profile.photo.show');
 
     // Notifikasi
-    // PENTING: route 'baca-semua' harus didaftarkan SEBELUM '{notifikasi}/baca',
-    // supaya kata 'baca-semua' tidak ketangkep sebagai parameter {notifikasi}.
-    Route::patch('/notifikasi/baca-semua', [NotifikasiController::class, 'tandaiSemuaDibacaWeb'])
+    Route::patch('/notifikasi/baca-semua', [UserNotifikasiController::class, 'tandaiSemuaDibacaWeb'])
         ->name('notifikasi.read-all');
 
-    Route::patch('/notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'tandaiDibacaWeb'])
+    Route::patch('/notifikasi/{notifikasi}/baca', [UserNotifikasiController::class, 'tandaiDibacaWeb'])
         ->whereNumber('notifikasi')
         ->name('notifikasi.read');
 });
@@ -171,19 +181,25 @@ Route::middleware(['auth', 'role:superadmin'])
             ->name('metode-pembayaran.bank.update');
         Route::delete('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'destroyBank'])
             ->name('metode-pembayaran.bank.destroy');
+
+        /* Kelola Divisi */
+        Route::get('/divisi', [SuperadminDivisiController::class, 'index'])->name('divisi.index');
+        Route::post('/divisi', [SuperadminDivisiController::class, 'store'])->name('divisi.store');
+        Route::put('/divisi/{divisi}', [SuperadminDivisiController::class, 'update'])->name('divisi.update');
+        Route::delete('/divisi/{divisi}', [SuperadminDivisiController::class, 'destroy'])->name('divisi.destroy');
     });
 
 /*
 |--------------------------------------------------------------------------
-| Admin & Karyawan
+| Admin Peserta
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'role:admin,karyawan'])
-    ->prefix('admin')
-    ->name('admin.')
+Route::middleware('admin.peserta')
+    ->prefix('admin-peserta')
+    ->name('admin-peserta.')
     ->group(function (): void {
-        Route::get('/dashboard', AdminDashboardController::class)
+        Route::get('/dashboard', AdminPesertaDashboardController::class)
             ->name('dashboard');
 
         /* Data Peserta Magang */
@@ -212,7 +228,6 @@ Route::middleware(['auth', 'role:admin,karyawan'])
             ->except(['create'])
             ->parameters(['peserta' => 'peserta_magang']);
 
-
         /* Permintaan Magang */
         Route::get('/permintaan', [AdminPermintaanMagangController::class, 'index'])
             ->name('permintaan.index');
@@ -220,14 +235,6 @@ Route::middleware(['auth', 'role:admin,karyawan'])
         Route::post('/permintaan/action/{id}', [AdminPermintaanMagangController::class, 'action'])
             ->whereNumber('id')
             ->name('permintaan.action');
-
-        /* Kelola Permintaan Lamaran Registrasi Karyawan */
-        Route::get('/permintaan-lamaran', [AdminPermintaanLamaranController::class, 'index'])
-            ->name('permintaan-lamaran.index');
-
-        Route::post('/permintaan-lamaran/{id}/action', [AdminPermintaanLamaranController::class, 'action'])
-            ->whereNumber('id')
-            ->name('permintaan-lamaran.action');
 
         /* Kelola Laporan Peserta Magang */
         Route::resource('laporan-peserta', AdminLaporanPesertaController::class)
@@ -254,13 +261,9 @@ Route::middleware(['auth', 'role:admin,karyawan'])
         Route::post('/tugas/upload', [AdminTugasController::class, 'upload'])
             ->name('tugas.upload');
 
-        // Panduan materi & tugas — public/template/MATERI DAN TUGAS.xlsx
-        // Nama final route: admin.tugas.panduan.download (jangan didaftarkan dobel dengan prefix /admin lagi)
         Route::get('/tugas/panduan/download', [AdminTugasController::class, 'downloadPanduan'])
             ->name('tugas.panduan.download');
 
-        // Template Excel tugas mingguan — public/template/template_tugas_mingguan.xlsx
-        // Satu method saja (downloadTemplate) dipakai oleh 2 nama route, biar view lama/baru sama-sama jalan
         Route::get('/tugas/template-excel/download', [AdminTugasController::class, 'downloadTemplate'])
             ->name('tugas.template-excel.download');
 
@@ -299,27 +302,16 @@ Route::middleware(['auth', 'role:admin,karyawan'])
         Route::get('/absensi', [AdminDataAbsensiController::class, 'index'])
             ->name('absensi.index');
 
-        /* Absensi Karyawan */
-        Route::get('/absensi-karyawan/export', [AdminAbsensiKaryawanController::class, 'export'])
-            ->name('absensi-karyawan.export');
-        Route::get('/absensi-karyawan', [AdminAbsensiKaryawanController::class, 'index'])
-            ->name('absensi-karyawan.index');
-        Route::get('/absensi-karyawan/create', [AdminAbsensiKaryawanController::class, 'create'])
-            ->name('absensi-karyawan.create');
-        Route::post('/absensi-karyawan', [AdminAbsensiKaryawanController::class, 'store'])
-            ->name('absensi-karyawan.store');
-        Route::get('/absensi-karyawan/{absensiKaryawan}', [AdminAbsensiKaryawanController::class, 'show'])
-            ->whereNumber('absensiKaryawan')
-            ->name('absensi-karyawan.show');
-        Route::get('/absensi-karyawan/{absensiKaryawan}/edit', [AdminAbsensiKaryawanController::class, 'edit'])
-            ->whereNumber('absensiKaryawan')
-            ->name('absensi-karyawan.edit');
-        Route::put('/absensi-karyawan/{absensiKaryawan}', [AdminAbsensiKaryawanController::class, 'update'])
-            ->whereNumber('absensiKaryawan')
-            ->name('absensi-karyawan.update');
-        Route::delete('/absensi-karyawan/{absensiKaryawan}', [AdminAbsensiKaryawanController::class, 'destroy'])
-            ->whereNumber('absensiKaryawan')
-            ->name('absensi-karyawan.destroy');
+        /* Data Pembayaran */
+        Route::get('/pembayaran', [AdminDataPembayaranController::class, 'index'])
+            ->name('pembayaran.index');
+
+        Route::patch('/pembayaran/{pembayaran}/terima', [AdminDataPembayaranController::class, 'terima'])
+            ->name('pembayaran.terima');
+
+        Route::patch('/pembayaran/{pembayaran}/tolak', [AdminDataPembayaranController::class, 'tolak'])
+            ->name('pembayaran.tolak');
+
         /* Metode Pembayaran */
         Route::get('/metode-pembayaran', [AdminDataMetodePembayaranController::class, 'index'])
             ->name('metode-pembayaran.index');
@@ -335,13 +327,6 @@ Route::middleware(['auth', 'role:admin,karyawan'])
 
         Route::delete('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'destroyBank'])
             ->name('metode-pembayaran.bank.destroy');
-
-        /* Data Karyawan */
-        Route::get('/karyawan', [KaryawanController::class, 'index'])
-        ->name('karyawan.index');
-
-        Route::put('/karyawan/{karyawan}', [KaryawanController::class, 'update'])
-        ->name('karyawan.update');
 
         /* Notifikasi */
         Route::get('/notifikasi', [AdminNotifikasiController::class, 'index'])
@@ -366,6 +351,71 @@ Route::middleware(['auth', 'role:admin,karyawan'])
 
 /*
 |--------------------------------------------------------------------------
+| Admin Karyawan
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('admin.karyawan')
+    ->prefix('admin-karyawan')
+    ->name('admin-karyawan.')
+    ->group(function (): void {
+        Route::get('/dashboard', AdminKaryawanDashboardController::class)->name('dashboard');
+        
+        // Data Karyawan
+        Route::get('/karyawan', [AdminKaryawanController::class, 'index'])->name('karyawan.index');
+        Route::put('/karyawan/{karyawan}', [AdminKaryawanController::class, 'update'])->name('karyawan.update');
+        
+        // Absensi Karyawan
+        Route::get('/absensi-karyawan/export', [AdminAbsensiKaryawanController::class, 'export'])->name('absensi-karyawan.export');
+        Route::resource('absensi-karyawan', AdminAbsensiKaryawanController::class);
+        
+        // Permintaan Lamaran Karyawan
+        Route::get('/permintaan-lamaran', [AdminPermintaanLamaranController::class, 'index'])->name('permintaan-lamaran.index');
+        Route::post('/permintaan-lamaran/{id}/action', [AdminPermintaanLamaranController::class, 'action'])->whereNumber('id')->name('permintaan-lamaran.action');
+        
+        // Pembayaran Gaji Karyawan
+        Route::get('/pembayaran-karyawan', [AdminPembayaranKaryawanController::class, 'index'])->name('pembayaran-karyawan.index');
+        Route::post('/pembayaran-karyawan', [AdminPembayaranKaryawanController::class, 'store'])->name('pembayaran-karyawan.store');
+        Route::delete('/pembayaran-karyawan/{id}', [AdminPembayaranKaryawanController::class, 'destroy'])->name('pembayaran-karyawan.destroy');
+
+        // Pengajuan Resign (sisi admin)
+        Route::get('/resign', [AdminResignController::class, 'index'])->name('resign.index');
+        Route::patch('/resign/{resign}/approve', [AdminResignController::class, 'approve'])->name('resign.approve');
+        Route::patch('/resign/{resign}/reject', [AdminResignController::class, 'reject'])->name('resign.reject');
+
+        // Laporan Karyawan & Absensi
+        Route::prefix('laporan')->name('laporan.')->group(function () {
+            // Laporan Absensi
+            Route::get('/absensi', [LaporanAbsensiKaryawanController::class, 'index'])->name('absensi');
+            Route::get('/absensi/export', [LaporanAbsensiKaryawanController::class, 'export'])->name('absensi.export');
+
+            // Laporan Data Karyawan
+            Route::get('/karyawan', [LaporanKaryawanController::class, 'index'])->name('karyawan');
+            Route::get('/karyawan/export', [LaporanKaryawanController::class, 'export'])->name('karyawan.export');
+        });
+    });
+
+// Logout khusus Admin
+Route::prefix('admin-karyawan')->name('admin-karyawan.')->group(function (): void {
+    Route::middleware('admin.karyawan')->post('/logout', function (\Illuminate\Http\Request $request) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login');
+    })->name('logout');
+});
+
+Route::prefix('admin-peserta')->name('admin-peserta.')->group(function (): void {
+    Route::middleware('admin.peserta')->post('/logout', function (\Illuminate\Http\Request $request) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login');
+    })->name('logout');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Peserta Magang
 |--------------------------------------------------------------------------
 */
@@ -374,38 +424,31 @@ Route::middleware(['auth', 'role:peserta'])
     ->prefix('peserta-magang')
     ->name('peserta-magang.')
     ->group(function (): void {
-        // Dashboard
         Route::get('/dashboard', [PesertaMagangDashboardController::class, 'index'])->name('dashboard');
 
-        // Absensi
         Route::get('/absensi', [PesertaMagangAbsensiController::class, 'index'])->name('absensi.index');
         Route::post('/absensi', [PesertaMagangAbsensiController::class, 'store'])->name('absensi.store');
 
-        // Penugasan
         Route::get('/penugasan', [PesertaMagangPenugasanController::class, 'index'])->name('penugasan.index');
         Route::post('/penugasan/{id_tugas}/kumpul', [PesertaMagangPenugasanController::class, 'store'])->name('penugasan.store');
 
-        // Aturan Perusahaan
         Route::get('/aturan', [PesertaAturanController::class, 'index'])->name('aturan.index');
 
-        // Fitur penugasan alternatif
         Route::get('/tugas', [PesertaTugasController::class, 'index'])->name('tugas.index');
         Route::get('/tugas/{penugasan}/file', [PesertaTugasController::class, 'downloadTask'])->name('tugas.file.download');
         Route::get('/tugas/{penugasan}/template-laporan', [PesertaTugasController::class, 'downloadReportTemplate'])->name('tugas.template-laporan.download');
         Route::post('/tugas/{penugasan}/kumpulkan', [PesertaTugasController::class, 'submit'])->name('tugas.submit');
 
-        // Pembayaran
         Route::get('/pembayaran', [PesertaMagangPembayaranController::class, 'index'])->name('pembayaran.index');
         Route::post('/pembayaran', [PesertaMagangPembayaranController::class, 'store'])->name('pembayaran.store');
 
-        // Laporan Mingguan
         Route::get('/laporan-mingguan', [PesertaMagangLaporanMingguanController::class, 'index'])->name('laporan-mingguan.index');
         Route::post('/laporan-mingguan', [PesertaMagangLaporanMingguanController::class, 'store'])->name('laporan-mingguan.store');
     });
 
 /*
 |--------------------------------------------------------------------------
-| Dashboard Karyawan
+| Karyawan User Panel
 |--------------------------------------------------------------------------
 */
 
@@ -415,46 +458,56 @@ Route::middleware(['auth', 'role:karyawan'])
     ->group(function (): void {
         Route::get('/dashboard', [KaryawanDashboardController::class, 'index'])->name('dashboard');
 
-        // Tambahkan rute-rute berikut agar tidak error:
         Route::get('/absensi', [KaryawanDashboardController::class, 'absensiIndex'])->name('absensi.index');
         Route::post('/absensi/clock-in', [KaryawanDashboardController::class, 'clockIn'])->name('absensi.clockin');
 
-        Route::get('/resign/create', [ResignController::class, 'create'])->name('resign.create');
-        Route::post('/resign', [ResignController::class, 'store'])->name('resign.store');
-        Route::get('/resign/{resign}', [ResignController::class, 'show'])->name('resign.show');
+        // Resign
+        Route::get('/resign/create', [AdminResignController::class, 'create'])->name('resign.create');
+        Route::post('/resign', [AdminResignController::class, 'store'])->name('resign.store');
+        Route::get('/resign/{resign}', [AdminResignController::class, 'show'])->name('resign.show');
 
-        Route::get('/cuti', [KaryawanDashboardController::class, 'cutiIndex'])->name('cuti.index'); // Sesuaikan controller
-        Route::get('/payslip', [KaryawanDashboardController::class, 'payslipIndex'])->name('payslip.index'); // Sesuaikan controller
-        Route::get('/reimbursement', [KaryawanDashboardController::class, 'reimbursementIndex'])->name('reimbursement.index'); // Sesuaikan controller
-        Route::get('/profil/edit', [ProfileController::class, 'edit'])->name('profil.edit'); // Sesuaikan controller
-
+        // Pengumuman & Aturan Perusahaan
         Route::get('/pengumuman', [PengumumanController::class, 'index'])->name('pengumuman.index');
         Route::get('/pengumuman/{pengumuman}', [PengumumanController::class, 'show'])->name('pengumuman.show');
-
         Route::get('/aturan', [AturanController::class, 'index'])->name('aturan.index');
-        Route::get('/helpdesk', [KaryawanDashboardController::class, 'helpdeskIndex'])->name('helpdesk.index'); // Sesuaikan controller
+
+        // Menu Tambahan Karyawan (View Langsung)
+        Route::get('/cuti', function () {
+            return view('karyawan.cuti.index');
+        })->name('cuti.index');
+
+        Route::get('/payslip', function () {
+            return view('karyawan.payslip.index');
+        })->name('payslip.index');
+
+        Route::get('/reimbursement', function () {
+            return view('karyawan.reimbursement.index');
+        })->name('reimbursement.index');
+
+        Route::get('/helpdesk', function () {
+            return view('karyawan.helpdesk.index');
+        })->name('helpdesk.index');
+
+        Route::get('/profil/edit', [ProfileController::class, 'edit'])->name('profil.edit');
     });
+
 /*
 |--------------------------------------------------------------------------
 | Status Pengajuan Pelamar & Karyawan / Peserta Baru
 |--------------------------------------------------------------------------
 */
 
-// PERBAIKAN: Role karyawan dan peserta ditambahkan agar bisa membuka halaman ini setelah disetujui
 Route::middleware(['auth', 'role:pelamar,pelamar_karyawan,karyawan,peserta'])->group(function () {
     Route::get('/pengajuan/status', function () {
         $user = auth()->user();
 
-        // Mark session bahwa pengguna sudah melihat kredensial
         session(['has_seen_credentials' => true]);
 
-        // 1. Coba cari di PermintaanMagang lebih dulu
         $permintaan = \App\Models\PermintaanMagang::where('user_id', $user->id_user)
             ->orWhere('email', $user->email)
             ->latest('id_permintaan')
             ->first();
 
-        // 2. Jika tidak ada dan ada model PermintaanLamaran (karyawan), ambil dari sana
         if (! $permintaan && class_exists('\App\Models\PermintaanLamaran')) {
             $permintaan = \App\Models\PermintaanLamaran::where('user_id', $user->id_user)
                 ->orWhere('email', $user->email)
@@ -462,7 +515,6 @@ Route::middleware(['auth', 'role:pelamar,pelamar_karyawan,karyawan,peserta'])->g
                 ->first();
         }
 
-        // 3. Mengambil notifikasi terkait user
         $notifications = \App\Models\Notifikasi::where('user_id', $user->id_user)
             ->latest()
             ->get();

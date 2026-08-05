@@ -61,7 +61,9 @@ class AuthenticatedSessionController extends Controller
         // 2. Redirect Berdasarkan Role Pengguna
         return match ($user->role) {
             'superadmin'       => redirect()->intended(route('superadmin.dashboard')),
-            'admin'            => redirect()->intended(route('admin.dashboard')),
+            'admin', 
+            'admin_peserta'    => redirect()->intended(route('admin-peserta.dashboard')),
+            'admin_karyawan'   => redirect()->intended(route('admin-karyawan.dashboard')),
             'pelamar',
             'pelamar_karyawan' => redirect()->intended(route('pengajuan.status')),
             'peserta'          => redirect()->intended(route('peserta-magang.dashboard')),

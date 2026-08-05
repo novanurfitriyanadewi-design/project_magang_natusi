@@ -26,7 +26,7 @@
             $addTourStep(
                 'superadmin.dashboard',
                 '[data-tour="dashboard"]',
-                'Dashboard Super Admin',
+                'Dashboard Direktur Utama',
                 'Di sini kamu bisa lihat ringkasan admin, pengguna, aturan aktif, jadwal absensi, dan aktivitas terbaru dalam satu tempat.'
             );
 

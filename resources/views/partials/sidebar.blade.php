@@ -3,8 +3,10 @@
     $role = $user?->role ?? 'peserta';
 
     $portal = match ($role) {
-        'superadmin' => ['name' => 'Natusi Admin', 'subtitle' => 'SUPER ADMIN PORTAL'],
+        'superadmin' => ['name' => 'Natusi Admin', 'subtitle' => 'PORTAL DIREKTUR UTAMA'],
         'admin' => ['name' => 'Natusi Admin', 'subtitle' => 'ADMIN PORTAL'],
+        'admin_peserta' => ['name' => 'Natusi Admin', 'subtitle' => 'ADMIN PESERTA PORTAL'],
+        'admin_karyawan' => ['name' => 'Natusi Admin', 'subtitle' => 'ADMIN KARYAWAN PORTAL'],
         'karyawan' => ['name' => 'CV Natusi', 'subtitle' => 'KARYAWAN PORTAL'],
         default => ['name' => 'CV Natusi', 'subtitle' => 'INTERNSHIP PORTAL'],
     };
@@ -23,7 +25,6 @@
             ['label' => 'Dashboard', 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
             ['label' => 'Permintaan Magang', 'route' => 'admin.permintaan.index', 'match' => 'admin.permintaan.*', 'icon' => 'inbox', 'tour' => 'internship-requests'],
             ['label' => 'Permintaan Lamaran', 'route' => 'admin.permintaan-lamaran.index', 'match' => 'admin.permintaan-lamaran.*', 'icon' => 'inbox', 'tour' => 'permintaan-lamaran'],
-
             [
                 'label' => 'Karyawan',
                 'icon' => 'users',
@@ -36,7 +37,6 @@
                     ['label' => 'Pengajuan Resign', 'route' => 'admin.resign.index', 'match' => 'admin.resign.*', 'tour' => 'resign'],
                 ],
             ],
-
             [
                 'label' => 'Peserta Magang',
                 'icon' => 'users',
@@ -50,7 +50,6 @@
                     ['label' => 'Pengumpulan Tugas', 'route' => 'admin.pengumpulan-tugas.index', 'match' => 'admin.pengumpulan-tugas.*', 'tour' => 'task-submissions'],
                 ],
             ],
-
             [
                 'label' => 'Laporan',
                 'icon' => 'rules',
@@ -66,132 +65,93 @@
                     ['label' => 'Pembayaran Karyawan', 'route' => 'admin.laporan.pembayaran-karyawan', 'match' => 'admin.laporan.pembayaran-karyawan', 'tour' => 'report-payments-karyawan'],
                 ],
             ],
-
+            ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
+        ],
+        'admin_peserta' => [
+            ['label' => 'Dashboard', 'route' => 'admin-peserta.dashboard', 'match' => 'admin-peserta.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
+            ['label' => 'Permintaan Magang', 'route' => 'admin-peserta.permintaan.index', 'match' => 'admin-peserta.permintaan.*', 'icon' => 'inbox', 'tour' => 'internship-requests'],
+            ['label' => 'Data Peserta Magang', 'route' => 'admin-peserta.peserta.index', 'match' => 'admin-peserta.peserta.*', 'icon' => 'users', 'tour' => 'internship-participants'],
+            ['label' => 'Absensi Peserta', 'route' => 'admin-peserta.absensi.index', 'match' => 'admin-peserta.absensi.*', 'icon' => 'attendance-user', 'tour' => 'attendance-data'],
+            ['label' => 'Pembayaran Sumbangan', 'route' => 'admin-peserta.pembayaran.index', 'match' => 'admin-peserta.pembayaran.*', 'icon' => 'payment', 'tour' => 'pembayaran-peserta'],
+            ['label' => 'Kelola Tugas', 'route' => 'admin-peserta.tugas.index', 'match' => 'admin-peserta.tugas.*', 'icon' => 'tasks', 'tour' => 'manage-tasks'],
+            ['label' => 'Pengumpulan Tugas', 'route' => 'admin-peserta.pengumpulan-tugas.index', 'match' => 'admin-peserta.pengumpulan-tugas.*', 'icon' => 'assignment', 'tour' => 'task-submissions'],
+            [
+                'label' => 'Laporan',
+                'icon' => 'rules',
+                'match' => 'admin-peserta.laporan.*',
+                'tour' => 'reports',
+                'children' => [
+                    ['label' => 'Laporan Peserta', 'route' => 'admin-peserta.laporan-peserta.index', 'match' => 'admin-peserta.laporan-peserta.*', 'tour' => 'report-participants'],
+                    ['label' => 'Laporan Absensi', 'route' => 'admin-peserta.laporan.absensi', 'match' => 'admin-peserta.laporan.absensi', 'tour' => 'report-attendance'],
+                    ['label' => 'Laporan Penugasan', 'route' => 'admin-peserta.laporan.penugasan', 'match' => 'admin-peserta.laporan.penugasan', 'tour' => 'report-tasks'],
+                    ['label' => 'Laporan Pembayaran', 'route' => 'admin-peserta.laporan.pembayaran', 'match' => 'admin-peserta.laporan.pembayaran', 'tour' => 'report-payments'],
+                ],
+            ],
+            ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
+        ],
+        'admin_karyawan' => [
+            ['label' => 'Dashboard', 'route' => 'admin-karyawan.dashboard', 'match' => 'admin-karyawan.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
+            ['label' => 'Permintaan Lamaran', 'route' => 'admin-karyawan.permintaan-lamaran.index', 'match' => 'admin-karyawan.permintaan-lamaran.*', 'icon' => 'inbox', 'tour' => 'permintaan-lamaran'],
+            ['label' => 'Data Karyawan', 'route' => 'admin-karyawan.karyawan.index', 'match' => 'admin-karyawan.karyawan.*', 'icon' => 'users', 'tour' => 'data-karyawan'],
+            ['label' => 'Absensi Karyawan', 'route' => 'admin-karyawan.absensi-karyawan.index', 'match' => 'admin-karyawan.absensi-karyawan.*', 'icon' => 'attendance-user', 'tour' => 'absensi-karyawan'],
+            ['label' => 'Pembayaran Gaji', 'route' => 'admin-karyawan.pembayaran-karyawan.index', 'match' => 'admin-karyawan.pembayaran-karyawan.*', 'icon' => 'payment', 'tour' => 'pembayaran-karyawan'],
+            ['label' => 'Pengajuan Resign', 'route' => 'admin-karyawan.resign.index', 'match' => 'admin-karyawan.resign.*', 'icon' => 'clock', 'tour' => 'resign'],
+            [
+                'label' => 'Laporan',
+                'icon' => 'rules',
+                'match' => 'admin-karyawan.laporan.*',
+                'tour' => 'reports',
+                'children' => [
+                    ['label' => 'Laporan Karyawan', 'route' => 'admin-karyawan.laporan.karyawan', 'match' => 'admin-karyawan.laporan.karyawan*', 'tour' => 'report-karyawan'],
+                    ['label' => 'Laporan Absensi Karyawan', 'route' => 'admin-karyawan.laporan.absensi', 'match' => 'admin-karyawan.laporan.absensi*', 'tour' => 'report-attendance-karyawan'],
+                ],
+            ],
             ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
         'karyawan' => [
+            ['label' => 'Dashboard', 'route' => 'karyawan.dashboard', 'match' => 'karyawan.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
+            ['label' => 'Absensi', 'route' => 'karyawan.absensi.index', 'match' => 'karyawan.absensi.*', 'icon' => 'attendance-user', 'tour' => 'absensi'],
+            ['label' => 'Pengumuman', 'route' => 'karyawan.pengumuman.index', 'match' => 'karyawan.pengumuman.*', 'icon' => 'announcement', 'tour' => 'pengumuman'],
             [
-                'label' => 'Dashboard',
-                'route' => 'karyawan.dashboard',
-                'match' => 'karyawan.dashboard',
-                'icon' => 'dashboard',
-                'tour' => 'dashboard',
-            ],
-            [
-                'label' => 'Absensi',
-                'route' => 'karyawan.absensi.index',
-                'match' => 'karyawan.absensi.*',
-                'icon' => 'attendance-user',
-                'tour' => 'absensi',
-            ],
-            [
-                'label' => 'Pengumuman',
-                'route' => 'karyawan.pengumuman.index',
-                'match' => 'karyawan.pengumuman.*',
-                'icon' => 'inbox',
-                'tour' => 'pengumuman',
-            ],
-            [
-                'label' => 'Aturan Perusahaan',
-                'route' => 'karyawan.aturan.index',
-                'match' => 'karyawan.aturan.*',
-                'icon' => 'rules',
-                'tour' => 'aturan',
-            ],
-            [
-                'label' => 'Cuti',
-                'route' => 'karyawan.cuti.index',
-                'match' => 'karyawan.cuti.*',
-                'icon' => 'clock',
-                'tour' => 'cuti',
-            ],
-            [
-                'label' => 'Slip Gaji',
-                'route' => 'karyawan.payslip.index',
-                'match' => 'karyawan.payslip.*',
-                'icon' => 'payment',
-                'tour' => 'payslip',
-            ],
-            [
-                'label' => 'Reimbursement',
-                'route' => 'karyawan.reimbursement.index',
-                'match' => 'karyawan.reimbursement.*',
+                'label' => 'Pengajuan',
                 'icon' => 'tasks',
-                'tour' => 'reimbursement',
-            ],
-            [
-                'label' => 'Resign',
-                'icon' => 'users',
-                'match' => 'karyawan.resign.*',
-                'tour' => 'resign',
+                'match' => 'karyawan.cuti.*',
+                'tour' => 'pengajuan',
                 'children' => [
+                    ['label' => 'Ajukan Cuti', 'route' => 'karyawan.cuti.index', 'match' => 'karyawan.cuti.*', 'tour' => 'cuti'],
                     ['label' => 'Ajukan Resign', 'route' => 'karyawan.resign.create', 'match' => 'karyawan.resign.create', 'tour' => 'resign-create'],
                     ['label' => 'Status Resign', 'route' => 'karyawan.resign.show', 'match' => 'karyawan.resign.*', 'tour' => 'resign-status'],
                 ],
             ],
             [
-                'label' => 'Profile',
-                'route' => 'profile.edit',
-                'match' => 'profile.*',
-                'icon' => 'profile',
-                'tour' => 'profile',
+                'label' => 'Keuangan',
+                'icon' => 'payment',
+                'match' => 'karyawan.payslip.*',
+                'tour' => 'keuangan',
+                'children' => [
+                    ['label' => 'Slip Gaji', 'route' => 'karyawan.payslip.index', 'match' => 'karyawan.payslip.*', 'tour' => 'payslip'],
+                    ['label' => 'Reimbursement', 'route' => 'karyawan.reimbursement.index', 'match' => 'karyawan.reimbursement.*', 'tour' => 'reimbursement'],
+                ],
             ],
-            [
-                'label' => 'Bantuan',
-                'route' => 'karyawan.helpdesk.index',
-                'match' => 'karyawan.helpdesk.*',
-                'icon' => 'tasks',
-                'tour' => 'helpdesk',
-            ],
+            ['label' => 'Aturan Perusahaan', 'route' => 'karyawan.aturan.index', 'match' => 'karyawan.aturan.*', 'icon' => 'rules', 'tour' => 'aturan'],
+            ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
+            ['label' => 'Bantuan', 'route' => 'karyawan.helpdesk.index', 'match' => 'karyawan.helpdesk.*', 'icon' => 'help', 'tour' => 'helpdesk'],
         ],
         default => [
-            [
-                'label' => 'Dashboard',
-                'route' => 'peserta-magang.dashboard',
-                'match' => 'peserta-magang.dashboard',
-                'icon' => 'dashboard',
-            ],
-            [
-                'label' => 'Absensi',
-                'route' => 'peserta-magang.absensi.index',
-                'match' => 'peserta-magang.absensi.*',
-                'icon' => 'attendance-user',
-            ],
-            [
-                'label' => 'Penugasan',
-                'route' => 'peserta-magang.penugasan.index',
-                'match' => 'peserta-magang.penugasan.*',
-                'icon' => 'assignment',
-            ],
-            [
-                'label' => 'Laporan Mingguan',
-                'route' => 'peserta-magang.laporan-mingguan.index',
-                'match' => 'peserta-magang.laporan-mingguan.*',
-                'icon' => 'report',
-            ],
-            [
-                'label' => 'Pembayaran',
-                'route' => 'peserta-magang.pembayaran.index',
-                'match' => 'peserta-magang.pembayaran.*',
-                'icon' => 'payment',
-            ],
-            [
-                'label' => 'Aturan Perusahaan',
-                'route' => 'peserta-magang.aturan.index',
-                'match' => 'peserta-magang.aturan.*',
-                'icon' => 'rules',
-            ],
-            [
-                'label' => 'Profile',
-                'route' => 'profile.edit',
-                'match' => 'profile.*',
-                'icon' => 'profile',
-            ],
+            ['label' => 'Dashboard', 'route' => 'peserta-magang.dashboard', 'match' => 'peserta-magang.dashboard', 'icon' => 'dashboard'],
+            ['label' => 'Absensi', 'route' => 'peserta-magang.absensi.index', 'match' => 'peserta-magang.absensi.*', 'icon' => 'attendance-user'],
+            ['label' => 'Penugasan', 'route' => 'peserta-magang.penugasan.index', 'match' => 'peserta-magang.penugasan.*', 'icon' => 'assignment'],
+            ['label' => 'Laporan Mingguan', 'route' => 'peserta-magang.laporan-mingguan.index', 'match' => 'peserta-magang.laporan-mingguan.*', 'icon' => 'report'],
+            ['label' => 'Pembayaran', 'route' => 'peserta-magang.pembayaran.index', 'match' => 'peserta-magang.pembayaran.*', 'icon' => 'payment'],
+            ['label' => 'Aturan Perusahaan', 'route' => 'peserta-magang.aturan.index', 'match' => 'peserta-magang.aturan.*', 'icon' => 'rules'],
+            ['label' => 'Profile', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile'],
         ],
     };
 
     $homeRoute = match (true) {
         $role === 'superadmin' && Route::has('superadmin.dashboard') => route('superadmin.dashboard'),
+        $role === 'admin_peserta' && Route::has('admin-peserta.dashboard') => route('admin-peserta.dashboard'),
+        $role === 'admin_karyawan' && Route::has('admin-karyawan.dashboard') => route('admin-karyawan.dashboard'),
         $role === 'karyawan' && Route::has('karyawan.dashboard') => route('karyawan.dashboard'),
         default => route('dashboard'),
     };
@@ -208,44 +168,90 @@
 @endphp
 
 <style>
+    /* Sidebar scrollbar styling */
     .natusi-sidebar-scrollbar {
         scrollbar-width: thin;
-        scrollbar-color: rgba(186, 230, 253, 0.82) rgba(255, 255, 255, 0.10);
+        scrollbar-color: rgba(125, 211, 252, 0.50) rgba(255, 255, 255, 0.06);
         scrollbar-gutter: stable;
         overscroll-behavior: contain;
     }
-
-    .natusi-sidebar-scrollbar::-webkit-scrollbar {
-        width: 7px;
-    }
-
+    .natusi-sidebar-scrollbar::-webkit-scrollbar { width: 5px; }
     .natusi-sidebar-scrollbar::-webkit-scrollbar-track {
-        margin-block: 4px;
+        margin-block: 6px;
         border-radius: 9999px;
-        background: rgba(255, 255, 255, 0.10);
+        background: transparent;
     }
-
     .natusi-sidebar-scrollbar::-webkit-scrollbar-thumb {
-        min-height: 42px;
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        min-height: 36px;
         border-radius: 9999px;
-        background: rgba(186, 230, 253, 0.76);
+        background: rgba(125, 211, 252, 0.35);
+        background-clip: padding-box;
+        transition: background 0.2s ease;
+    }
+    .natusi-sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(125, 211, 252, 0.65);
         background-clip: padding-box;
     }
 
-    .natusi-sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(224, 242, 254, 0.96);
-        background-clip: padding-box;
+    /* Active indicator glow */
+    .sidebar-active-glow {
+        box-shadow: 
+            0 0 20px rgba(6, 95, 137, 0.15),
+            0 10px 28px rgba(0, 32, 58, 0.22);
+    }
+
+    /* Smooth collapse/expand transitions */
+    .sidebar-collapse-enter {
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    .sidebar-collapse-enter-active {
+        max-height: 500px;
+        opacity: 1;
+        transform: translateY(0);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sidebar-collapse-leave {
+        max-height: 500px;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .sidebar-collapse-leave-active {
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-4px);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Sidebar link hover effect */
+    .sidebar-link-hover {
+        position: relative;
+        overflow: hidden;
+    }
+    .sidebar-link-hover::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    .sidebar-link-hover:hover::before {
+        opacity: 1;
     }
 </style>
 
 <aside
-    class="fixed inset-y-0 left-0 z-50 flex w-[245px] -translate-x-full flex-col overflow-hidden border-r border-white/10 bg-gradient-to-b from-[#073b60] via-[#075f89] to-[#062f50] px-3 py-5 shadow-[12px_0_40px_rgba(4,47,78,0.20)] transition-transform duration-300 lg:translate-x-0"
+    class="fixed inset-y-0 left-0 z-50 flex w-[245px] -translate-x-full flex-col overflow-hidden border-r border-white/[0.06] bg-gradient-to-b from-[#063551] via-[#075177] to-[#052b45] px-3 py-5 shadow-[12px_0_40px_rgba(4,47,78,0.25)] transition-transform duration-300 lg:translate-x-0"
     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
     aria-label="Navigasi portal"
 >
-    <div class="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full border-[28px] border-white/[0.04]"></div>
-    <div class="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-sky-300/[0.06] blur-2xl"></div>
+    <!-- Decorative background elements -->
+    <div class="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full border-[28px] border-white/[0.03]"></div>
+    <div class="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-sky-300/[0.05] blur-3xl"></div>
+    <div class="pointer-events-none absolute left-1/2 top-1/3 h-36 w-36 -translate-x-1/2 rounded-full bg-gradient-to-br from-sky-400/[0.03] to-transparent blur-2xl"></div>
 
     <div class="relative z-10 flex min-h-0 flex-1 flex-col">
         <div class="flex items-center justify-between px-2">
@@ -286,18 +292,18 @@
                             type="button"
                             data-tour="{{ $menu['tour'] ?? '' }}"
                             @click="openGroup = (openGroup === {{ $i }} ? null : {{ $i }})"
-                            @class([
-                                'group flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition duration-200',
-                                'bg-white font-semibold text-[#05658f] shadow-[0_10px_28px_rgba(0,32,58,0.22)]' => $groupActive,
-                                'font-medium text-sky-50/85 hover:translate-x-0.5 hover:bg-white/10 hover:text-white' => ! $groupActive,
-                            ])
+                        @class([
+                            'group flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200',
+                            'bg-white font-semibold text-[#05658f] sidebar-active-glow' => $groupActive,
+                            'font-medium text-sky-50/85 hover:translate-x-0.5 hover:bg-white/10 hover:text-white' => ! $groupActive,
+                        ])
                         >
                             <span @class([
-                                'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition duration-200',
+                                'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-all duration-200',
                                 'bg-gradient-to-br from-sky-100 to-cyan-50 text-[#0573a3] shadow-sm ring-1 ring-sky-100' => $groupActive,
-                                'bg-white/10 text-white ring-1 ring-white/10 group-hover:bg-white/15' => ! $groupActive,
+                                'bg-white/10 text-white ring-1 ring-white/10 group-hover:bg-white/15 group-hover:scale-105' => ! $groupActive,
                             ])>
-                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M5 19h14M8 15l7-7 3 3-7 7H8v-3ZM13 6l3-3 3 3-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M16 7.5h5M18.5 5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
                             </span>
 
                             <span class="min-w-0 flex-1 truncate text-left">{{ $menu['label'] }}</span>
@@ -333,7 +339,7 @@
 
                                     <a
                                         href="{{ $childHref }}"
-                                        data-tour="{{ $child['tour'] ?? '' }}"
+                                        data-tour="{{ $menu['tour'] ?? '' }}"
                                         @if (! $childAvailable) aria-disabled="true" title="Halaman ini belum dibuat" @endif
                                         @click="sidebarOpen = false"
                                         @class([
@@ -375,16 +381,16 @@
                         @if (! $available) aria-disabled="true" title="Halaman ini belum dibuat" @endif
                         @click="sidebarOpen = false"
                         @class([
-                            'group flex min-h-[48px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition duration-200',
-                            'bg-white font-semibold text-[#05658f] shadow-[0_10px_28px_rgba(0,32,58,0.22)]' => $active,
+                            'group flex min-h-[48px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200',
+                            'bg-white font-semibold text-[#05658f] sidebar-active-glow' => $active,
                             'font-medium text-sky-50/85 hover:translate-x-0.5 hover:bg-white/10 hover:text-white' => ! $active && $available,
                             'cursor-not-allowed text-sky-100/35' => ! $available,
                         ])
                     >
                         <span @class([
-                            'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition duration-200',
+                            'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-all duration-200',
                             'bg-gradient-to-br from-sky-100 to-cyan-50 text-[#0573a3] shadow-sm ring-1 ring-sky-100' => $active,
-                            'bg-white/10 text-white ring-1 ring-white/10 group-hover:bg-white/15' => ! $active && $available,
+                            'bg-white/10 text-white ring-1 ring-white/10 group-hover:bg-white/15 group-hover:scale-105' => ! $active && $available,
                             'bg-white/[0.04] text-white/35' => ! $available,
                         ])>
                             @switch($menu['icon'])
@@ -423,6 +429,15 @@
                                     @break
                                 @case('tasks')
                                     <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    @break
+                                @case('announcement')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M3 11v2a2 2 0 0 0 2 2h1l3 4v-4h8a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H8L5 2v3H5a2 2 0 0 0-2 2v4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                                    @break
+                                @case('reimbursement')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 6.5a4 4 0 0 0-4-2.5H10a3.5 3.5 0 0 0 0 7h4a3.5 3.5 0 0 1 0 7h-3a4 4 0 0 1-4-2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                                    @break
+                                @case('help')
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.9-2.4 2.1-2.4 3.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                                     @break
                                 @default
                                     <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M6 3h9l3 3v15H6V3Zm3 7h6M9 14h6M9 18h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>

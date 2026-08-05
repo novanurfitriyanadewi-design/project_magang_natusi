@@ -416,7 +416,7 @@ class PortalSearchController extends Controller
     private function searchDescription(?string $role): string
     {
         return match ($role) {
-            'superadmin' => 'Pencarian Super Admin dibatasi hanya untuk data akun administrator.',
+            'superadmin' => 'Pencarian Direktur Utama dibatasi hanya untuk data akun administrator.',
             'admin' => 'Pencarian mencakup peserta magang, permintaan magang, dan tugas.',
             default => 'Pencarian mencakup tugas aktif, laporan mingguan, dan riwayat absensi Anda.',
         };

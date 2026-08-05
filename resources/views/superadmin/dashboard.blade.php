@@ -1,6 +1,6 @@
 @extends('layouts.portal')
 
-@section('title', 'Dashboard Super Admin')
+@section('title', 'Dashboard Direktur Utama')
 
 @section('content')
     @php
@@ -29,7 +29,7 @@
             </span>
 
             <h1 class="mt-3 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
-                Halo, {{ auth()->user()->nama ?? 'Super Admin' }} 👋
+                Halo, {{ auth()->user()->nama ?? 'Direktur Utama' }} 👋
             </h1>
 
             <p class="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
@@ -39,7 +39,7 @@
             <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] font-medium text-slate-400">
                 <span>Diperbarui {{ now()->translatedFormat('d M Y, H:i') }}</span>
                 <span class="hidden h-1 w-1 rounded-full bg-slate-300 sm:block"></span>
-                <span>Akses Super Administrator</span>
+                <span>Akses Direktur Utama</span>
             </div>
         </div>
     </section>
@@ -139,7 +139,7 @@
         <article class="rounded-3xl border border-white/80 bg-white/90 p-5 shadow-[0_18px_45px_rgba(15,52,94,0.08)] backdrop-blur sm:p-6">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">Panduan Menu Super Admin</h2>
+                    <h2 class="text-lg font-bold text-slate-900">Panduan Menu Direktur Utama</h2>
                     <p class="mt-1 text-sm text-slate-500">Akses cepat dan fungsi utama setiap menu.</p>
                 </div>
                 <span class="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg">

@@ -360,337 +360,277 @@
                 </span>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-sky-100">
-                    <thead
-                        class="
-                            bg-gradient-to-r
-                            from-sky-50 via-blue-50 to-cyan-50
-                        "
-                    >
-                        <tr>
-                            <th
-                                class="
-                                    px-5 py-3.5 text-left
-                                    text-[11px] font-bold uppercase
-                                    tracking-[0.09em] text-slate-500
-                                "
-                            >
-                                Nama Aturan
-                            </th>
-
-                            <th
-                                class="
-                                    px-5 py-3.5 text-left
-                                    text-[11px] font-bold uppercase
-                                    tracking-[0.09em] text-slate-500
-                                "
-                            >
-                                Pembaruan
-                            </th>
-
-                            <th
-                                class="
-                                    px-5 py-3.5 text-center
-                                    text-[11px] font-bold uppercase
-                                    tracking-[0.09em] text-slate-500
-                                "
-                            >
-                                Aksi
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y divide-sky-50 bg-white/80">
-                        @forelse ($rules as $rule)
-                            <tr
-                                class="
-                                    cursor-pointer transition duration-200
-                                    hover:bg-sky-50/80
-                                "
-                                @click="openDetail({
-                                    id: @js($rule->id_aturan),
-                                    nama: @js($rule->nama),
-                                    deskripsi: @js($rule->deskripsi),
-                                    updated_at: @js(
-                                        $rule->updated_at?->translatedFormat(
-                                            'd M Y, H:i'
-                                        )
-                                    ),
-                                    action: @js(
-                                        route(
-                                            'superadmin.aturan.update',
-                                            $rule
-                                        )
-                                    ),
-                                })"
-                            >
-                                <td class="px-5 py-4 align-top">
-                                    <div class="flex items-start gap-3">
-                                        <span
-                                            class="
-                                                mt-1 h-10 w-1 shrink-0
-                                                rounded-full
-                                                bg-gradient-to-b
-                                                from-sky-500 to-blue-600
-                                            "
-                                        ></span>
-
-                                        <div class="min-w-0">
-                                            <button
-                                                type="button"
-                                                class="
-                                                    max-w-2xl text-left
-                                                    text-sm font-extrabold
-                                                    text-slate-900 transition
-                                                    hover:text-sky-700
-                                                "
-                                            >
-                                                {{ $rule->nama }}
-                                            </button>
-
-                                            <p
-                                                class="
-                                                    mt-1 max-w-3xl truncate
-                                                    text-xs text-slate-500
-                                                "
-                                            >
-                                                {{ $rule->deskripsi }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <td
+            <div class="p-5">
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @forelse ($rules as $rule)
+                        <article
+                            class="
+                                relative flex cursor-pointer flex-col
+                                overflow-hidden rounded-2xl
+                                border border-slate-100 bg-white p-5
+                                shadow-sm transition duration-200
+                                hover:-translate-y-0.5 hover:shadow-md
+                            "
+                            @click="openDetail({
+                                id: @js($rule->id_aturan),
+                                nama: @js($rule->nama),
+                                deskripsi: @js($rule->deskripsi),
+                                updated_at: @js(
+                                    $rule->updated_at?->translatedFormat(
+                                        'd M Y, H:i'
+                                    )
+                                ),
+                                action: @js(
+                                    route(
+                                        'superadmin.aturan.update',
+                                        $rule
+                                    )
+                                ),
+                            })"
+                        >
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <h3 class="text-base font-bold text-slate-950">
+                                        {{ $rule->nama }}
+                                    </h3>
+                                    <p class="mt-1 line-clamp-2 text-xs text-slate-500">
+                                        {{ $rule->deskripsi }}
+                                    </p>
+                                </div>
+                                <span
                                     class="
-                                        whitespace-nowrap px-5 py-4 align-top
-                                        text-sm text-slate-600
+                                        grid h-9 w-9 shrink-0
+                                        place-items-center rounded-xl
+                                        bg-sky-50 text-sky-600
                                     "
                                 >
+                                    <svg
+                                        class="h-5 w-5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M6 3h9l3 3v15H6V3Zm9 0v4h4M9 11h6M9 15h6M9 19h4"
+                                            stroke="currentColor"
+                                            stroke-width="1.8"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+                                </span>
+                            </div>
+
+                            <div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+                                <span class="text-xs font-semibold text-slate-500">
                                     {{
                                         $rule->updated_at?->translatedFormat(
                                             'd M Y'
                                         ) ?? '-'
                                     }}
-
-                                    <span
-                                        class="
-                                            block text-xs text-slate-400
-                                        "
-                                    >
-                                        {{ $rule->updated_at?->format('H:i') }}
+                                    <span class="text-slate-400">
+                                        · {{ $rule->updated_at?->format('H:i') }}
                                     </span>
-                                </td>
+                                </span>
 
-                                <td
-                                    class="
-                                        whitespace-nowrap px-5 py-4 align-top
-                                    "
-                                >
-                                    <div
+                                <div class="flex gap-1" @click.stop>
+                                    <button
+                                        type="button"
                                         class="
-                                            flex items-center justify-center
-                                            gap-2
+                                            grid h-9 w-9 place-items-center
+                                            rounded-xl bg-sky-50
+                                            text-sky-700
+                                            ring-1 ring-sky-100
+                                            transition hover:bg-sky-100
                                         "
-                                        @click.stop
-                                    >
-                                        <button
-                                            type="button"
-                                            class="
-                                                grid h-9 w-9 place-items-center
-                                                rounded-xl bg-sky-50
-                                                text-sky-700
-                                                ring-1 ring-sky-100
-                                                transition hover:bg-sky-100
-                                            "
-                                            title="Lihat isi aturan"
-                                            aria-label="Lihat {{ $rule->nama }}"
-                                            @click="openDetail({
-                                                id: @js($rule->id_aturan),
-                                                nama: @js($rule->nama),
-                                                deskripsi: @js($rule->deskripsi),
-                                                updated_at: @js(
-                                                    $rule->updated_at
-                                                        ?->translatedFormat(
-                                                            'd M Y, H:i'
-                                                        )
-                                                ),
-                                                action: @js(
-                                                    route(
-                                                        'superadmin.aturan.update',
-                                                        $rule
+                                        title="Lihat isi aturan"
+                                        aria-label="Lihat {{ $rule->nama }}"
+                                        @click="openDetail({
+                                            id: @js($rule->id_aturan),
+                                            nama: @js($rule->nama),
+                                            deskripsi: @js($rule->deskripsi),
+                                            updated_at: @js(
+                                                $rule->updated_at
+                                                    ?->translatedFormat(
+                                                        'd M Y, H:i'
                                                     )
-                                                ),
-                                            })"
-                                        >
-                                            <svg
-                                                class="h-5 w-5"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                aria-hidden="true"
-                                            >
-                                                <path
-                                                    d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z"
-                                                    stroke="currentColor"
-                                                    stroke-width="1.7"
-                                                    stroke-linejoin="round"
-                                                />
-                                                <circle
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="2.5"
-                                                    stroke="currentColor"
-                                                    stroke-width="1.7"
-                                                />
-                                            </svg>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            class="
-                                                grid h-9 w-9 place-items-center
-                                                rounded-xl bg-blue-50
-                                                text-blue-700
-                                                ring-1 ring-blue-100
-                                                transition hover:bg-blue-100
-                                            "
-                                            title="Edit aturan"
-                                            aria-label="Edit {{ $rule->nama }}"
-                                            @click="openEdit({
-                                                id: @js($rule->id_aturan),
-                                                nama: @js($rule->nama),
-                                                deskripsi: @js($rule->deskripsi),
-                                                action: @js(
-                                                    route(
-                                                        'superadmin.aturan.update',
-                                                        $rule
-                                                    )
-                                                ),
-                                            })"
-                                        >
-                                            <svg
-                                                class="h-5 w-5"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                aria-hidden="true"
-                                            >
-                                                <path
-                                                    d="m5 16.5-.8 3.3 3.3-.8L18 8.5 15.5 6 5 16.5Z"
-                                                    stroke="currentColor"
-                                                    stroke-width="1.8"
-                                                    stroke-linejoin="round"
-                                                />
-                                                <path
-                                                    d="m13.8 7.7 2.5 2.5"
-                                                    stroke="currentColor"
-                                                    stroke-width="1.8"
-                                                />
-                                            </svg>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            class="
-                                                grid h-9 w-9
-                                                place-items-center
-                                                rounded-xl bg-rose-50
-                                                text-rose-600
-                                                ring-1 ring-rose-100
-                                                transition
-                                                hover:bg-rose-100
-                                            "
-                                            title="Hapus aturan"
-                                            aria-label="Hapus {{ $rule->nama }}"
-                                            @click="$dispatch(
-                                                'open-delete-confirm',
-                                                {
-                                                    action: @js(
-                                                        route(
-                                                            'superadmin.aturan.destroy',
-                                                            $rule
-                                                        )
-                                                    ),
-                                                    title: 'Hapus Aturan?',
-                                                    name: @js($rule->nama),
-                                                    description:
-                                                        'Aturan ini akan dihapus dari daftar kebijakan perusahaan.',
-                                                    confirmText:
-                                                        'Ya, Hapus Aturan',
-                                                }
-                                            )"
-                                        >
-                                            <svg
-                                                class="h-5 w-5"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                aria-hidden="true"
-                                            >
-                                                <path
-                                                    d="M5 7h14M9 7V4.5h6V7M8 10v7M12 10v7M16 10v7M6.5 7l.7 12h9.6l.7-12"
-                                                    stroke="currentColor"
-                                                    stroke-width="1.8"
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td
-                                    colspan="3"
-                                    class="px-5 py-16 text-center"
-                                >
-                                    <span
-                                        class="
-                                            mx-auto grid h-14 w-14
-                                            place-items-center rounded-2xl
-                                            bg-sky-50 text-sky-500
-                                        "
+                                            ),
+                                            action: @js(
+                                                route(
+                                                    'superadmin.aturan.update',
+                                                    $rule
+                                                )
+                                            ),
+                                        })"
                                     >
                                         <svg
-                                            class="h-7 w-7"
+                                            class="h-4.5 w-4.5"
                                             viewBox="0 0 24 24"
                                             fill="none"
                                             aria-hidden="true"
                                         >
                                             <path
-                                                d="M6 3h9l3 3v15H6V3Zm9 0v4h4M9 11h6M9 15h6"
+                                                d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z"
+                                                stroke="currentColor"
+                                                stroke-width="1.7"
+                                                stroke-linejoin="round"
+                                            />
+                                            <circle
+                                                cx="12"
+                                                cy="12"
+                                                r="2.5"
+                                                stroke="currentColor"
+                                                stroke-width="1.7"
+                                            />
+                                        </svg>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="
+                                            grid h-9 w-9 place-items-center
+                                            rounded-xl bg-blue-50
+                                            text-blue-700
+                                            ring-1 ring-blue-100
+                                            transition hover:bg-blue-100
+                                        "
+                                        title="Edit aturan"
+                                        aria-label="Edit {{ $rule->nama }}"
+                                        @click="openEdit({
+                                            id: @js($rule->id_aturan),
+                                            nama: @js($rule->nama),
+                                            deskripsi: @js($rule->deskripsi),
+                                            action: @js(
+                                                route(
+                                                    'superadmin.aturan.update',
+                                                    $rule
+                                                )
+                                            ),
+                                        })"
+                                    >
+                                        <svg
+                                            class="h-4.5 w-4.5"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            aria-hidden="true"
+                                        >
+                                            <path
+                                                d="m5 16.5-.8 3.3 3.3-.8L18 8.5 15.5 6 5 16.5Z"
+                                                stroke="currentColor"
+                                                stroke-width="1.8"
+                                                stroke-linejoin="round"
+                                            />
+                                            <path
+                                                d="m13.8 7.7 2.5 2.5"
+                                                stroke="currentColor"
+                                                stroke-width="1.8"
+                                            />
+                                        </svg>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="
+                                            grid h-9 w-9
+                                            place-items-center
+                                            rounded-xl bg-rose-50
+                                            text-rose-600
+                                            ring-1 ring-rose-100
+                                            transition
+                                            hover:bg-rose-100
+                                        "
+                                        title="Hapus aturan"
+                                        aria-label="Hapus {{ $rule->nama }}"
+                                        @click="$dispatch(
+                                            'open-delete-confirm',
+                                            {
+                                                action: @js(
+                                                    route(
+                                                        'superadmin.aturan.destroy',
+                                                        $rule
+                                                    )
+                                                ),
+                                                title: 'Hapus Aturan?',
+                                                name: @js($rule->nama),
+                                                description:
+                                                    'Aturan ini akan dihapus dari daftar kebijakan perusahaan.',
+                                                confirmText:
+                                                    'Ya, Hapus Aturan',
+                                            }
+                                        )"
+                                    >
+                                        <svg
+                                            class="h-4.5 w-4.5"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            aria-hidden="true"
+                                        >
+                                            <path
+                                                d="M5 7h14M9 7V4.5h6V7M8 10v7M12 10v7M16 10v7M6.5 7l.7 12h9.6l.7-12"
                                                 stroke="currentColor"
                                                 stroke-width="1.8"
                                                 stroke-linecap="round"
                                                 stroke-linejoin="round"
                                             />
                                         </svg>
-                                    </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </article>
+                    @empty
+                        <div
+                            class="
+                                col-span-full rounded-2xl
+                                border border-dashed border-slate-200
+                                bg-white px-5 py-16 text-center
+                            "
+                        >
+                            <span
+                                class="
+                                    mx-auto grid h-14 w-14
+                                    place-items-center rounded-2xl
+                                    bg-sky-50 text-sky-500
+                                "
+                            >
+                                <svg
+                                    class="h-7 w-7"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        d="M6 3h9l3 3v15H6V3Zm9 0v4h4M9 11h6M9 15h6"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                            </span>
 
-                                    <p
-                                        class="
-                                            mt-3 text-sm font-bold
-                                            text-slate-800
-                                        "
-                                    >
-                                        {{
-                                            $search !== ''
-                                                ? 'Aturan tidak ditemukan.'
-                                                : 'Belum ada aturan perusahaan.'
-                                        }}
-                                    </p>
+                            <p
+                                class="
+                                    mt-3 text-sm font-bold
+                                    text-slate-800
+                                "
+                            >
+                                {{
+                                    $search !== ''
+                                        ? 'Aturan tidak ditemukan.'
+                                        : 'Belum ada aturan perusahaan.'
+                                }}
+                            </p>
 
-                                    <p class="mt-1 text-sm text-slate-500">
-                                        {{
-                                            $search !== ''
-                                                ? 'Coba gunakan kata pencarian lain.'
-                                                : 'Klik Tambah Aturan Baru untuk membuat aturan pertama.'
-                                        }}
-                                    </p>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                            <p class="mt-1 text-sm text-slate-500">
+                                {{
+                                    $search !== ''
+                                        ? 'Coba gunakan kata pencarian lain.'
+                                        : 'Klik Tambah Aturan Baru untuk membuat aturan pertama.'
+                                }}
+                            </p>
+                        </div>
+                    @endforelse
+                </div>
             </div>
 
             {{-- Pagination --}}

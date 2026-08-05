@@ -13,11 +13,10 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        // 1. Membuat/Update Super Admin
         User::updateOrCreate(
             ['username' => 'superadmin'],
             [
-                'nama' => 'Super Admin',
+                'nama' => 'Direktur Utama',
                 'email' => 'superadmin@cvnatusi.com',
                 'password' => Hash::make('admin123'),
                 'role' => 'superadmin',

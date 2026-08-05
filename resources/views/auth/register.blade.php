@@ -28,7 +28,7 @@
                     <div class="absolute right-[-110px] top-[15%] h-[380px] w-[380px] rounded-full border border-[#8dbde8]/35"></div>
                     <div class="absolute right-[-45px] top-[22%] h-[300px] w-[300px] rounded-full border border-[#8dbde8]/30"></div>
                     <div class="absolute left-[70px] top-[48%] h-[240px] w-[180px] rotate-[-14deg] rounded-[30px] border border-[#8dbde8]/35"></div>
-                    <div class="absolute left-[-120px] top-[-150px] h-[340px] w-[340px] rounded-full bg-white/35 blur-3xl"></div>
+                    <div class="absolute left-[-120px] top-[-150px] h-[340px] w-[340px] rounded-full bg-blue-100/70 blur-3xl"></div>
                 </div>
 
                 <a href="{{ route('login') }}" class="inline-flex w-fit items-center gap-3 text-[#075f8c] transition hover:opacity-80">
@@ -173,6 +173,7 @@
                                     <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                                 @enderror
                             </div>
+                            <div class="space-y-2">
 
                             {{-- Email --}}
                             <div>

@@ -12,7 +12,7 @@
             ?? 'Pengguna';
 
         $roleLabel = match ($user->role ?? '') {
-            'superadmin' => 'Super Admin Internal',
+            'superadmin' => 'Direktur Utama Internal',
             'admin' => 'Admin Internal',
             'karyawan' => 'Karyawan',
             'pelamar' => 'Pelamar',

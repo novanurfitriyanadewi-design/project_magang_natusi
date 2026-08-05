@@ -6,8 +6,10 @@
         ?? 'Pengguna';
 
     $roleLabel = match ($user?->role) {
-        'superadmin' => 'Super Admin',
+        'superadmin' => 'Direktur Utama',
         'admin' => 'Admin',
+        'admin_peserta' => 'Admin Peserta Magang',
+        'admin_karyawan' => 'Admin Karyawan',
         'karyawan' => $user->karyawan?->jabatan ?? 'Karyawan',
         'peserta' => 'Peserta Magang',
         default => 'Peserta Magang',
@@ -63,7 +65,7 @@
         ? route('profile.edit')
         : '#';
 
-    $showNotification = $user?->role !== 'superadmin';
+    $showNotification = $user?->role !== 'superadmin' && $user?->role !== 'admin_peserta' && $user?->role !== 'admin_karyawan';
 
     $profilePhotoUrl = (
         filled($user?->foto_profil)
