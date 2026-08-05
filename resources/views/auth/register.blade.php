@@ -142,6 +142,7 @@
                         <form
                             method="POST"
                             action="{{ route('register.store') }}"
+                            enctype="multipart/form-data"
                             class="space-y-3.5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:pr-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 hover:[&::-webkit-scrollbar-thumb]:bg-slate-400"
                         >
                             @csrf
@@ -302,7 +303,68 @@
                                     <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                                 @enderror
                             </div>
+                            {{-- Upload Berkas Lamaran (khusus Karyawan) --}}
+@if ($isEmployee)
+    <div class="rounded-lg border border-slate-200 bg-slate-50/70 p-3.5">
+        <p class="text-[10px] font-bold uppercase tracking-[0.065em] text-slate-800">
+            Berkas Lamaran (PDF/JPG/PNG, maks. 2MB per file)
+        </p>
 
+        <div class="mt-2.5 space-y-2.5">
+            @php
+                $berkasWajib = [
+                    'surat_lamaran' => 'Surat Lamaran Kerja',
+                    'cv'            => 'CV (Curriculum Vitae)',
+                    'ijazah'        => 'Ijazah & Transkrip Nilai',
+                    'ktp'           => 'Fotokopi KTP',
+                    'pas_foto'      => 'Pas Foto Terbaru',
+                    'skck'          => 'SKCK',
+                ];
+                $berkasOpsional = [
+                    'portfolio'        => 'Portofolio',
+                    'pengalaman_kerja' => 'Surat Pengalaman Kerja',
+                ];
+            @endphp
+
+            @foreach ($berkasWajib as $field => $label)
+                <div>
+                    <label for="{{ $field }}" class="block text-xs font-semibold text-slate-700">
+                        {{ $label }} <span class="text-rose-500">*</span>
+                    </label>
+                    <input
+                        id="{{ $field }}"
+                        name="{{ $field }}"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        required
+                        class="mt-1 block w-full text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-[#0879ad] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-[#066c9b]"
+                    >
+                    @error($field)
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endforeach
+
+            @foreach ($berkasOpsional as $field => $label)
+                <div>
+                    <label for="{{ $field }}" class="block text-xs font-semibold text-slate-700">
+                        {{ $label }} <span class="text-slate-400">(opsional)</span>
+                    </label>
+                    <input
+                        id="{{ $field }}"
+                        name="{{ $field }}"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        class="mt-1 block w-full text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-500 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-slate-600"
+                    >
+                    @error($field)
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endif
                             {{-- Kata Sandi --}}
                             <div class="grid gap-3 sm:grid-cols-2">
                                 <div>

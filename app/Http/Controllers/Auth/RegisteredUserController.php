@@ -163,21 +163,34 @@ class RegisteredUserController extends Controller
             $messages['student_id.required'] = 'Nomor induk (NIM/NISN) wajib diisi.';
             $messages['major.required']      = 'Jurusan wajib diisi.';
         }
+        $fileRules = [];
+if ($roleSession === 'karyawan') {
+    $fileRules = [
+        'surat_lamaran'    => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+        'cv'               => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+        'ijazah'           => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+        'ktp'              => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+        'pas_foto'         => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:2048'],
+        'skck'             => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+        'portfolio'        => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,zip', 'max:5120'],
+        'pengalaman_kerja' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+    ];
+}
 
         $validated = $request->validate(
-            [
-                'full_name'   => ['required', 'string', 'max:255'],
-                'email'       => $emailRules,
-                'password'    => ['required', 'string', 'min:8', 'max:100', 'confirmed'],
-                'university'  => ['required', 'string', 'max:255'], // Pendidikan Terakhir (Karyawan) / Sekolah (Magang)
-                'student_id'  => $studentIdRules,                   // NIK (Karyawan) / NIM (Magang)
-                'major'       => ['required', 'string', 'max:255'], // Posisi Dilamar (Karyawan) / Jurusan (Magang)
-                'phone'       => ['required', 'string', 'max:20'],
-                'description' => ['nullable', 'string', 'max:2000'],
-                'terms'       => ['accepted'],
-            ],
-            $messages
-        );
+    array_merge([
+        'full_name'   => ['required', 'string', 'max:255'],
+        'email'       => $emailRules,
+        'password'    => ['required', 'string', 'min:8', 'max:100', 'confirmed'],
+        'university'  => ['required', 'string', 'max:255'],
+        'student_id'  => $studentIdRules,
+        'major'       => ['required', 'string', 'max:255'],
+        'phone'       => ['required', 'string', 'max:20'],
+        'description' => ['nullable', 'string', 'max:2000'],
+        'terms'       => ['accepted'],
+    ], $fileRules),
+    $messages
+);
 
         $email = strtolower(trim($validated['email']));
         $username = $this->makeUniqueUsername(
@@ -189,7 +202,7 @@ class RegisteredUserController extends Controller
         // 1. ALUR PENDAFTARAN PELAMAR MAGANG
         // ==========================================
         if ($roleSession === 'pelamar') {
-            [$user, $permintaan] = DB::transaction(function () use ($validated, $email, $username) {
+            [$user, $permintaan] = DB::transaction(function () use ($validated, $email, $username, $request) {
                 $user = User::query()->create([
                     'nama'                 => trim($validated['full_name']),
                     'username'             => $username,
@@ -245,7 +258,7 @@ class RegisteredUserController extends Controller
         // ==========================================
         // 2. ALUR PENDAFTARAN CALON KARYAWAN
         // ==========================================
-        [$user, $permintaan] = DB::transaction(function () use ($validated, $email, $username) {
+        [$user, $permintaan] = DB::transaction(function () use ($validated, $email, $username, $request) {
             $user = User::query()->create([
                 'nama'                 => trim($validated['full_name']),
                 'username'             => $username,
@@ -259,22 +272,29 @@ class RegisteredUserController extends Controller
                 'password'             => Hash::make($validated['password']),
                 'wajib_ganti_password' => false,
             ]);
+            $berkasPaths = [];
+$folderBerkas = 'permintaan-lamaran/' . Str::uuid();
 
+foreach (['surat_lamaran', 'cv', 'ijazah', 'ktp', 'pas_foto', 'skck', 'portfolio', 'pengalaman_kerja'] as $field) {
+    if ($request->hasFile($field)) {
+        $berkasPaths["{$field}_path"] = $request->file($field)->store($folderBerkas, 'public');
+    }
+}
             $permintaan = null;
             if (class_exists(PermintaanLamaran::class)) {
-                $permintaan = PermintaanLamaran::query()->create([
-                    'user_id'            => $user->id_user,
-                    'nama_pemohon'       => trim($validated['full_name']),
-                    'email'              => $email,
-                    'nik'                => trim($validated['student_id']),  // Sesuai field NIK Karyawan
-                    'pendidikan_terakhir' => trim($validated['university']), // Sesuai Pendidikan Terakhir
-                    'posisi'             => trim($validated['major']),      // Sesuai Posisi yang Dilamar
-                    'no_hp'              => trim($validated['phone']),
-                    'tanggal_lamar'      => now(),
-                    'pesan'              => filled($validated['description'] ?? null) ? trim($validated['description']) : null,
-                    'status'             => 'menunggu',
-                    'akun_dibuat'        => false,
-                ]);
+                $permintaan = PermintaanLamaran::query()->create(array_merge([
+    'user_id'             => $user->id_user,
+    'nama_pemohon'        => trim($validated['full_name']),
+    'email'               => $email,
+    'nik'                 => trim($validated['student_id']),
+    'pendidikan_terakhir' => trim($validated['university']),
+    'posisi'              => trim($validated['major']),
+    'no_hp'               => trim($validated['phone']),
+    'tanggal_lamar'       => now(),
+    'pesan'               => filled($validated['description'] ?? null) ? trim($validated['description']) : null,
+    'status'              => 'menunggu',
+    'akun_dibuat'         => false,
+], $berkasPaths));
 
                 $this->kirimNotifikasiKeAdmin($permintaan->nama_pemohon, 'Pengajuan Lamaran Karyawan Baru');
             }
