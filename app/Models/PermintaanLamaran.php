@@ -31,6 +31,13 @@ class PermintaanLamaran extends Model
         'lokasi_interview',
         'akun_dibuat',
         'cv_path',
+        'surat_lamaran_path',   // <-- baru
+    'ijazah_path',          // <-- baru
+    'ktp_path',             // <-- baru
+    'pas_foto_path',        // <-- baru
+    'skck_path',            // <-- baru
+    'portfolio_path',
+    'pengalaman_kerja_path', // <-- baru
         'portfolio_path',
         'alasan_penolakan',
         'catatan_revisi',
