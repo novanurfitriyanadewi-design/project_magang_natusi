@@ -3,42 +3,42 @@
 namespace App\Http\Controllers\AdminPeserta;
 
 use App\Http\Controllers\Controller;
-use App\Models\Absensi; // Pastikan nama Model Absensi kamu sudah sesuai
+use App\Models\Absensi;
 use Illuminate\Http\Request;
 
 class AbsensiController extends Controller
-
 {
     public function index(Request $request)
     {
-        // 1. Ambil input filter dari halaman browser
         $search = $request->input('search');
-        $date = $request->input('date');
         $status = $request->input('status');
+        $date = $request->input('date');
 
-        // 2. Query data absensi dengan memuat relasi data peserta/user
-        // Jalankan filter jika input pencarian diisi oleh admin
-        $query = Absensi::with('user'); 
+        // Mulai query dengan relasi peserta.user
+        $query = Absensi::with('peserta.user')
+            ->whereDate('tanggal', today()); // default hari ini
 
+        // Filter pencarian nama/instansi
         if ($search) {
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
+            $query->whereHas('peserta.user', function ($q) use ($search) {
+                $q->where('nama', 'like', '%' . $search . '%')
                   ->orWhere('instansi', 'like', '%' . $search . '%');
             });
         }
 
-        if ($date) {
-            $query->whereDate('created_at', $date);
-        }
-
+        // Filter status absensi
         if ($status) {
             $query->where('status', $status);
         }
 
-        // 3. Ambil data hasil filter dengan pagination (misal 10 data per halaman)
-        $absensi = $query->latest()->paginate(10)->withQueryString();
+        // Filter tanggal manual
+        if ($date) {
+            $query->whereDate('tanggal', $date);
+        }
 
-        // 4. Kirim data hasil filter ke dalam view blade
+        // Urutkan dan paginate
+        $absensi = $query->latest('tanggal')->paginate(10)->withQueryString();
+
         return view('admin-peserta.absensi', compact('absensi'));
     }
 }

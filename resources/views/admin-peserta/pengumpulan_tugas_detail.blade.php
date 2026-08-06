@@ -15,7 +15,10 @@
     $group = match ($pengumpulan->tugas?->target_peserta) {
         'smk_tkj' => 'SMK TKJ',
         'smk_rpl' => 'SMK RPL',
-        'universitas' => 'Universitas',
+        'smk_sija' => 'SMK SIJA',
+        'kuliah_ti' => 'Teknik Informatika',
+        'kuliah_si' => 'Sistem Informasi',
+        'kuliah_ptik' => 'Pend Teknik Informatika',
         default => ucfirst(str_replace('_', ' ', (string) ($pengumpulan->peserta?->tingkat_pendidikan ?? '-'))),
     };
 

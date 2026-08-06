@@ -24,7 +24,7 @@ class AturanPerusahaanController extends Controller
                 });
             })
             ->latest('updated_at')
-            ->paginate(5)
+            ->paginate(6)
             ->withQueryString();
 
         $totalRules = AturanPerusahaan::query()->count();

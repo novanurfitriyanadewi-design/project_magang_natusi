@@ -19,6 +19,7 @@ class PesertaMagang extends Model
         'alamat',
         'tingkat_pendidikan',
         'kelas',
+        'jurusan_id',
         'tgl_mulai',
         'tgl_selesai',
         'durasi_magang',
@@ -48,6 +49,14 @@ class PesertaMagang extends Model
             PermintaanMagang::class,
             'permintaan_id',
             'id_permintaan'
+        );
+    }
+    public function jurusan(): BelongsTo
+    {
+        return $this->belongsTo(
+            Jurusan::class,
+            'jurusan_id',
+            'id_jurusan'
         );
     }
     public function absensi(): HasMany

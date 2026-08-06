@@ -7,6 +7,7 @@ use App\Models\PenugasanPeserta;
 use App\Models\PesertaMagang;
 use App\Models\TemplateLaporan;
 use App\Models\Tugas;
+use App\Support\JurusanKategori;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -29,28 +30,26 @@ class PenugasanTemplateService
     ];
 
     /**
-     * Sheet resmi pada template tugas mingguan.
+     * Sheet resmi pada template tugas mingguan, dibentuk dinamis dari
+     * daftar jurusan aktif (dikelola lewat halaman Kelola Jurusan) supaya
+     * admin bisa menambah jurusan baru tanpa perlu mengubah kode ini.
      */
-    private const TEMPLATE_SHEETS = [
-        'SMK RPL' => [
-            'target' => 'smk_rpl',
-            'instansi' => 'sekolah',
-            'prefix' => 'RPL',
-            'label' => 'SMK RPL',
-        ],
-        'SMK TKJ' => [
-            'target' => 'smk_tkj',
-            'instansi' => 'sekolah',
-            'prefix' => 'TKJ',
-            'label' => 'SMK TKJ',
-        ],
-        'Universitas' => [
-            'target' => 'universitas',
-            'instansi' => 'universitas',
-            'prefix' => 'UNI',
-            'label' => 'Universitas',
-        ],
-    ];
+    private function templateSheets(): array
+    {
+        $sheets = [];
+
+        foreach (JurusanKategori::semua() as $jurusan) {
+            $sheets[$jurusan->nama_sheet] = [
+                'target' => $jurusan->target_peserta,
+                'instansi' => $jurusan->tingkat === 'smk' ? 'sekolah' : 'universitas',
+                'prefix' => $jurusan->kode,
+                'label' => $jurusan->nama_sheet,
+                'jurusan_id' => $jurusan->id_jurusan,
+            ];
+        }
+
+        return $sheets;
+    }
 
     /**
      * Membaca template resmi yang berisi tiga sheet sekaligus, memperbarui
@@ -335,46 +334,32 @@ class PenugasanTemplateService
     }
 
     /**
-     * Menentukan sheet tugas peserta dari pendidikan dan jurusannya.
+     * Menentukan sheet tugas peserta dari jurusan resminya (jurusan_id).
+     * Untuk data lama yang belum punya jurusan_id, dicoba dicocokkan dari
+     * teks jurusan/kelas bebas. Peserta yang jurusannya tidak dikenali
+     * dalam daftar Kelola Jurusan tidak mendapat target otomatis.
      */
     public function participantTarget(PesertaMagang $participant): ?string
     {
-        if ($this->participantInstitution($participant) === 'universitas') {
-            return 'universitas';
+        return $this->resolveJurusan($participant)?->target_peserta;
+    }
+
+    private function resolveJurusan(PesertaMagang $participant): ?\App\Models\Jurusan
+    {
+        if ($participant->jurusan_id) {
+            $jurusan = JurusanKategori::cariById($participant->jurusan_id);
+            if ($jurusan) {
+                return $jurusan;
+            }
         }
 
-        $major = Str::of(implode(' ', array_filter([
+        $teks = implode(' ', array_filter([
             $participant->permintaan?->jurusan,
             $participant->user?->major,
             $participant->kelas,
-        ])))
-            ->lower()
-            ->ascii()
-            ->replaceMatches('/[^a-z0-9]+/', ' ')
-            ->squish()
-            ->toString();
+        ]));
 
-        if (Str::contains($major, [
-            'rpl',
-            'rekayasa perangkat lunak',
-            'pengembangan perangkat lunak dan gim',
-            'pplg',
-            'software engineering',
-        ])) {
-            return 'smk_rpl';
-        }
-
-        if (Str::contains($major, [
-            'tkj',
-            'teknik komputer dan jaringan',
-            'teknik jaringan komputer dan telekomunikasi',
-            'tjkt',
-            'komputer jaringan',
-        ])) {
-            return 'smk_tkj';
-        }
-
-        return null;
+        return JurusanKategori::cariByTeks($teks);
     }
 
     private function activeReportTemplate(string $institution): ?TemplateLaporan
@@ -508,7 +493,7 @@ class PenugasanTemplateService
         $groups = [];
         $missingSheets = [];
 
-        foreach (self::TEMPLATE_SHEETS as $sheetName => $profile) {
+        foreach ($this->templateSheets() as $sheetName => $profile) {
             $worksheet = $spreadsheet->getSheetByName($sheetName);
             if (!$worksheet) {
                 $missingSheets[] = $sheetName;

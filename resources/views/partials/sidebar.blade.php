@@ -74,6 +74,7 @@
             ['label' => 'Absensi Peserta', 'route' => 'admin-peserta.absensi.index', 'match' => 'admin-peserta.absensi.*', 'icon' => 'attendance-user', 'tour' => 'attendance-data'],
             ['label' => 'Pembayaran Sumbangan', 'route' => 'admin-peserta.pembayaran.index', 'match' => 'admin-peserta.pembayaran.*', 'icon' => 'payment', 'tour' => 'pembayaran-peserta'],
             ['label' => 'Kelola Tugas', 'route' => 'admin-peserta.tugas.index', 'match' => 'admin-peserta.tugas.*', 'icon' => 'tasks', 'tour' => 'manage-tasks'],
+            ['label' => 'Kelola Jurusan', 'route' => 'admin-peserta.jurusan.index', 'match' => 'admin-peserta.jurusan.*', 'icon' => 'rules', 'tour' => 'manage-jurusan'],
             ['label' => 'Pengumpulan Tugas', 'route' => 'admin-peserta.pengumpulan-tugas.index', 'match' => 'admin-peserta.pengumpulan-tugas.*', 'icon' => 'assignment', 'tour' => 'task-submissions'],
             [
                 'label' => 'Laporan',

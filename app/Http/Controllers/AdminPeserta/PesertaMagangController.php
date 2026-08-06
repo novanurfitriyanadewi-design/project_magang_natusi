@@ -6,10 +6,13 @@ use App\Exports\TemplatePesertaMagangExport;
 use App\Http\Controllers\Controller;
 use App\Imports\PesertaMagangImport;
 use App\Models\PesertaMagang;
+use App\Support\JurusanKategori;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -22,7 +25,7 @@ class PesertaMagangController extends Controller
         $status = $request->string('status', 'semua')->toString();
 
         $query = PesertaMagang::query()
-            ->with(['user', 'permintaan']);
+            ->with(['user', 'permintaan', 'jurusan']);
 
         if ($search !== '') {
             $query->where(function ($query) use ($search) {
@@ -61,11 +64,18 @@ class PesertaMagangController extends Controller
             'nonaktif' => PesertaMagang::query()->where('status', '!=', 'aktif')->count(),
         ];
 
+        $jurusanOptions = \App\Models\Jurusan::query()
+            ->aktif()
+            ->orderBy('tingkat')
+            ->orderBy('nama_jurusan')
+            ->get();
+
         return view('admin-peserta.peserta_magang', compact(
             'peserta',
             'stats',
             'search',
             'status',
+            'jurusanOptions',
         ));
     }
 
@@ -138,6 +148,7 @@ class PesertaMagangController extends Controller
             'alamat' => ['required', 'string', 'max:1000'],
             'tingkat_pendidikan' => ['required', Rule::in(['SMK', 'Universitas'])],
             'kelas' => ['nullable', 'string', 'max:100'],
+            'jurusan_id' => ['nullable', 'exists:jurusan,id_jurusan'],
             'tgl_mulai' => ['nullable', 'date'],
             'tgl_selesai' => ['nullable', 'date', 'after_or_equal:tgl_mulai'],
             'durasi_magang' => ['nullable', 'string', 'max:100'],
@@ -145,6 +156,22 @@ class PesertaMagangController extends Controller
             'no_hpguru' => ['nullable', 'string', 'max:20'],
             'status' => ['required', Rule::in(['aktif', 'selesai', 'dibatalkan'])],
         ]);
+
+        if (!empty($validated['tgl_mulai']) && !empty($validated['tgl_selesai'])) {
+            $bulanMagang = Carbon::parse($validated['tgl_mulai'])
+                ->diffInMonths(Carbon::parse($validated['tgl_selesai']));
+
+            $jurusan = !empty($validated['jurusan_id'])
+                ? JurusanKategori::cariById((int) $validated['jurusan_id'])
+                : null;
+
+            $pesanDurasi = JurusanKategori::validasiDurasi($jurusan, $bulanMagang);
+            if ($pesanDurasi !== null) {
+                throw ValidationException::withMessages([
+                    'tgl_selesai' => $pesanDurasi,
+                ]);
+            }
+        }
 
         $pesertaMagang->update($validated);
 

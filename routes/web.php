@@ -26,6 +26,7 @@ use App\Http\Controllers\AdminPeserta\PermintaanMagangController as AdminPermint
 use App\Http\Controllers\AdminPeserta\DataAbsensiController as AdminDataAbsensiController;
 use App\Http\Controllers\AdminPeserta\DataPembayaranController as AdminDataPembayaranController;
 use App\Http\Controllers\AdminPeserta\DataMetodePembayaranController as AdminDataMetodePembayaranController;
+use App\Http\Controllers\AdminPeserta\JurusanController as AdminJurusanController;
 use App\Http\Controllers\AdminPeserta\PengumpulanTugasController as AdminPengumpulanTugasController;
 use App\Http\Controllers\AdminPeserta\NotifikasiController as AdminNotifikasiController;
 use App\Http\Controllers\AdminPeserta\NotifikasiController as UserNotifikasiController;
@@ -327,6 +328,19 @@ Route::middleware('admin.peserta')
 
         Route::delete('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'destroyBank'])
             ->name('metode-pembayaran.bank.destroy');
+
+        /* Kelola Jurusan */
+        Route::get('/jurusan', [AdminJurusanController::class, 'index'])
+            ->name('jurusan.index');
+
+        Route::post('/jurusan', [AdminJurusanController::class, 'store'])
+            ->name('jurusan.store');
+
+        Route::put('/jurusan/{jurusan}', [AdminJurusanController::class, 'update'])
+            ->name('jurusan.update');
+
+        Route::delete('/jurusan/{jurusan}', [AdminJurusanController::class, 'destroy'])
+            ->name('jurusan.destroy');
 
         /* Notifikasi */
         Route::get('/notifikasi', [AdminNotifikasiController::class, 'index'])

@@ -340,7 +340,10 @@ class PengumpulanTugasController extends Controller
         return match ($jenjang) {
             'smk-tkj' => 'smk_tkj',
             'smk-rpl' => 'smk_rpl',
-            'universitas' => 'universitas',
+            'smk-sija' => 'smk_sija',
+            'kuliah-ti' => 'kuliah_ti',
+            'kuliah-si' => 'kuliah_si',
+            'kuliah-ptik' => 'kuliah_ptik',
             default => null,
         };
     }

@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\PesertaMagang;
 use App\Models\User;
+use App\Support\JurusanKategori;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -197,11 +198,26 @@ class PesertaMagangImport implements ToCollection, SkipsEmptyRows, WithMultipleS
             $peserta->user_id = $user->id_user;
         }
 
+        $jurusan = JurusanKategori::cariByTeks($data['jurusan']);
+
+        if ($data['tanggal_mulai'] && $data['tanggal_selesai']) {
+            $bulanMagang = Carbon::parse($data['tanggal_mulai'])
+                ->diffInMonths(Carbon::parse($data['tanggal_selesai']));
+
+            $pesanDurasi = JurusanKategori::validasiDurasi($jurusan, $bulanMagang);
+            if ($pesanDurasi !== null) {
+                throw ValidationException::withMessages([
+                    'file_excel' => "Baris {$rowNumber}: {$pesanDurasi}",
+                ]);
+            }
+        }
+
         $peserta->fill([
             'permintaan_id' => $peserta->permintaan_id,
             'alamat' => $data['alamat'],
             'tingkat_pendidikan' => $data['tingkat_pendidikan'],
             'kelas' => $data['kelas'],
+            'jurusan_id' => $jurusan?->id_jurusan ?? $peserta->jurusan_id,
             'tgl_mulai' => $data['tanggal_mulai'],
             'tgl_selesai' => $data['tanggal_selesai'],
             'durasi_magang' => $data['durasi_magang'],

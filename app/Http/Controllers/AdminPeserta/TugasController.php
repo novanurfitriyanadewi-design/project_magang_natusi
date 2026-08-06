@@ -17,7 +17,7 @@ class TugasController extends Controller
         $targetPeserta = $request->string('target_peserta')->toString();
         $targetValid = in_array(
             $targetPeserta,
-            ['smk_tkj', 'smk_rpl', 'universitas'],
+            ['smk_tkj', 'smk_rpl', 'smk_sija', 'kuliah_ti', 'kuliah_si', 'kuliah_ptik'],
             true
         );
 
@@ -34,8 +34,11 @@ class TugasController extends Controller
                 "CASE target_peserta
                     WHEN 'smk_tkj' THEN 1
                     WHEN 'smk_rpl' THEN 2
-                    WHEN 'universitas' THEN 3
-                    ELSE 4
+                    WHEN 'smk_sija' THEN 3
+                    WHEN 'kuliah_ti' THEN 4
+                    WHEN 'kuliah_si' THEN 5
+                    WHEN 'kuliah_ptik' THEN 6
+                    ELSE 7
                 END"
             )
             ->orderBy('minggu_ke')
@@ -223,7 +226,7 @@ class TugasController extends Controller
             'keterangan' => ['nullable', 'string'],
             'file_tugas' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx', 'max:10240'],
             'instansi' => ['required', Rule::in(['universitas', 'sekolah', 'semua'])],
-            'target_peserta' => ['nullable', Rule::in(['smk_rpl', 'smk_tkj', 'universitas', 'semua'])],
+            'target_peserta' => ['nullable', Rule::in(['smk_rpl', 'smk_tkj', 'smk_sija', 'kuliah_ti', 'kuliah_si', 'kuliah_ptik', 'semua'])],
             'hari_tampil' => ['nullable', 'string', 'max:20'],
             'hari_deadline' => ['nullable', 'string', 'max:20'],
             'jam_deadline' => ['nullable', 'date_format:H:i'],

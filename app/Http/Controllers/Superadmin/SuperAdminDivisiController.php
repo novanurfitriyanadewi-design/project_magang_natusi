@@ -12,7 +12,7 @@ class SuperadminDivisiController extends Controller
     {
         $divisiList = Divisi::withCount('karyawan')
             ->orderBy('nama_divisi')
-            ->get();
+            ->paginate(6); // <- ubah dari get() menjadi paginate(6)
 
         return view('superadmin.divisi.index', compact('divisiList'));
     }
