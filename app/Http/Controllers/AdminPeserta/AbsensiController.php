@@ -4,6 +4,7 @@ namespace App\Http\Controllers\AdminPeserta;
 
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
+use App\Models\PesertaMagang;
 use Illuminate\Http\Request;
 
 class AbsensiController extends Controller
@@ -16,6 +17,7 @@ class AbsensiController extends Controller
 
         // Mulai query dengan relasi peserta.user
         $query = Absensi::with('peserta.user')
+            ->where('absentable_type', PesertaMagang::class)
             ->whereDate('tanggal', today()); // default hari ini
 
         // Filter pencarian nama/instansi

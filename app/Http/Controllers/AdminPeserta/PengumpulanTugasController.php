@@ -146,12 +146,48 @@ class PengumpulanTugasController extends Controller
             ->orderBy('judul')
             ->get(['id_tugas', 'judul', 'minggu_ke']);
 
+        // Daftar penugasan mingguan hasil import template Excel,
+        // dikelompokkan per jurusan (dipindah dari halaman Tugas Mingguan).
+        $templateTarget = $request->string('template_target', '')->toString();
+        $templateTargetValid = in_array(
+            $templateTarget,
+            ['smk_tkj', 'smk_rpl', 'smk_sija', 'kuliah_ti', 'kuliah_si', 'kuliah_ptik'],
+            true
+        );
+
+        $tugasList = Tugas::query()
+            ->where('jenis_tugas', 'mingguan')
+            ->whereNotNull('template_batch')
+            ->where('status', 'aktif')
+            ->when(
+                $templateTargetValid,
+                fn (Builder $query) => $query->where('target_peserta', $templateTarget)
+            )
+            ->withCount('penugasanPeserta')
+            ->orderByRaw(
+                "CASE target_peserta
+                    WHEN 'smk_tkj' THEN 1
+                    WHEN 'smk_rpl' THEN 2
+                    WHEN 'smk_sija' THEN 3
+                    WHEN 'kuliah_ti' THEN 4
+                    WHEN 'kuliah_si' THEN 5
+                    WHEN 'kuliah_ptik' THEN 6
+                    ELSE 7
+                END"
+            )
+            ->orderBy('minggu_ke')
+            ->orderBy('rilis_hari_ke')
+            ->orderBy('id_tugas')
+            ->get();
+
         return view('admin-peserta.pengumpulan_tugas', compact(
             'stats',
             'submitted',
             'pending',
             'daftarTugas',
-            'jenjang'
+            'jenjang',
+            'tugasList',
+            'templateTarget'
         ));
     }
 

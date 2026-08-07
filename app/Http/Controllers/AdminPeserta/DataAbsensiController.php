@@ -35,6 +35,7 @@ class DataAbsensiController extends Controller
         $totalActiveParticipants = (clone $activeParticipantsQuery)->count();
 
         $todayAttendanceBase = Absensi::query()
+            ->where('absentable_type', PesertaMagang::class)
             ->whereDate('tanggal', $today)
             ->whereHas('peserta', fn (Builder $query) => $query->where('status', 'aktif'));
 
@@ -50,6 +51,7 @@ class DataAbsensiController extends Controller
         if ($todayTab === 'sudah_absen') {
             $todayAttendances = Absensi::query()
                 ->with(['peserta.user', 'peserta.permintaan'])
+                ->where('absentable_type', PesertaMagang::class)
                 ->whereDate('tanggal', $today)
                 ->whereHas('peserta', fn (Builder $query) => $query->where('status', 'aktif'))
                 ->when($todaySearch !== '', function (Builder $query) use ($todaySearch) {
@@ -76,6 +78,7 @@ class DataAbsensiController extends Controller
 
         $historyQuery = Absensi::query()
             ->with(['peserta.user', 'peserta.permintaan'])
+            ->where('absentable_type', PesertaMagang::class)
             ->whereDate('tanggal', '<', $today)
             ->when($historyDate !== '', fn (Builder $query) => $query->whereDate('tanggal', $historyDate))
             ->when($historyStatus !== '', fn (Builder $query) => $query->where('status', $historyStatus))

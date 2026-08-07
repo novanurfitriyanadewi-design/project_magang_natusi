@@ -26,7 +26,8 @@ class LaporanAbsensiController extends Controller
             ->pluck('tingkat_pendidikan');
 
         // 2. Base Query Absensi untuk Statistik & Grafik
-        $queryBase = Absensi::query();
+        $queryBase = Absensi::query()
+            ->where('absentable_type', PesertaMagang::class);
 
         if ($dariTgl) {
             $queryBase->whereDate('tanggal', '>=', $dariTgl);
@@ -59,6 +60,7 @@ class LaporanAbsensiController extends Controller
 
         // 4. Hitung Trend Frekuensi Kehadiran Bulanan (Grafik)
         $monthlyData = Absensi::selectRaw('MONTH(tanggal) as bulan, COUNT(*) as total')
+            ->where('absentable_type', PesertaMagang::class)
             ->whereYear('tanggal', now()->year)
             ->whereIn('status', ['hadir', 'terlambat'])
             ->groupBy('bulan')
@@ -72,7 +74,7 @@ class LaporanAbsensiController extends Controller
         }
 
         // 5. Query Rekap Data Per Peserta (Tabel Utama)
-        $rekapQuery = Absensi::select('peserta_id')
+        $rekapQuery = Absensi::select('absentable_id')
             ->selectRaw("
                 COUNT(*) as total_absen,
                 SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) as total_hadir,
@@ -81,8 +83,9 @@ class LaporanAbsensiController extends Controller
                 SUM(CASE WHEN status = 'sakit' THEN 1 ELSE 0 END) as total_sakit,
                 SUM(CASE WHEN status = 'alfa' THEN 1 ELSE 0 END) as total_alfa
             ")
+            ->where('absentable_type', PesertaMagang::class)
             ->with(['peserta.user'])
-            ->groupBy('peserta_id');
+            ->groupBy('absentable_id');
 
         // Filter tabel per peserta
         if ($dariTgl) {

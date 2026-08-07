@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Absensi;
 use App\Models\LaporanMingguan;
 use App\Models\Pembayaran;
+use App\Models\PesertaMagang;
 use App\Models\Notifikasi;
 use App\Models\Pengumuman;
 use App\Models\Tugas;
@@ -65,12 +66,14 @@ class DashboardController extends Controller
             ];
         }
 
-        $totalHadir = Absensi::where('peserta_id', $pesertaId)
+        $totalHadir = Absensi::where('absentable_id', $pesertaId)
+            ->where('absentable_type', PesertaMagang::class)
             ->where('status', 'hadir')
             ->whereBetween('tanggal', [$awalPeriode, Carbon::now()])
             ->count();
 
-        $hadirHariIni = Absensi::where('peserta_id', $pesertaId)
+        $hadirHariIni = Absensi::where('absentable_id', $pesertaId)
+            ->where('absentable_type', PesertaMagang::class)
             ->whereDate('tanggal', Carbon::today())
             ->where('status', 'hadir')
             ->exists();

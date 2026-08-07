@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\AdminPeserta;
 
 use App\Http\Controllers\Controller;
-use App\Models\TemplateLaporan;
 use App\Models\Tugas;
 use App\Services\PenugasanTemplateService;
 use Illuminate\Http\Request;
@@ -14,43 +13,7 @@ class TugasController extends Controller
 {
     public function index(Request $request)
     {
-        $targetPeserta = $request->string('target_peserta')->toString();
-        $targetValid = in_array(
-            $targetPeserta,
-            ['smk_tkj', 'smk_rpl', 'smk_sija', 'kuliah_ti', 'kuliah_si', 'kuliah_ptik'],
-            true
-        );
-
-        $tugasList = Tugas::query()
-            ->where('jenis_tugas', 'mingguan')
-            ->whereNotNull('template_batch')
-            ->where('status', 'aktif')
-            ->when(
-                $targetValid,
-                fn ($query) => $query->where('target_peserta', $targetPeserta)
-            )
-            ->withCount('penugasanPeserta')
-            ->orderByRaw(
-                "CASE target_peserta
-                    WHEN 'smk_tkj' THEN 1
-                    WHEN 'smk_rpl' THEN 2
-                    WHEN 'smk_sija' THEN 3
-                    WHEN 'kuliah_ti' THEN 4
-                    WHEN 'kuliah_si' THEN 5
-                    WHEN 'kuliah_ptik' THEN 6
-                    ELSE 7
-                END"
-            )
-            ->orderBy('minggu_ke')
-            ->orderBy('rilis_hari_ke')
-            ->orderBy('id_tugas')
-            ->get();
-
-        $templateLaporan = TemplateLaporan::query()
-            ->latest('id_template_laporan')
-            ->get();
-
-        return view('admin-peserta.admin-tugas', compact('tugasList', 'templateLaporan'));
+        return view('admin-peserta.admin-tugas');
     }
 
     public function store(Request $request)
@@ -140,54 +103,6 @@ class TugasController extends Controller
         return redirect()
             ->route('admin-peserta.tugas.index')
             ->with('success', $message);
-    }
-
-    public function storeTemplateLaporan(
-        Request $request,
-        PenugasanTemplateService $service
-    ) {
-        $validated = $request->validate([
-            'judul_template' => ['required', 'string', 'max:255'],
-            'instansi_laporan' => ['required', Rule::in(['universitas', 'sekolah', 'semua'])],
-            'file_word' => ['required', 'file', 'mimes:doc,docx', 'max:10240'],
-            'ketentuan_laporan' => ['required', 'string', 'max:20000'],
-        ]);
-
-        TemplateLaporan::query()
-            ->where('instansi', $validated['instansi_laporan'])
-            ->where('is_active', true)
-            ->update(['is_active' => false]);
-
-        $path = $request->file('file_word')
-            ->store('template-laporan', 'public');
-
-        $template = TemplateLaporan::create([
-            'user_id' => auth()->id(),
-            'instansi' => $validated['instansi_laporan'],
-            'judul' => $validated['judul_template'],
-            'file_word' => $path,
-            'ketentuan' => $validated['ketentuan_laporan'],
-            'is_active' => true,
-        ]);
-
-        $updatedAssignments = $service->refreshReportTemplate($template);
-
-        return redirect()
-            ->route('admin-peserta.tugas.index')
-            ->with(
-                'success',
-                "Template laporan berhasil disimpan dan diterapkan ke {$updatedAssignments} penugasan laporan aktif."
-            );
-    }
-
-    public function destroyTemplateLaporan(TemplateLaporan $templateLaporan)
-    {
-        Storage::disk('public')->delete($templateLaporan->file_word);
-        $templateLaporan->delete();
-
-        return redirect()
-            ->route('admin-peserta.tugas.index')
-            ->with('success', 'Template laporan berhasil dihapus.');
     }
 
     public function downloadPanduan()

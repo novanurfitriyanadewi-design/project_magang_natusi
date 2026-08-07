@@ -334,7 +334,8 @@ class PortalSearchController extends Controller
         if ($peserta && Schema::hasTable('absensi')) {
             $results = $results->concat(
                 Absensi::query()
-                    ->where('peserta_id', $peserta->id_peserta)
+                    ->where('absentable_id', $peserta->id_peserta)
+                    ->where('absentable_type', PesertaMagang::class)
                     ->where(function ($builder) use ($query) {
                         $builder
                             ->where('tanggal', 'like', "%{$query}%")

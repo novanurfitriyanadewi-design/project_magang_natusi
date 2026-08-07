@@ -4,6 +4,7 @@ namespace App\Http\Controllers\PesertaMagang;
 
 use App\Http\Controllers\Controller;
 use App\Models\Absensi;
+use App\Models\PesertaMagang;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,33 +31,39 @@ class AbsensiController extends Controller
         $awalBulan = Carbon::now()->startOfMonth();
         $akhirBulan = Carbon::now()->endOfMonth();
 
-        $sudahAbsenHariIni = Absensi::where('peserta_id', $pesertaId)
+        $sudahAbsenHariIni = Absensi::where('absentable_id', $pesertaId)
+            ->where('absentable_type', PesertaMagang::class)
             ->whereDate('tanggal', Carbon::today())
             ->exists();
 
-        $totalHadir = Absensi::where('peserta_id', $pesertaId)
+        $totalHadir = Absensi::where('absentable_id', $pesertaId)
+            ->where('absentable_type', PesertaMagang::class)
             ->where('status', 'hadir')
             ->whereBetween('tanggal', [$awalBulan, $akhirBulan])
             ->count();
 
-        $totalSakit = Absensi::where('peserta_id', $pesertaId)
+        $totalSakit = Absensi::where('absentable_id', $pesertaId)
+            ->where('absentable_type', PesertaMagang::class)
             ->where('status', 'sakit')
             ->whereBetween('tanggal', [$awalBulan, $akhirBulan])
             ->count();
 
-        $totalIzin = Absensi::where('peserta_id', $pesertaId)
+        $totalIzin = Absensi::where('absentable_id', $pesertaId)
+            ->where('absentable_type', PesertaMagang::class)
             ->where('status', 'izin')
             ->whereBetween('tanggal', [$awalBulan, $akhirBulan])
             ->count();
 
         $totalHariKerja = Carbon::now()->diffInWeekdays($awalBulan) + 1;
 
-        $riwayat = Absensi::where('peserta_id', $pesertaId)
+        $riwayat = Absensi::where('absentable_id', $pesertaId)
+            ->where('absentable_type', PesertaMagang::class)
             ->orderByDesc('tanggal')
             ->paginate(10);
 
         // Data untuk kalender mini bulan berjalan
-        $absensiBulanIni = Absensi::where('peserta_id', $pesertaId)
+        $absensiBulanIni = Absensi::where('absentable_id', $pesertaId)
+            ->where('absentable_type', PesertaMagang::class)
             ->whereBetween('tanggal', [$awalBulan, $akhirBulan])
             ->get()
             ->keyBy(fn ($item) => Carbon::parse($item->tanggal)->format('Y-m-d'));
@@ -91,7 +98,8 @@ class AbsensiController extends Controller
                 ->with('error', 'Data peserta magang Anda belum terdaftar di sistem. Hubungi admin.');
         }
 
-        $sudahAbsenHariIni = Absensi::where('peserta_id', $pesertaId)
+        $sudahAbsenHariIni = Absensi::where('absentable_id', $pesertaId)
+            ->where('absentable_type', PesertaMagang::class)
             ->whereDate('tanggal', Carbon::today())
             ->exists();
 
@@ -134,7 +142,8 @@ class AbsensiController extends Controller
         }
 
         Absensi::create([
-            'peserta_id'  => $pesertaId,
+            'absentable_id'   => $pesertaId,
+            'absentable_type' => PesertaMagang::class,
             'tanggal'     => Carbon::today(),
             'jam'         => Carbon::now()->format('H:i:s'),
             'status'      => $validated['status'],

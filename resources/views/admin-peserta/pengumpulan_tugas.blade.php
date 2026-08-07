@@ -306,5 +306,160 @@
             </footer>
         @endif
     </section>
+
+    {{-- Daftar Penugasan dari Template Excel --}}
+    <section id="daftar-penugasan" class="overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
+        <div class="h-1.5 bg-gradient-to-r from-cyan-600 via-sky-500 to-blue-700"></div>
+
+        <div class="border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5">
+            <div class="flex items-start gap-3">
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-cyan-700 shadow-sm ring-1 ring-sky-100">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                </span>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Daftar Penugasan dari Template</h2>
+                    <p class="mt-0.5 text-sm text-slate-500">Susunan tabel mengikuti template Excel: Minggu Ke, Materi &amp; Laporan, Tugas, Hari Tampil, Hari Deadline, dan Jam Deadline. Untuk mengunggah template baru, buka menu <a href="{{ route('admin-peserta.tugas.index') }}" class="font-bold text-sky-700 underline">Tugas Mingguan</a>.</p>
+                </div>
+            </div>
+        </div>
+
+        @php
+            $filterKelompokTemplate = [
+                ['value' => '', 'label' => 'Semua', 'icon' => 'groups'],
+                ['value' => 'smk_tkj', 'label' => 'SMK TKJ', 'icon' => 'lan'],
+                ['value' => 'smk_rpl', 'label' => 'SMK RPL', 'icon' => 'code'],
+                ['value' => 'smk_sija', 'label' => 'SMK SIJA', 'icon' => 'hub'],
+                ['value' => 'kuliah_ti', 'label' => 'Teknik Informatika', 'icon' => 'school'],
+                ['value' => 'kuliah_si', 'label' => 'Sistem Informasi', 'icon' => 'school'],
+                ['value' => 'kuliah_ptik', 'label' => 'Pend Teknik Informatika', 'icon' => 'school'],
+            ];
+
+            $kelompokMetaTemplate = [
+                'smk_tkj' => ['judul' => 'SMK TKJ', 'deskripsi' => 'Tugas peserta SMK Teknik Komputer dan Jaringan · minimal magang 5 bulan', 'icon' => 'lan'],
+                'smk_rpl' => ['judul' => 'SMK RPL', 'deskripsi' => 'Tugas peserta SMK Rekayasa Perangkat Lunak · minimal magang 5 bulan', 'icon' => 'code'],
+                'smk_sija' => ['judul' => 'SMK SIJA', 'deskripsi' => 'Tugas peserta SMK Sistem Informasi Jaringan dan Aplikasi · minimal magang 5 bulan', 'icon' => 'hub'],
+                'kuliah_ti' => ['judul' => 'Teknik Informatika', 'deskripsi' => 'Tugas peserta jurusan Teknik Informatika · magang 1–4 bulan', 'icon' => 'school'],
+                'kuliah_si' => ['judul' => 'Sistem Informasi', 'deskripsi' => 'Tugas peserta jurusan Sistem Informasi · magang 1–4 bulan', 'icon' => 'school'],
+                'kuliah_ptik' => ['judul' => 'Pend Teknik Informatika', 'deskripsi' => 'Tugas peserta jurusan Pend Teknik Informatika · magang 1–4 bulan', 'icon' => 'school'],
+            ];
+
+            $templateTargetAktif = in_array($templateTarget, array_keys($kelompokMetaTemplate), true) ? $templateTarget : '';
+            $kelompokDitampilkanTemplate = $templateTargetAktif !== '' ? [$templateTargetAktif] : array_keys($kelompokMetaTemplate);
+        @endphp
+
+        {{-- Filter kelompok --}}
+        <div class="border-b border-slate-200 bg-slate-50/70 px-6 py-4">
+            <div class="flex flex-wrap items-center gap-2" aria-label="Filter kelompok peserta">
+                @foreach ($filterKelompokTemplate as $filter)
+                    @php
+                        $aktif = $templateTargetAktif === $filter['value'];
+                        $filterUrl = $filter['value'] === ''
+                            ? route('admin-peserta.pengumpulan-tugas.index')
+                            : route('admin-peserta.pengumpulan-tugas.index', ['template_target' => $filter['value']]);
+                    @endphp
+                    <a href="{{ $filterUrl }}#daftar-penugasan"
+                        @class([
+                            'inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold transition',
+                            'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-[0_8px_20px_rgba(14,165,233,0.24)]' => $aktif,
+                            'border border-slate-200 bg-white text-slate-600 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700' => !$aktif,
+                        ])
+                        @if ($aktif) aria-current="page" @endif>
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        {{ $filter['label'] }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Daftar penugasan --}}
+        <div class="space-y-6 p-6">
+            @if ($tugasList->isEmpty())
+                <div class="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-14 text-center">
+                    <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    <p class="mt-3 text-sm font-bold text-slate-500">Belum ada template tugas yang diunggah.</p>
+                    <p class="mt-1 text-xs text-slate-400">Unggah file template Excel di menu Tugas Mingguan agar daftar penugasan tampil mengikuti isi setiap sheet.</p>
+                </div>
+            @else
+                @foreach ($kelompokDitampilkanTemplate as $target)
+                    @php
+                        $meta = $kelompokMetaTemplate[$target];
+                        $groupTasks = $tugasList->where('target_peserta', $target)->sortBy([['minggu_ke', 'asc'], ['rilis_hari_ke', 'asc'], ['id_tugas', 'asc']])->values();
+                    @endphp
+                    @continue($groupTasks->isEmpty())
+
+                    <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/70 ring-1 ring-slate-100">
+                        <div class="flex items-center justify-between gap-4 bg-slate-800 px-5 py-3 text-white">
+                            <div class="flex items-center gap-3">
+                                <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/10">
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                </span>
+                                <h3 class="text-base font-bold tracking-wide">{{ $meta['judul'] }}</h3>
+                            </div>
+                            <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{{ $groupTasks->count() }} penugasan</span>
+                        </div>
+
+                        <div class="border-b border-sky-100 bg-sky-50 px-5 py-3 text-sm font-semibold text-slate-700">{{ $meta['deskripsi'] }}</div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full min-w-[980px] border-collapse text-left text-sm">
+                                <thead>
+                                    <tr class="bg-sky-600 text-xs font-bold uppercase tracking-wide text-white">
+                                        <th class="w-[110px] border-r border-sky-500 px-4 py-3 text-center">Minggu Ke</th>
+                                        <th class="w-[190px] border-r border-sky-500 px-4 py-3">Materi &amp; Laporan</th>
+                                        <th class="min-w-[320px] border-r border-sky-500 px-4 py-3">Tugas</th>
+                                        <th class="w-[140px] border-r border-sky-500 px-4 py-3 text-center">Hari Tampil</th>
+                                        <th class="w-[150px] border-r border-sky-500 px-4 py-3 text-center">Hari Deadline</th>
+                                        <th class="w-[140px] px-4 py-3 text-center">Jam Deadline</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    @foreach ($groupTasks->groupBy('minggu_ke') as $minggu => $tugasMinggu)
+                                        @foreach ($tugasMinggu as $baris => $tugas)
+                                            @php $isLaporan = $tugas->kategori_tugas === 'laporan'; @endphp
+                                            <tr @class(['transition hover:bg-sky-50/70', 'bg-purple-50/40' => $isLaporan, 'bg-white' => !$isLaporan])>
+                                                @if ($baris === 0)
+                                                    <td rowspan="{{ $tugasMinggu->count() }}" class="border-r border-slate-200 bg-amber-50 px-4 py-4 text-center align-middle">
+                                                        <span class="inline-flex h-10 min-w-10 items-center justify-center rounded-xl bg-amber-100 px-3 font-extrabold text-amber-800 ring-1 ring-amber-200">{{ $minggu ?: '-' }}</span>
+                                                    </td>
+                                                @endif
+                                                <td class="border-r border-slate-200 px-4 py-4 align-top">
+                                                    <span @class(['inline-flex rounded-full px-3 py-1 text-xs font-bold', 'bg-purple-100 text-purple-700' => $isLaporan, 'bg-amber-100 text-amber-700' => !$isLaporan])>{{ $tugas->materi ?: ($isLaporan ? 'Laporan' : 'Materi') }}</span>
+                                                </td>
+                                                <td class="border-r border-slate-200 px-4 py-4 align-top">
+                                                    <div class="flex items-start justify-between gap-4">
+                                                        <div>
+                                                            <p class="font-semibold leading-6 text-slate-900">{{ $tugas->judul }}</p>
+                                                            <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400">
+                                                                <span>{{ $tugas->kode_tugas ?: 'Tanpa kode' }}</span>
+                                                                <span class="inline-flex items-center gap-1">
+                                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                                                    {{ $tugas->penugasan_peserta_count }} peserta
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <form action="{{ route('admin-peserta.tugas.destroy', $tugas) }}" method="POST" class="shrink-0" onsubmit="return confirm('Hapus tugas dan seluruh jadwal pesertanya?');">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit" class="rounded-lg p-2 text-rose-500 transition hover:bg-rose-50" title="Hapus penugasan">
+                                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M9 7V4.5h6V7M8 10v7M12 10v7M16 10v7M6.5 7l.7 12h9.6l.7-12"/></svg>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                                <td class="border-r border-slate-200 px-4 py-4 text-center font-medium text-slate-700">{{ ucfirst($tugas->hari_tampil ?: '-') }}</td>
+                                                <td class="border-r border-slate-200 px-4 py-4 text-center font-medium text-slate-700">{{ ucfirst($tugas->hari_deadline ?: '-') }}</td>
+                                                <td class="px-4 py-4 text-center">
+                                                    <span class="inline-flex rounded-xl bg-slate-100 px-3 py-1.5 font-bold tabular-nums text-slate-700">{{ $tugas->jam_deadline ? substr((string) $tugas->jam_deadline, 0, 5) : '-' }}</span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                @endforeach
+            @endif
+        </div>
+    </section>
 </div>
 @endsection

@@ -21,6 +21,7 @@ use App\Http\Controllers\AdminPeserta\LaporanPesertaController as AdminLaporanPe
 use App\Http\Controllers\AdminPeserta\LaporanPembayaranController as AdminLaporanPembayaranController;
 use App\Http\Controllers\AdminPeserta\LaporanAbsensiController as AdminLaporanAbsensiController;
 use App\Http\Controllers\AdminPeserta\LaporanPenugasanController as AdminLaporanPenugasanController;
+use App\Http\Controllers\AdminPeserta\LaporanMingguanController as AdminLaporanMingguanController;
 use App\Http\Controllers\AdminPeserta\TugasController as AdminTugasController;
 use App\Http\Controllers\AdminPeserta\PermintaanMagangController as AdminPermintaanMagangController;
 use App\Http\Controllers\AdminPeserta\DataAbsensiController as AdminDataAbsensiController;
@@ -271,17 +272,25 @@ Route::middleware('admin.peserta')
         Route::get('/tugas/template/download', [AdminTugasController::class, 'downloadTemplate'])
             ->name('tugas.template.download');
 
-        Route::post('/tugas/template-laporan', [AdminTugasController::class, 'storeTemplateLaporan'])
-            ->name('tugas.template-laporan.store');
-
-        Route::delete('/tugas/template-laporan/{templateLaporan}', [AdminTugasController::class, 'destroyTemplateLaporan'])
-            ->name('tugas.template-laporan.destroy');
-
         Route::put('/tugas/{tugas}', [AdminTugasController::class, 'update'])
             ->name('tugas.update');
 
         Route::delete('/tugas/{tugas}', [AdminTugasController::class, 'destroy'])
             ->name('tugas.destroy');
+
+        /* Laporan Mingguan (peserta) */
+        Route::get('/laporan-mingguan', [AdminLaporanMingguanController::class, 'index'])
+            ->name('laporan-mingguan.index');
+
+        Route::get('/laporan-mingguan/{laporanMingguan}/download', [AdminLaporanMingguanController::class, 'download'])
+            ->whereNumber('laporanMingguan')
+            ->name('laporan-mingguan.download');
+
+        Route::post('/laporan-mingguan/template-laporan', [AdminLaporanMingguanController::class, 'storeTemplateLaporan'])
+            ->name('laporan-mingguan.template.store');
+
+        Route::delete('/laporan-mingguan/template-laporan/{templateLaporan}', [AdminLaporanMingguanController::class, 'destroyTemplateLaporan'])
+            ->name('laporan-mingguan.template.destroy');
 
         /* Pengumpulan Tugas */
         Route::get('/pengumpulan-tugas', [AdminPengumpulanTugasController::class, 'index'])
