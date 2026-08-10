@@ -17,7 +17,6 @@
     closeDetail() { this.detailOpen = false; }
 }">
 
-    {{-- Judul --}}
     <section class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
             <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">Data Peserta Magang</h1>
@@ -35,17 +34,16 @@
         </div>
     </section>
 
-    {{-- Alert --}}
     @if(session('success'))
         <div class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-            <svg class="mt-0.5 h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span>{{ session('success') }}</span>
         </div>
     @endif
 
     @if(session('error'))
         <div class="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
-            <svg class="mt-0.5 h-5 w-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <svg class="mt-0.5 h-5 w-5 shrink-0 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span>{{ session('error') }}</span>
         </div>
     @endif
@@ -53,7 +51,7 @@
     @if($errors->any())
         <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
             <div class="flex items-start gap-3">
-                <svg class="mt-0.5 h-5 w-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <svg class="mt-0.5 h-5 w-5 shrink-0 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <div>
                     <p>Data belum dapat diproses.</p>
                     <ul class="mt-1 list-disc space-y-1 pl-5 text-xs font-medium">
@@ -66,31 +64,27 @@
         </div>
     @endif
 
-    {{-- Tabel --}}
-    <section class="overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.06)]">
-
-        {{-- Header tabel tanpa filter status --}}
-        <div class="border-b border-sky-100 bg-gradient-to-r from-sky-50/80 via-white to-cyan-50/70 px-6 py-4">
+    <section class="overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
+        <div class="border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5">
             <div>
-                <h2 class="text-base font-extrabold text-slate-900">Daftar Peserta</h2>
-                <p class="mt-1 text-xs text-slate-500">Kelola data peserta magang yang terdaftar.</p>
+                <h2 class="text-lg font-bold text-slate-950">Daftar Peserta</h2>
+                <p class="mt-0.5 text-sm text-slate-500">Kelola data peserta magang yang terdaftar.</p>
             </div>
         </div>
 
-        {{-- Tabel --}}
         <div class="overflow-x-auto">
             <table class="w-full min-w-[980px] border-collapse text-left">
-                <thead>
-                    <tr class="border-b border-slate-200 bg-slate-50/80 text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">
-                        <th class="px-5 py-4">Nama Peserta</th>
-                        <th class="px-5 py-4">Instansi</th>
-                        <th class="px-5 py-4">Pendidikan</th>
-                        <th class="px-5 py-4">Periode</th>
-                        <th class="px-5 py-4 text-center">Status</th>
-                        <th class="px-5 py-4 text-center">Aksi</th>
+                <thead class="bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50">
+                    <tr>
+                        <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Nama Peserta</th>
+                        <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Instansi</th>
+                        <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Pendidikan</th>
+                        <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Periode</th>
+                        <th class="px-5 py-3.5 text-center text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Status</th>
+                        <th class="px-5 py-3.5 text-center text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-100 bg-white/80">
                     @forelse($peserta as $item)
                         @php
                             $isActive = $item->status === 'aktif';
@@ -116,10 +110,10 @@
                         <tr class="transition hover:bg-sky-50/40">
                             <td class="px-5 py-4">
                                 <div class="flex items-center gap-3">
-                                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-sky-100 to-cyan-100 text-sm font-extrabold text-sky-700 ring-1 ring-sky-200">{{ strtoupper(mb_substr($item->user->nama ?? 'P', 0, 1)) }}</span>
+                                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-sky-100 to-cyan-100 text-xs font-extrabold text-sky-700 ring-1 ring-sky-200/80">{{ strtoupper(mb_substr($item->user->nama ?? 'P', 0, 1)) }}</span>
                                     <div class="min-w-0">
-                                        <p class="truncate text-sm font-extrabold text-slate-900">{{ $item->user->nama ?? '-' }}</p>
-                                        <p class="mt-0.5 truncate text-xs font-medium text-slate-500">{{ $item->user->email ?? '-' }}</p>
+                                        <p class="max-w-52 truncate text-sm font-bold text-slate-900">{{ $item->user->nama ?? '-' }}</p>
+                                        <p class="mt-0.5 max-w-52 truncate text-xs text-slate-500">{{ $item->user->email ?? '-' }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -137,18 +131,18 @@
                             </td>
                             <td class="px-5 py-4 text-center">
                                 @if($isActive)
-                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 ring-1 ring-emerald-100/50">
                                         <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Aktif
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">
+                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 ring-1 ring-indigo-100/50">
                                         <span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span> Nonaktif
                                     </span>
                                 @endif
                             </td>
                             <td class="px-5 py-4">
                                 <div class="flex items-center justify-center gap-2">
-                                    <button type="button" @click='openDetail(@json($detailPayload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT))' class="inline-flex items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-700 transition hover:bg-sky-100">
+                                    <button type="button" @click="openDetail(@js($detailPayload))" class="inline-flex items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-700 transition hover:bg-sky-100">
                                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                         Detail
                                     </button>
@@ -179,7 +173,6 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
         @if($peserta->hasPages())
             @php
                 $peserta->appends(request()->except('page'));
@@ -236,7 +229,6 @@
         @endif
     </section>
 
-    {{-- Modal Import --}}
     <template x-teleport="body">
         <div x-show="importOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-md" @click.self="if (!importLoading) importOpen = false">
             <section x-show="importOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="my-auto w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_rgba(15,23,42,0.30)]">
@@ -290,7 +282,6 @@
         </div>
     </template>
 
-    {{-- Loading Overlay --}}
     <template x-teleport="body">
         <div x-show="importLoading" x-cloak x-transition.opacity class="fixed inset-0 z-[10000] flex h-screen w-screen items-center justify-center bg-slate-950/70 p-4 backdrop-blur-md">
             <section x-show="importLoading" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="w-full max-w-sm rounded-3xl bg-white px-8 py-9 text-center shadow-[0_30px_90px_rgba(15,23,42,0.35)]" role="status" aria-live="polite">
@@ -306,7 +297,6 @@
         </div>
     </template>
 
-    {{-- Notifikasi Import --}}
     <template x-teleport="body">
         <div x-show="importResultOpen" x-cloak x-transition:enter="transition ease-out duration-250" x-transition:enter-start="opacity-0 translate-y-3 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-180" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-3 scale-95" x-init="if (importResultOpen) setTimeout(() => importResultOpen = false, 7000)" class="fixed right-4 top-4 z-[10001] w-[calc(100%-2rem)] max-w-md" role="alert" aria-live="assertive">
             <div :class="importResultType === 'success' ? 'border-emerald-200 bg-white shadow-[0_20px_55px_rgba(5,150,105,0.20)]' : 'border-rose-200 bg-white shadow-[0_20px_55px_rgba(225,29,72,0.20)]'" class="flex items-start gap-4 rounded-2xl border p-4">
@@ -326,20 +316,26 @@
         </div>
     </template>
 
-    {{-- Modal Detail --}}
     <template x-teleport="body">
-        <div x-show="detailOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-md" @click.self="closeDetail()">
+        <div x-show="detailOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center overflow-y-auto bg-slate-950/60 p-4" @click.self="closeDetail()">
             <section x-show="detailOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="my-auto max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_rgba(15,23,42,0.30)]">
                 <header class="flex items-start justify-between gap-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5">
                     <div>
-                        <span class="inline-flex items-center rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-sky-700 ring-1 ring-sky-200">Detail Peserta</span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="inline-flex items-center rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-sky-700 ring-1 ring-sky-200">Detail Peserta</span>
+                            <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.1em]"
+                                  :class="detail.status === 'Aktif' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-indigo-100 text-indigo-700 border-indigo-200'"
+                                  x-text="detail.status">
+                            </span>
+                        </div>
                         <h3 class="mt-3 text-xl font-extrabold text-slate-950" x-text="detail.nama || '-'">-</h3>
                         <p class="mt-1 text-sm text-slate-500">Informasi lengkap peserta magang.</p>
                     </div>
-                    <button type="button" @click="closeDetail()" class="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-rose-50 hover:text-rose-600">
+                    <button type="button" @click="closeDetail()" class="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-rose-50 hover:text-rose-600" aria-label="Tutup detail">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </header>
+
                 <div class="max-h-[calc(92vh-150px)] overflow-y-auto px-6 py-6">
                     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach([
@@ -357,7 +353,6 @@
                             ['Durasi Magang', 'durasi_magang'],
                             ['Nama Pembimbing', 'nama_pembimbing'],
                             ['No. HP Pembimbing', 'no_hp_pembimbing'],
-                            ['Status', 'status'],
                         ] as [$label, $key])
                             <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                                 <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{{ $label }}</p>

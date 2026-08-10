@@ -30,7 +30,6 @@
         </div>
     @endif
 
-    {{-- Template Laporan Peserta --}}
     <section class="overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
         <div class="h-1.5 bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600"></div>
 
@@ -82,7 +81,6 @@
                 </button>
             </form>
 
-            {{-- Daftar template tersimpan --}}
             <div>
                 <h3 class="text-sm font-bold text-slate-900">Template yang Tersimpan</h3>
                 <div class="mt-3 space-y-3">

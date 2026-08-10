@@ -5,13 +5,11 @@
 @section('content')
 <div x-data="taskTemplatePage()" class="space-y-6">
 
-    {{-- Judul --}}
     <header>
         <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">Kelola Tugas Magang</h1>
         <p class="mt-1 text-sm text-slate-500">Unggah template penugasan dan sistem akan membentuk jadwal serta deadline berbeda untuk setiap peserta berdasarkan tanggal mulai magangnya.</p>
     </header>
 
-    {{-- Alert --}}
     @if (session('success'))
         <div class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
             <svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -33,11 +31,8 @@
         </div>
     @endif
 
-    {{-- Section 1: Unggah Template Tugas --}}
     <section class="overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
         <div class="h-1.5 bg-gradient-to-r from-sky-600 via-blue-500 to-sky-600"></div>
-
-        {{-- Header --}}
         <div class="border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5 lg:flex lg:items-center lg:justify-between">
             <div class="flex items-start gap-3">
                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-sky-700 shadow-sm ring-1 ring-sky-100">
@@ -56,12 +51,9 @@
             </div>
         </div>
 
-        {{-- Body --}}
         <div class="grid gap-6 p-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <form action="{{ route('admin-peserta.tugas.upload') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf
-
-                {{-- Sheet info --}}
                 <div>
                     <div class="mb-3 flex items-center justify-between">
                         <div>
@@ -98,7 +90,6 @@
                     </div>
                 </div>
 
-                {{-- Upload file --}}
                 <div>
                     <div class="mb-3 flex items-center justify-between">
                         <p class="text-sm font-semibold text-slate-800">Pilih File Tugas Excel</p>
@@ -134,7 +125,6 @@
                 </button>
             </form>
 
-            {{-- Sidebar alur --}}
             <aside class="rounded-2xl border border-sky-100 bg-gradient-to-b from-sky-50 to-white p-5">
                 <div class="flex items-center gap-3">
                     <span class="grid h-10 w-10 place-items-center rounded-xl bg-sky-100 text-sky-700">
@@ -167,10 +157,6 @@
             </aside>
         </div>
     </section>
-
-    {{-- Kelola Tugas Magang sekarang fokus pada unggah template Excel.
-         Bagian "Template Laporan Peserta" dipindah ke menu Laporan Mingguan,
-         dan "Daftar Penugasan dari Template" dipindah ke menu Data Penugasan. --}}
 </div>
 @endsection
 

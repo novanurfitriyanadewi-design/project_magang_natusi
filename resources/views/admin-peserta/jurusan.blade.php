@@ -40,7 +40,6 @@
     },
 }" @keydown.escape.window="formOpen = false" x-effect="document.body.classList.toggle('overflow-hidden', formOpen)">
 
-    {{-- Judul --}}
     <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">Kelola Jurusan</h1>
@@ -52,7 +51,6 @@
         </button>
     </header>
 
-    {{-- Alert --}}
     @if (session('success'))
         <div class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
             <svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -88,7 +86,6 @@
         $smk = $jurusanList->where('tingkat', 'smk');
     @endphp
 
-    {{-- Grup Jurusan Kuliah --}}
     <section class="mt-8 overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
         <div class="flex flex-col gap-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -165,7 +162,6 @@
         </div>
     </section>
 
-    {{-- Grup Jurusan SMK --}}
     <section class="mt-8 overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
         <div class="flex flex-col gap-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -242,7 +238,6 @@
         </div>
     </section>
 
-    {{-- Modal Tambah/Edit --}}
     <div x-show="formOpen" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-950/60 p-4" @click.self="formOpen = false">
         <div x-show="formOpen" x-transition.scale.origin.center class="relative w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl">
             <header class="flex items-start justify-between gap-4 bg-gradient-to-r from-white via-sky-50/50 to-blue-50/40 px-6 py-5 border-b border-slate-200 rounded-t-3xl">

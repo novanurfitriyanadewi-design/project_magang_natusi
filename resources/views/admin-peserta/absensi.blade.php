@@ -10,13 +10,11 @@
     }
 }">
 
-    {{-- Judul --}}
     <section class="mb-6">
         <h1 class="text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">Data Absensi</h1>
         <p class="mt-1 text-sm text-slate-500">Pantau kehadiran peserta magang dan karyawan secara real-time.</p>
     </section>
 
-    {{-- Statistik --}}
     @php
         $totalHadir = $absensi->filter(fn($a) => $a->status === 'Hadir')->count();
         $totalTerlambat = $absensi->filter(fn($a) => $a->status === 'Terlambat')->count();
@@ -26,7 +24,6 @@
     @endphp
 
     <section class="grid grid-cols-1 gap-5 mb-6 sm:grid-cols-2 lg:grid-cols-4">
-        {{-- Hadir --}}
         <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="absolute left-0 top-0 h-full w-1 bg-emerald-500"></div>
             <div class="flex items-start justify-between">
@@ -41,7 +38,6 @@
             </div>
         </div>
 
-        {{-- Terlambat --}}
         <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="absolute left-0 top-0 h-full w-1 bg-amber-500"></div>
             <div class="flex items-start justify-between">
@@ -56,7 +52,6 @@
             </div>
         </div>
 
-        {{-- Izin & Sakit --}}
         <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="absolute left-0 top-0 h-full w-1 bg-sky-500"></div>
             <div class="flex items-start justify-between">
@@ -71,7 +66,6 @@
             </div>
         </div>
 
-        {{-- Alpa --}}
         <div class="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="absolute left-0 top-0 h-full w-1 bg-rose-500"></div>
             <div class="flex items-start justify-between">
@@ -87,10 +81,7 @@
         </div>
     </section>
 
-    {{-- Tabel --}}
     <section class="overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
-
-        {{-- Header Filter --}}
         <div class="flex flex-col gap-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <h2 class="text-lg font-bold text-slate-950">Data Absensi Hari Ini</h2>
@@ -117,7 +108,6 @@
             </form>
         </div>
 
-        {{-- Tabel --}}
         <div class="overflow-x-auto">
             <table class="w-full min-w-[980px] border-collapse text-left">
                 <thead>
@@ -176,7 +166,6 @@
                             </td>
                         </tr>
 
-                        {{-- Row Map --}}
                         <tr id="map-row-{{ $index }}" class="hidden bg-slate-50/50">
                             <td colspan="6" class="px-6 py-4">
                                 <div class="h-48 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-inner">
@@ -202,7 +191,6 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
         @if($absensi->hasPages())
             <div class="border-t border-sky-100 bg-sky-50/50 px-6 py-4">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -218,7 +206,6 @@
     </section>
 </div>
 
-{{-- Script --}}
 <script>
     function toggleMap(id) {
         const row = document.getElementById(id);

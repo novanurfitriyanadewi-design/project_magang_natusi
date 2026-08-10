@@ -2,7 +2,7 @@
 @section('title', 'Aturan Perusahaan')
 @section('content')
     <section class="mb-6">
-        <h1 class="headline text-2xl md:text-3xl font-bold text-slate-900 mb-1">
+        <h1 class="mt-5 text-2xl font-bold text-slate-900 md:text-3xl mb-1">
             Aturan Perusahaan
         </h1>
         <p class="text-sm text-slate-500">

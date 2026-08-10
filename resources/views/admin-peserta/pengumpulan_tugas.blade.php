@@ -54,13 +54,11 @@
 
 <div class="space-y-6">
 
-    {{-- Judul --}}
     <section>
         <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">Data Pengumpulan Tugas</h1>
         <p class="mt-1 max-w-3xl text-sm leading-6 text-slate-500">Pantau peserta yang mengumpulkan, terlambat, dan belum mengerjakan tugas magang.</p>
     </section>
 
-    {{-- Alert --}}
     @if(session('success'))
         <div class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
             <svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -75,7 +73,6 @@
         </div>
     @endif
 
-    {{-- SECTION 1: Sudah Mengumpulkan --}}
     <section class="overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
         <header class="flex flex-col gap-3 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -85,7 +82,6 @@
             <span class="w-fit rounded-xl bg-white px-4 py-2 text-xs font-bold text-sky-700 shadow-sm ring-1 ring-slate-200">{{ number_format($submitted->total()) }} data</span>
         </header>
 
-        {{-- Filter jenjang --}}
         <div class="border-b border-sky-100 bg-white px-6 py-4">
             <nav class="flex flex-wrap items-center gap-2" aria-label="Filter jenjang peserta">
                 @foreach(['semua' => 'Semua', 'smk-tkj' => 'SMK TKJ', 'smk-rpl' => 'SMK RPL', 'smk-sija' => 'SMK SIJA', 'kuliah-ti' => 'Teknik Informatika', 'kuliah-si' => 'Sistem Informasi', 'kuliah-ptik' => 'Pend Teknik Informatika'] as $value => $label)
@@ -98,7 +94,6 @@
             </nav>
         </div>
 
-        {{-- Tabel --}}
         <div class="overflow-x-auto">
             <table class="w-full min-w-[1260px] border-collapse text-left">
                 <thead>
@@ -199,7 +194,6 @@
         @endif
     </section>
 
-    {{-- SECTION 2: Belum Mengumpulkan --}}
     <section class="overflow-hidden rounded-3xl border border-amber-100/80 bg-white/95 shadow-[0_20px_50px_rgba(180,83,9,0.08)] backdrop-blur">
         <header class="flex flex-col gap-3 border-b border-amber-100 bg-gradient-to-r from-amber-50 to-orange-50/80 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-3">
@@ -307,7 +301,6 @@
         @endif
     </section>
 
-    {{-- Daftar Penugasan dari Template Excel --}}
     <section id="daftar-penugasan" class="overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
         <div class="h-1.5 bg-gradient-to-r from-cyan-600 via-sky-500 to-blue-700"></div>
 
@@ -347,7 +340,6 @@
             $kelompokDitampilkanTemplate = $templateTargetAktif !== '' ? [$templateTargetAktif] : array_keys($kelompokMetaTemplate);
         @endphp
 
-        {{-- Filter kelompok --}}
         <div class="border-b border-slate-200 bg-slate-50/70 px-6 py-4">
             <div class="flex flex-wrap items-center gap-2" aria-label="Filter kelompok peserta">
                 @foreach ($filterKelompokTemplate as $filter)

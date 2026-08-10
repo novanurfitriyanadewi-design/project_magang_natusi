@@ -73,6 +73,7 @@
             ['label' => 'Data Peserta Magang', 'route' => 'admin-peserta.peserta.index', 'match' => 'admin-peserta.peserta.*', 'icon' => 'users', 'tour' => 'internship-participants'],
             ['label' => 'Absensi Peserta', 'route' => 'admin-peserta.absensi.index', 'match' => 'admin-peserta.absensi.*', 'icon' => 'attendance-user', 'tour' => 'attendance-data'],
             ['label' => 'Pembayaran Sumbangan', 'route' => 'admin-peserta.pembayaran.index', 'match' => 'admin-peserta.pembayaran.*', 'icon' => 'payment', 'tour' => 'pembayaran-peserta'],
+            ['label' => 'Kelola Jurusan', 'route' => 'admin-peserta.jurusan.index', 'match' => 'admin-peserta.jurusan.*', 'icon' => 'rules', 'tour' => 'manage-jurusan'],
             [
                 'label' => 'Kelola Tugas',
                 'icon' => 'tasks',
@@ -84,7 +85,6 @@
                     ['label' => 'Data Penugasan', 'route' => 'admin-peserta.pengumpulan-tugas.index', 'match' => 'admin-peserta.pengumpulan-tugas.*', 'tour' => 'task-submissions'],
                 ],
             ],
-            ['label' => 'Kelola Jurusan', 'route' => 'admin-peserta.jurusan.index', 'match' => 'admin-peserta.jurusan.*', 'icon' => 'rules', 'tour' => 'manage-jurusan'],
             [
                 'label' => 'Laporan',
                 'icon' => 'rules',
