@@ -475,9 +475,7 @@ Route::middleware(['auth', 'role:karyawan'])
             return view('karyawan.cuti.index');
         })->name('cuti.index');
 
-        Route::get('/payslip', function () {
-            return view('karyawan.payslip.index');
-        })->name('payslip.index');
+        Route::get('/payslip', [\App\Http\Controllers\Karyawan\PayslipController::class, 'index'])->name('payslip.index');
 
         Route::get('/reimbursement', function () {
             return view('karyawan.reimbursement.index');
