@@ -32,6 +32,7 @@
                 'tour' => 'karyawan',
                 'children' => [
                     ['label' => 'Data Karyawan', 'route' => 'admin.karyawan.index', 'match' => 'admin.karyawan.*', 'tour' => 'data-karyawan'],
+                    ['label' => 'Pengumuman', 'route' => 'admin-karyawan.pengumuman.index', 'match' => 'admin-karyawan.pengumuman.*', 'icon' => 'announcement', 'tour' => 'pengumuman'],
                     ['label' => 'Absensi Karyawan', 'route' => 'admin.absensi-karyawan.index', 'match' => 'admin.absensi-karyawan.*', 'tour' => 'absensi-karyawan'],
                     ['label' => 'Pembayaran Gaji', 'route' => 'admin.pembayaran-karyawan.index', 'match' => 'admin.pembayaran-karyawan.*', 'tour' => 'pembayaran-karyawan'],
                     ['label' => 'Pengajuan Resign', 'route' => 'admin.resign.index', 'match' => 'admin.resign.*', 'tour' => 'resign'],
@@ -93,6 +94,7 @@
             ['label' => 'Dashboard', 'route' => 'admin-karyawan.dashboard', 'match' => 'admin-karyawan.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
             ['label' => 'Permintaan Lamaran', 'route' => 'admin-karyawan.permintaan-lamaran.index', 'match' => 'admin-karyawan.permintaan-lamaran.*', 'icon' => 'inbox', 'tour' => 'permintaan-lamaran'],
             ['label' => 'Data Karyawan', 'route' => 'admin-karyawan.karyawan.index', 'match' => 'admin-karyawan.karyawan.*', 'icon' => 'users', 'tour' => 'data-karyawan'],
+            ['label' => 'Pengumuman', 'route' => 'admin-karyawan.pengumuman.index', 'match' => 'admin-karyawan.pengumuman.*', 'icon' => 'announcement', 'tour' => 'pengumuman'],
             ['label' => 'Absensi Karyawan', 'route' => 'admin-karyawan.absensi-karyawan.index', 'match' => 'admin-karyawan.absensi-karyawan.*', 'icon' => 'attendance-user', 'tour' => 'absensi-karyawan'],
             ['label' => 'Pembayaran Gaji', 'route' => 'admin-karyawan.pembayaran-karyawan.index', 'match' => 'admin-karyawan.pembayaran-karyawan.*', 'icon' => 'payment', 'tour' => 'pembayaran-karyawan'],
             ['label' => 'Pengajuan Resign', 'route' => 'admin-karyawan.resign.index', 'match' => 'admin-karyawan.resign.*', 'icon' => 'clock', 'tour' => 'resign'],
