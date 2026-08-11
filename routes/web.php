@@ -30,7 +30,6 @@ use App\Http\Controllers\AdminPeserta\DataMetodePembayaranController as AdminDat
 use App\Http\Controllers\AdminPeserta\JurusanController as AdminJurusanController;
 use App\Http\Controllers\AdminPeserta\PengumpulanTugasController as AdminPengumpulanTugasController;
 use App\Http\Controllers\AdminPeserta\NotifikasiController as AdminNotifikasiController;
-use App\Http\Controllers\AdminPeserta\NotifikasiController as UserNotifikasiController;
 
 // Admin Karyawan Controllers
 use App\Http\Controllers\AdminKaryawan\DashboardController as AdminKaryawanDashboardController;
@@ -86,14 +85,14 @@ Route::middleware('auth')->get('/dashboard', function () {
     $user = auth()->user();
 
     return match ($user?->role) {
-        'superadmin'                => redirect()->route('superadmin.dashboard'),
+        'superadmin'                  => redirect()->route('superadmin.dashboard'),
         'admin',
-        'admin_peserta'             => redirect()->route('admin-peserta.dashboard'),
-        'admin_karyawan'            => redirect()->route('admin-karyawan.dashboard'),
-        'karyawan'                  => redirect()->route('karyawan.dashboard'),
+        'admin_peserta'              => redirect()->route('admin-peserta.dashboard'),
+        'admin_karyawan'             => redirect()->route('admin-karyawan.dashboard'),
+        'karyawan'                   => redirect()->route('karyawan.dashboard'),
         'pelamar', 'pelamar_karyawan' => redirect()->route('pengajuan.status'),
-        'peserta'                   => redirect()->route('peserta-magang.dashboard'),
-        default                     => view('dashboard'),
+        'peserta'                    => redirect()->route('peserta-magang.dashboard'),
+        default                      => view('dashboard'),
     };
 })->name('dashboard');
 
@@ -123,10 +122,10 @@ Route::middleware('auth')->group(function (): void {
         ->name('profile.photo.show');
 
     // Notifikasi
-    Route::patch('/notifikasi/baca-semua', [UserNotifikasiController::class, 'tandaiSemuaDibacaWeb'])
+    Route::patch('/notifikasi/baca-semua', [AdminNotifikasiController::class, 'tandaiSemuaDibacaWeb'])
         ->name('notifikasi.read-all');
 
-    Route::patch('/notifikasi/{notifikasi}/baca', [UserNotifikasiController::class, 'tandaiDibacaWeb'])
+    Route::patch('/notifikasi/{notifikasi}/baca', [AdminNotifikasiController::class, 'tandaiDibacaWeb'])
         ->whereNumber('notifikasi')
         ->name('notifikasi.read');
 });
@@ -482,7 +481,10 @@ Route::middleware(['auth', 'role:karyawan'])
         Route::get('/dashboard', [KaryawanDashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/absensi', [KaryawanDashboardController::class, 'absensiIndex'])->name('absensi.index');
-        Route::post('/absensi/clock-in', [KaryawanDashboardController::class, 'clockIn'])->name('absensi.clockin');
+        Route::post('/absensi', [KaryawanDashboardController::class, 'absensiStore'])->name('absensi.store');
+
+        // Menambahkan rute alias untuk clockin agar sesuai dengan panggilan route('karyawan.absensi.clockin') di Blade
+        Route::post('/absensi/clockin', [KaryawanDashboardController::class, 'absensiStore'])->name('absensi.clockin');
 
         // Resign
         Route::get('/resign/create', [AdminResignController::class, 'create'])->name('resign.create');

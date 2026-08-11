@@ -130,7 +130,6 @@
                 'children' => [
                     ['label' => 'Ajukan Cuti', 'route' => 'karyawan.cuti.index', 'match' => 'karyawan.cuti.*', 'tour' => 'cuti'],
                     ['label' => 'Ajukan Resign', 'route' => 'karyawan.resign.create', 'match' => 'karyawan.resign.create', 'tour' => 'resign-create'],
-                    ['label' => 'Status Resign', 'route' => 'karyawan.resign.show', 'match' => 'karyawan.resign.*', 'tour' => 'resign-status'],
                 ],
             ],
             [
