@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Absensi;
 use App\Models\Pengumuman;
 use App\Models\Resign;
+use App\Models\PembayaranKaryawan;
 
 class DashboardController extends Controller
 {
@@ -80,6 +81,14 @@ class DashboardController extends Controller
             ->latest()
             ->take(3)
             ->get();
+
+             $slipGajiTerakhir = null;
+        if ($karyawan) {
+            $slipGajiTerakhir = PembayaranKaryawan::where('karyawan_id', $karyawan->id_karyawan)
+                ->orderByDesc('periode')
+                ->first();
+        }
+
 
         return view('karyawan.dashboard', compact(
             'user',
