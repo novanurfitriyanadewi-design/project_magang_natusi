@@ -12,19 +12,50 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="min-h-screen bg-[#f7f9ff] font-['Inter'] text-slate-900 antialiased lg:h-dvh lg:overflow-hidden">
-    @php
+
+   @php
         $registerRole = $registerRole ?? session('register_role', 'pelamar');
         $isEmployee = $registerRole === 'karyawan';
-        $accent = $isEmployee ? '#cf0a1f' : '#08678f';
-        $accentDark = $isEmployee ? '#b30a1c' : '#075c80';
+
+        // Warna disamakan untuk semua role
+        $accent = '#08678f';
+        $accentDark = '#075c80';
+        $accentSoft = '#e8f4f9';
     @endphp
+
+    <style>
+        /* Tombol upload file ikut warna aksen role aktif (tidak bisa pakai class Tailwind dinamis) */
+        input[type="file"]::file-selector-button {
+            margin-right: 0.75rem;
+            border: 0;
+            border-radius: 0.375rem;
+            background-color: {{ $accent }};
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background-color: {{ $accentDark }};
+        }
+        input[name="portfolio"]::file-selector-button,
+        input[name="pengalaman_kerja"]::file-selector-button {
+            background-color: #64748b;
+        }
+        input[name="portfolio"]::file-selector-button:hover,
+        input[name="pengalaman_kerja"]::file-selector-button:hover {
+            background-color: #475569;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#f7f9ff] font-['Inter'] text-slate-900 antialiased lg:h-dvh lg:overflow-hidden">
 
     <div class="relative flex min-h-screen flex-col overflow-hidden lg:h-dvh lg:min-h-0">
         <div class="pointer-events-none absolute inset-0 -z-10">
-            <div class="absolute -left-28 -top-28 h-[440px] w-[440px] rounded-full bg-blue-100/70 blur-3xl"></div>
-            <div class="absolute -bottom-36 -right-20 h-[420px] w-[420px] rounded-full bg-rose-100/70 blur-3xl"></div>
+            <div class="absolute -left-28 -top-28 h-[440px] w-[440px] rounded-full blur-3xl" style="background-color: {{ $accentSoft }};"></div>
+            <div class="absolute -bottom-36 -right-20 h-[420px] w-[420px] rounded-full bg-rose-50/60 blur-3xl"></div>
         </div>
 
         <main class="flex flex-1 items-center justify-center overflow-y-auto px-0 py-5 sm:px-5 lg:min-h-0 lg:overflow-hidden lg:px-7 lg:py-3">
@@ -34,7 +65,7 @@
             >
                 {{-- Panel Kiri --}}
                 <aside class="relative isolate hidden flex-col overflow-hidden bg-gradient-to-br px-6 py-7 text-white lg:flex lg:min-h-0 lg:px-9 lg:py-9"
-                    style="background-image: linear-gradient(to bottom right, {{ $accent }}, {{ $accentDark }});"
+                    style="background-image: linear-gradient(135deg, {{ $accent }}, {{ $accentDark }});"
                 >
                     <div class="pointer-events-none absolute -bottom-[128px] -right-[118px] -z-10 h-[300px] w-[300px] rounded-full border-[38px] border-white/[0.065]"></div>
                     <div class="pointer-events-none absolute -bottom-[84px] -right-[76px] -z-10 h-[214px] w-[214px] rounded-full border-[38px] border-white/[0.055]"></div>
@@ -42,7 +73,7 @@
                     <a href="{{ route('login') }}" class="grid h-[56px] w-[56px] place-items-center overflow-hidden rounded-md bg-white shadow-md transition hover:opacity-90 sm:h-[62px] sm:w-[62px]">
                         <img
                             src="{{ asset('images/logo.jpeg') }}"
-                            alt="Logo CV Natusi"
+                            alt="CV Natusi Logo"
                             class="h-[48px] w-[48px] object-contain sm:h-[54px] sm:w-[54px]"
                         >
                     </a>
@@ -50,24 +81,24 @@
                     <div class="mt-6 max-w-[420px]">
                         <h1 class="text-[18px] font-bold leading-relaxed tracking-[-0.02em] lg:text-[20px]">
                             @if ($isEmployee)
-                                Bangun Karier Profesional Anda Bersama Kami.
+                                Build Your Professional Career With Us.
                             @else
-                                Gerbang Menuju Pengalaman Magang Terbaik.
+                                Your Gateway to the Best Internship Experience.
                             @endif
                         </h1>
                         <p class="mt-2 text-[13px] font-medium leading-relaxed text-white/75 lg:text-[15px]">
                             @if ($isEmployee)
-                                Bergabunglah bersama tim profesional CV Natusi. Kembangkan bakat, kepemimpinan, dan dorong inovasi bersama kami.
+                                Join the professional team at CV Natusi. Grow your talent, leadership, and drive innovation together with us.
                             @else
-                                Bergabunglah dengan portal eksklusif kami untuk terhubung dengan pemimpin industri dan membangun jalur karier yang lebih terarah.
+                                Join our exclusive portal to connect with industry leaders and build a clearer career path.
                             @endif
                         </p>
                     </div>
 
                     <blockquote class="mt-auto max-w-[420px] border-l-[3px] border-white/50 pl-4 pt-6 text-[13px] italic leading-6 text-white/85">
-                        &ldquo;CV Natusi terus berkomitmen menciptakan ruang tumbuh bagi profesional berbakat untuk mencetak karya berdampak.&rdquo;
+                        &ldquo;CV Natusi remains committed to creating a space for talented professionals to grow and produce impactful work.&rdquo;
                         <footer class="mt-2 text-[11px] font-semibold not-italic text-white">
-                            &mdash; Tim Pengembang Natusi 
+                            &mdash; Natusi Development Team
                         </footer>
                     </blockquote>
                 </aside>
@@ -76,7 +107,7 @@
                 <section class="flex min-h-0 flex-col bg-white px-6 py-6 sm:px-9 sm:py-7 lg:px-10 lg:py-7">
                     <div class="mb-4 flex shrink-0 items-center gap-3 lg:hidden">
                         <span class="grid h-11 w-11 place-items-center overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
-                            <img src="{{ asset('images/logo.jpeg') }}" alt="Logo CV Natusi" class="h-9 w-9 object-contain">
+                            <img src="{{ asset('images/logo.jpeg') }}" alt="CV Natusi Logo" class="h-9 w-9 object-contain">
                         </span>
                         <span class="text-base font-bold" style="color: {{ $accentDark }};">CV Natusi</span>
                     </div>
@@ -371,7 +402,7 @@
                                                 type="file"
                                                 accept=".pdf,.jpg,.jpeg,.png"
                                                 required
-                                                class="mt-1 block w-full text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-[#cf0a1f] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-[#b30a1c]"
+                                                class="mt-1 block w-full text-xs text-slate-600"
                                             >
                                             @error($field)
                                                 <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
@@ -389,7 +420,7 @@
                                                 name="{{ $field }}"
                                                 type="file"
                                                 accept=".pdf,.jpg,.jpeg,.png"
-                                                class="mt-1 block w-full text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-500 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-slate-600"
+                                                class="mt-1 block w-full text-xs text-slate-600"
                                             >
                                             @error($field)
                                                 <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
@@ -473,7 +504,7 @@
                             </div>
                         </div>
 
-                        <p class="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2 text-[11px] leading-5 text-sky-800">
+                        <p class="rounded-lg border px-3 py-2 text-[11px] leading-5" style="border-color: {{ $accentSoft }}; background-color: {{ $accentSoft }}; color: {{ $accentDark }};">
                             @if ($isEmployee)
                                 Email dan kata sandi ini digunakan untuk masuk ke portal pendaftaran karyawan dan memantau pembaruan status seleksi berkas Anda.
                             @else
@@ -518,7 +549,7 @@
 
                         <button
                             type="submit"
-                            class="inline-flex h-[44px] w-full items-center justify-center gap-2 rounded-[8px] px-5 text-[13px] font-semibold tracking-[0.04em] text-white shadow-[0_7px_15px_rgba(8,103,143,0.15)] transition hover:-translate-y-0.5 hover:brightness-95 active:translate-y-0 sm:text-sm"
+                            class="inline-flex h-[44px] w-full items-center justify-center gap-2 rounded-[8px] px-5 text-[13px] font-semibold tracking-[0.04em] text-white shadow-[0_7px_15px_rgba(30,58,95,0.18)] transition hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 sm:text-sm"
                             style="background-image: linear-gradient(to bottom, {{ $accent }}, {{ $accentDark }});"
                         >
                             <span>{{ $isEmployee ? 'KIRIM LAMARAN KARYAWAN' : 'AJUKAN MAGANG' }}</span>
@@ -538,17 +569,17 @@
             </section>
         </main>
 
-        <footer class="flex min-h-14 shrink-0 flex-col items-start justify-between gap-3 border-t border-slate-300/30 bg-[#cfe2ff] px-5 py-3 text-slate-700 sm:px-8 lg:h-14 lg:min-h-14 lg:flex-row lg:items-center lg:px-[max(24px,calc((100vw-1100px)/2))] lg:py-0">
+        <footer class="flex min-h-14 shrink-0 flex-col items-start justify-between gap-3 border-t border-slate-300/30 bg-[#eef2f7] px-5 py-3 text-slate-700 sm:px-8 lg:h-14 lg:min-h-14 lg:flex-row lg:items-center lg:px-[max(24px,calc((100vw-1100px)/2))] lg:py-0">
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] sm:text-xs">
                 <strong class="text-xs text-slate-950 sm:text-sm">CV Natusi</strong>
                 <span class="hidden h-6 w-px bg-slate-500/40 sm:block"></span>
-                <span>&copy; 2026 Portal Magang CV Natusi. Hak cipta dilindungi undang-undang.</span>
+                <span>&copy; 2026 {{ $isEmployee ? 'Employee Portal' : 'Internship Portal' }} CV Natusi. All rights reserved.</span>
             </div>
 
             <nav class="flex flex-wrap gap-x-6 gap-y-2 text-xs" aria-label="Tautan footer">
-                <a href="#" class="hover:text-[#075c80] hover:underline">Kebijakan Privasi</a>
-                <a href="#" class="hover:text-[#075c80] hover:underline">Ketentuan Layanan</a>
-                <a href="#" class="hover:text-[#075c80] hover:underline">Hubungi Dukungan</a>
+                <a href="#" class="hover:underline" style="color: {{ $accentDark }};">Kebijakan Privasi</a>
+                <a href="#" class="hover:underline" style="color: {{ $accentDark }};">Ketentuan Layanan</a>
+                <a href="#" class="hover:underline" style="color: {{ $accentDark }};">Hubungi Dukungan</a>
             </nav>
         </footer>
     </div>
