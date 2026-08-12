@@ -39,10 +39,10 @@
 
                     <div class="mt-5 max-w-[500px] sm:mt-6">
                         <h1 class="text-[16px] font-bold leading-relaxed tracking-[-0.02em] sm:text-lg lg:text-[20px]">
-                            Gerbang Menuju Masa Depan Profesional Anda.
+                            CV. NATUSI
                         </h1>
                         <p class="mt-2 text-[13px] font-medium leading-relaxed text-white/75 sm:text-[15px] lg:text-base">
-                            Terhubung dengan para pemimpin industri, dapatkan magang utama, dan percepat jalur karier Anda bersama CV Natusi.
+                            CV. Natusi (Arjuna Satu Solusi) memberikan solusi terintegritas dalam bidan teknologi informasi untuk kebutuhan bisnis atau instansi.
                         </p>
                     </div>
 
@@ -53,8 +53,8 @@
                                 <path d="m9.2 12 1.8 1.8 3.9-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             <span>
-                                <strong class="block text-xs leading-tight">KONEKSI AMAN</strong>
-                                <small class="mt-0.5 block text-[10px] leading-tight text-white/80">Enkripsi SSL 256-bit</small>
+                                <strong class="block text-xs leading-tight">LINGKUNGAN KERJA KONDUSIF</strong>
+                                <small class="mt-0.5 block text-[10px] leading-tight text-white/80">Mendukung budaya profesionalitas tinggi</small>
                             </span>
                         </div>
 
@@ -64,8 +64,8 @@
                                 <path d="m12 7.2 1.1 2.2 2.4.4-1.7 1.7.4 2.4-2.2-1.1-2.2 1.1.4-2.4-1.7-1.7 2.4-.4L12 7.2Z" fill="currentColor"/>
                             </svg>
                             <span>
-                                <strong class="block text-xs leading-tight">TERSERTIFIKASI ISO</strong>
-                                <small class="mt-0.5 block text-[10px] leading-tight text-white/80">Standar 27001</small>
+                                <strong class="block text-xs leading-tight">JENJANG TERUKUR</strong>
+                                <small class="mt-0.5 block text-[10px] leading-tight text-white/80">Berorientasi pada kinerja dan capaian</small>
                             </span>
                         </div>
                     </div>
@@ -74,10 +74,10 @@
                 <section class="flex min-h-0 items-center justify-center bg-white px-6 py-8 sm:px-9 sm:py-9 lg:px-9 lg:py-6">
                     <div class="w-full max-w-[348px]" x-data="{ showPassword: false }">
                         <h2 class="text-[16px] font-semibold leading-snug tracking-[-0.02em] text-slate-950">
-                            Portal Magang CV Natusi
+                            Portal Utama CV. Natusi
                         </h2>
                         <p class="mt-1 text-[12px] leading-5 text-slate-600 sm:text-sm">
-                            Silakan masukkan kredensial Anda untuk mengakses portal.
+                            Silakan masukkan Username dan Password Anda untuk mengakses portal.
                         </p>
 
                         @if (session('status'))

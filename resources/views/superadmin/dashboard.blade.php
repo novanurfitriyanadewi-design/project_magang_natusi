@@ -23,13 +23,8 @@
 
     <section class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-            <span class="inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-sky-700">
-                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.12)]"></span>
-                Sistem Aktif
-            </span>
-
-            <h1 class="mt-3 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
-                Halo, {{ auth()->user()->nama ?? 'Direktur Utama' }} 👋
+            <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
+                Halo, {{ auth()->user()->nama ?? 'Direktur Utama' }} 
             </h1>
 
             <p class="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
@@ -58,21 +53,7 @@
                 </span>
             </div>
         </article>
-
-        <article class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-500 p-5 text-white shadow-[0_16px_36px_rgba(79,70,229,0.18)]">
-            <div class="absolute -bottom-12 -right-8 h-36 w-36 rounded-full border-[22px] border-white/10"></div>
-            <div class="relative flex items-start justify-between gap-4">
-                <div>
-                    <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-100">Total Pengguna</p>
-                    <p class="mt-3 text-4xl font-extrabold">{{ $totalUsers }}</p>
-                    <p class="mt-1 text-sm text-indigo-100">Semua akun terdaftar</p>
-                </div>
-                <span class="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/20">
-                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="9" r="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M2.8 19c.5-3.5 2.2-5.2 5.2-5.2s4.8 1.7 5.2 5.2M14 14.5c2.8-.5 5 .9 5.7 3.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                </span>
-            </div>
-        </article>
-
+        
         <article class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-600 to-emerald-500 p-5 text-white shadow-[0_16px_36px_rgba(13,148,136,0.18)]">
             <div class="absolute -right-6 -top-10 h-32 w-32 rounded-[36px] border border-white/15"></div>
             <div class="relative flex items-start justify-between gap-4">

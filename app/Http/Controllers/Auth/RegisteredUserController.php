@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Jurusan;
 use App\Models\Notifikasi;
 use App\Models\PermintaanMagang;
 use App\Models\PermintaanLamaran;
@@ -54,6 +55,11 @@ class RegisteredUserController extends Controller
                 ['pelamar', 'karyawan'],
                 true
             ) ? $role : 'pelamar',
+            'jurusanList' => Jurusan::query()
+                ->aktif()
+                ->orderBy('tingkat')
+                ->orderBy('nama_jurusan')
+                ->get(),
         ]);
     }
 

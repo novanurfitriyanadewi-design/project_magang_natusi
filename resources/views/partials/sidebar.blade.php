@@ -74,8 +74,18 @@
             ['label' => 'Data Peserta Magang', 'route' => 'admin-peserta.peserta.index', 'match' => 'admin-peserta.peserta.*', 'icon' => 'users', 'tour' => 'internship-participants'],
             ['label' => 'Absensi Peserta', 'route' => 'admin-peserta.absensi.index', 'match' => 'admin-peserta.absensi.*', 'icon' => 'attendance-user', 'tour' => 'attendance-data'],
             ['label' => 'Pembayaran Sumbangan', 'route' => 'admin-peserta.pembayaran.index', 'match' => 'admin-peserta.pembayaran.*', 'icon' => 'payment', 'tour' => 'pembayaran-peserta'],
-            ['label' => 'Kelola Tugas', 'route' => 'admin-peserta.tugas.index', 'match' => 'admin-peserta.tugas.*', 'icon' => 'tasks', 'tour' => 'manage-tasks'],
-            ['label' => 'Pengumpulan Tugas', 'route' => 'admin-peserta.pengumpulan-tugas.index', 'match' => 'admin-peserta.pengumpulan-tugas.*', 'icon' => 'assignment', 'tour' => 'task-submissions'],
+            ['label' => 'Kelola Jurusan', 'route' => 'admin-peserta.jurusan.index', 'match' => 'admin-peserta.jurusan.*', 'icon' => 'rules', 'tour' => 'manage-jurusan'],
+            [
+                'label' => 'Kelola Tugas',
+                'icon' => 'tasks',
+                'match' => 'admin-peserta.tugas.*|admin-peserta.laporan-mingguan.*|admin-peserta.pengumpulan-tugas.*',
+                'tour' => 'manage-tasks',
+                'children' => [
+                    ['label' => 'Tugas Mingguan', 'route' => 'admin-peserta.tugas.index', 'match' => 'admin-peserta.tugas.*', 'tour' => 'weekly-tasks'],
+                    ['label' => 'Laporan Mingguan', 'route' => 'admin-peserta.laporan-mingguan.index', 'match' => 'admin-peserta.laporan-mingguan.*', 'tour' => 'weekly-reports'],
+                    ['label' => 'Data Penugasan', 'route' => 'admin-peserta.pengumpulan-tugas.index', 'match' => 'admin-peserta.pengumpulan-tugas.*', 'tour' => 'task-submissions'],
+                ],
+            ],
             [
                 'label' => 'Laporan',
                 'icon' => 'rules',
@@ -122,7 +132,6 @@
                 'children' => [
                     ['label' => 'Ajukan Cuti', 'route' => 'karyawan.cuti.index', 'match' => 'karyawan.cuti.*', 'tour' => 'cuti'],
                     ['label' => 'Ajukan Resign', 'route' => 'karyawan.resign.create', 'match' => 'karyawan.resign.create', 'tour' => 'resign-create'],
-                    ['label' => 'Status Resign', 'route' => 'karyawan.resign.show', 'match' => 'karyawan.resign.*', 'tour' => 'resign-status'],
                 ],
             ],
             [

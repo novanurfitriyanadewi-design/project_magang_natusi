@@ -37,6 +37,12 @@ class AbsensiController extends ApiCrudController
         ];
     }
 
+    protected function newQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::newQuery()
+            ->where('absentable_type', PesertaMagang::class);
+    }
+
     public function absen(Request $request): JsonResponse
     {
         $data = $request->validate($this->rules());
@@ -53,7 +59,8 @@ class AbsensiController extends ApiCrudController
         }
 
         $sudahAbsen = Absensi::query()
-            ->where('peserta_id', $peserta->id_peserta)
+            ->where('absentable_id', $peserta->id_peserta)
+            ->where('absentable_type', PesertaMagang::class)
             ->whereDate('tanggal', today())
             ->exists();
 
@@ -102,7 +109,8 @@ class AbsensiController extends ApiCrudController
                 : 'hadir';
 
         $absensi = Absensi::create([
-            'peserta_id' => $peserta->id_peserta,
+            'absentable_id' => $peserta->id_peserta,
+            'absentable_type' => PesertaMagang::class,
             'tanggal' => today(),
             'jam' => now(),
             'status' => $statusKehadiran,
@@ -147,13 +155,14 @@ class AbsensiController extends ApiCrudController
             ->where('status', 'aktif')
             ->firstOrFail();
 
-        if (Absensi::query()->where('peserta_id',$peserta->id_peserta)->whereDate('tanggal',today())->exists()) {
+        if (Absensi::query()->where('absentable_id', $peserta->id_peserta)->where('absentable_type', PesertaMagang::class)->whereDate('tanggal',today())->exists()) {
             return response()->json(['success'=>false,'message'=>'Data absensi hari ini sudah tersedia.'],422);
         }
 
         $path = $request->file($field)->store($directory, 'public');
         $absensi = Absensi::create([
-            'peserta_id'=>$peserta->id_peserta,
+            'absentable_id'=>$peserta->id_peserta,
+            'absentable_type'=>PesertaMagang::class,
             'tanggal'=>today(),
             'status'=>$status,
             $field=>$path,

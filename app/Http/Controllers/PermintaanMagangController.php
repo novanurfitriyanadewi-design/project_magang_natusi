@@ -6,9 +6,11 @@ use App\Models\Notifikasi;
 use App\Models\PermintaanMagang;
 use App\Models\PesertaMagang;
 use App\Models\User;
+use App\Support\JurusanKategori;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -178,6 +180,17 @@ class PermintaanMagangController extends ApiCrudController
                     422,
                     'Data peserta dari permintaan ini sudah tersedia.'
                 );
+            }
+
+            $bulanMagang = Carbon::parse($data['tgl_mulai'])
+                ->diffInMonths(Carbon::parse($data['tgl_selesai']));
+            $jurusan = JurusanKategori::cariByTeks($permintaanMagang->jurusan);
+            $pesanDurasi = JurusanKategori::validasiDurasi(
+                $jurusan,
+                $bulanMagang
+            );
+            if ($pesanDurasi !== null) {
+                abort(422, $pesanDurasi);
             }
 
             $username = $this->buatUsername(

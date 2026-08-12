@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class PesertaMagang extends Model
 {
@@ -19,6 +20,7 @@ class PesertaMagang extends Model
         'alamat',
         'tingkat_pendidikan',
         'kelas',
+        'jurusan_id',
         'tgl_mulai',
         'tgl_selesai',
         'durasi_magang',
@@ -50,13 +52,17 @@ class PesertaMagang extends Model
             'id_permintaan'
         );
     }
-    public function absensi(): HasMany
+    public function jurusan(): BelongsTo
     {
-        return $this->hasMany(
-            Absensi::class,
-            'peserta_id',
-            'id_peserta'
+        return $this->belongsTo(
+            Jurusan::class,
+            'jurusan_id',
+            'id_jurusan'
         );
+    }
+    public function absensi(): MorphMany
+    {
+        return $this->morphMany(Absensi::class, 'absentable');
     }
     public function laporanMingguan(): HasMany
     {

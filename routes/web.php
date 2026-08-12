@@ -21,14 +21,15 @@ use App\Http\Controllers\AdminPeserta\LaporanPesertaController as AdminLaporanPe
 use App\Http\Controllers\AdminPeserta\LaporanPembayaranController as AdminLaporanPembayaranController;
 use App\Http\Controllers\AdminPeserta\LaporanAbsensiController as AdminLaporanAbsensiController;
 use App\Http\Controllers\AdminPeserta\LaporanPenugasanController as AdminLaporanPenugasanController;
+use App\Http\Controllers\AdminPeserta\LaporanMingguanController as AdminLaporanMingguanController;
 use App\Http\Controllers\AdminPeserta\TugasController as AdminTugasController;
 use App\Http\Controllers\AdminPeserta\PermintaanMagangController as AdminPermintaanMagangController;
 use App\Http\Controllers\AdminPeserta\DataAbsensiController as AdminDataAbsensiController;
 use App\Http\Controllers\AdminPeserta\DataPembayaranController as AdminDataPembayaranController;
 use App\Http\Controllers\AdminPeserta\DataMetodePembayaranController as AdminDataMetodePembayaranController;
+use App\Http\Controllers\AdminPeserta\JurusanController as AdminJurusanController;
 use App\Http\Controllers\AdminPeserta\PengumpulanTugasController as AdminPengumpulanTugasController;
 use App\Http\Controllers\AdminPeserta\NotifikasiController as AdminNotifikasiController;
-use App\Http\Controllers\AdminPeserta\NotifikasiController as UserNotifikasiController;
 
 // Admin Karyawan Controllers
 use App\Http\Controllers\AdminKaryawan\DashboardController as AdminKaryawanDashboardController;
@@ -85,14 +86,14 @@ Route::middleware('auth')->get('/dashboard', function () {
     $user = auth()->user();
 
     return match ($user?->role) {
-        'superadmin'                => redirect()->route('superadmin.dashboard'),
+        'superadmin'                  => redirect()->route('superadmin.dashboard'),
         'admin',
-        'admin_peserta'             => redirect()->route('admin-peserta.dashboard'),
-        'admin_karyawan'            => redirect()->route('admin-karyawan.dashboard'),
-        'karyawan'                  => redirect()->route('karyawan.dashboard'),
+        'admin_peserta'              => redirect()->route('admin-peserta.dashboard'),
+        'admin_karyawan'             => redirect()->route('admin-karyawan.dashboard'),
+        'karyawan'                   => redirect()->route('karyawan.dashboard'),
         'pelamar', 'pelamar_karyawan' => redirect()->route('pengajuan.status'),
-        'peserta'                   => redirect()->route('peserta-magang.dashboard'),
-        default                     => view('dashboard'),
+        'peserta'                    => redirect()->route('peserta-magang.dashboard'),
+        default                      => view('dashboard'),
     };
 })->name('dashboard');
 
@@ -122,10 +123,10 @@ Route::middleware('auth')->group(function (): void {
         ->name('profile.photo.show');
 
     // Notifikasi
-    Route::patch('/notifikasi/baca-semua', [UserNotifikasiController::class, 'tandaiSemuaDibacaWeb'])
+    Route::patch('/notifikasi/baca-semua', [AdminNotifikasiController::class, 'tandaiSemuaDibacaWeb'])
         ->name('notifikasi.read-all');
 
-    Route::patch('/notifikasi/{notifikasi}/baca', [UserNotifikasiController::class, 'tandaiDibacaWeb'])
+    Route::patch('/notifikasi/{notifikasi}/baca', [AdminNotifikasiController::class, 'tandaiDibacaWeb'])
         ->whereNumber('notifikasi')
         ->name('notifikasi.read');
 });
@@ -271,17 +272,25 @@ Route::middleware('admin.peserta')
         Route::get('/tugas/template/download', [AdminTugasController::class, 'downloadTemplate'])
             ->name('tugas.template.download');
 
-        Route::post('/tugas/template-laporan', [AdminTugasController::class, 'storeTemplateLaporan'])
-            ->name('tugas.template-laporan.store');
-
-        Route::delete('/tugas/template-laporan/{templateLaporan}', [AdminTugasController::class, 'destroyTemplateLaporan'])
-            ->name('tugas.template-laporan.destroy');
-
         Route::put('/tugas/{tugas}', [AdminTugasController::class, 'update'])
             ->name('tugas.update');
 
         Route::delete('/tugas/{tugas}', [AdminTugasController::class, 'destroy'])
             ->name('tugas.destroy');
+
+        /* Laporan Mingguan (peserta) */
+        Route::get('/laporan-mingguan', [AdminLaporanMingguanController::class, 'index'])
+            ->name('laporan-mingguan.index');
+
+        Route::get('/laporan-mingguan/{laporanMingguan}/download', [AdminLaporanMingguanController::class, 'download'])
+            ->whereNumber('laporanMingguan')
+            ->name('laporan-mingguan.download');
+
+        Route::post('/laporan-mingguan/template-laporan', [AdminLaporanMingguanController::class, 'storeTemplateLaporan'])
+            ->name('laporan-mingguan.template.store');
+
+        Route::delete('/laporan-mingguan/template-laporan/{templateLaporan}', [AdminLaporanMingguanController::class, 'destroyTemplateLaporan'])
+            ->name('laporan-mingguan.template.destroy');
 
         /* Pengumpulan Tugas */
         Route::get('/pengumpulan-tugas', [AdminPengumpulanTugasController::class, 'index'])
@@ -328,6 +337,19 @@ Route::middleware('admin.peserta')
 
         Route::delete('/metode-pembayaran/rekening/{bank}', [AdminDataMetodePembayaranController::class, 'destroyBank'])
             ->name('metode-pembayaran.bank.destroy');
+
+        /* Kelola Jurusan */
+        Route::get('/jurusan', [AdminJurusanController::class, 'index'])
+            ->name('jurusan.index');
+
+        Route::post('/jurusan', [AdminJurusanController::class, 'store'])
+            ->name('jurusan.store');
+
+        Route::put('/jurusan/{jurusan}', [AdminJurusanController::class, 'update'])
+            ->name('jurusan.update');
+
+        Route::delete('/jurusan/{jurusan}', [AdminJurusanController::class, 'destroy'])
+            ->name('jurusan.destroy');
 
         /* Notifikasi */
         Route::get('/notifikasi', [AdminNotifikasiController::class, 'index'])
@@ -465,7 +487,10 @@ Route::middleware(['auth', 'role:karyawan'])
         Route::get('/dashboard', [KaryawanDashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/absensi', [KaryawanDashboardController::class, 'absensiIndex'])->name('absensi.index');
-        Route::post('/absensi/clock-in', [KaryawanDashboardController::class, 'clockIn'])->name('absensi.clockin');
+        Route::post('/absensi', [KaryawanDashboardController::class, 'absensiStore'])->name('absensi.store');
+
+        // Menambahkan rute alias untuk clockin agar sesuai dengan panggilan route('karyawan.absensi.clockin') di Blade
+        Route::post('/absensi/clockin', [KaryawanDashboardController::class, 'absensiStore'])->name('absensi.clockin');
 
         // Resign
         Route::get('/resign/create', [AdminResignController::class, 'create'])->name('resign.create');
@@ -482,9 +507,7 @@ Route::middleware(['auth', 'role:karyawan'])
             return view('karyawan.cuti.index');
         })->name('cuti.index');
 
-        Route::get('/payslip', function () {
-            return view('karyawan.payslip.index');
-        })->name('payslip.index');
+        Route::get('/payslip', [\App\Http\Controllers\Karyawan\PayslipController::class, 'index'])->name('payslip.index');
 
         Route::get('/reimbursement', function () {
             return view('karyawan.reimbursement.index');

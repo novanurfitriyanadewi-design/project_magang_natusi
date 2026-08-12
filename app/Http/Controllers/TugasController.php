@@ -28,7 +28,7 @@ class TugasController extends ApiCrudController
             'minggu_ke' => ['nullable', 'integer', 'min:1'],
             'file_tugas' => ['nullable', 'file', 'mimes:pdf,doc,docx,xls,xlsx', 'max:5120'],
             'instansi' => ['required', Rule::in(['universitas', 'sekolah', 'semua'])],
-            'target_peserta' => ['nullable', Rule::in(['smk_rpl', 'smk_tkj', 'universitas', 'semua'])],
+            'target_peserta' => ['nullable', Rule::in(['smk_rpl', 'smk_tkj', 'smk_sija', 'kuliah_ti', 'kuliah_si', 'kuliah_ptik', 'semua'])],
             'hari_tampil' => ['nullable', 'string', 'max:20'],
             'hari_deadline' => ['nullable', 'string', 'max:20'],
             'jam_deadline' => ['nullable', 'date_format:H:i'],

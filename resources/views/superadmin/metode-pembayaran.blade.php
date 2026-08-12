@@ -34,12 +34,7 @@
     >
         <section class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <span class="inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-sky-700">
-                    <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
-                    Metode Pembayaran
-                </span>
-
-                <h1 class="mt-3 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
+                <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
                     Manajemen Rekening Bank
                 </h1>
 
