@@ -4,9 +4,10 @@ namespace App\Http\Controllers\AdminKaryawan;
 
 use App\Exports\AbsensiKaryawanExport;
 use App\Http\Controllers\Controller;
-use App\Models\AbsensiKaryawan;
+use App\Models\Absensi;
 use App\Models\Karyawan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AbsensiKaryawanController extends Controller
@@ -15,74 +16,64 @@ class AbsensiKaryawanController extends Controller
     {
         $tanggal = $request->input('tanggal', now()->toDateString());
 
-        $query = AbsensiKaryawan::with('karyawan')->whereDate('tanggal', $tanggal);
+        $query = Absensi::with('absentable')
+            ->where('absentable_type', Karyawan::class)
+            ->whereDate('tanggal', $tanggal);
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('karyawan', function ($q) use ($search) {
+            $query->whereHas('absentable', function ($q) use ($search) {
                 $q->where('nama_karyawan', 'like', "%{$search}%");
             });
         }
 
         $absensi = $query->latest('created_at')->paginate(10)->withQueryString();
 
-        $baseStats = AbsensiKaryawan::whereDate('tanggal', $tanggal);
+        // Data mentah hari itu buat hitung statistik (termasuk yang kefilter search biar kartu tetap akurat)
+        $absensiHariIni = Absensi::where('absentable_type', Karyawan::class)
+            ->whereDate('tanggal', $tanggal)
+            ->get();
+
+        $totalHadir = $absensiHariIni->where('status', 'hadir')->count();
+        $totalIzinSakit = $absensiHariIni->whereIn('status', ['izin', 'sakit'])->count();
+
+        $totalTerlambat = $absensiHariIni->filter(function ($item) {
+            if (!$item->jam_masuk) return false;
+            return Carbon::parse($item->jam_masuk)->format('H:i:s') > '08:15:00';
+        })->count();
+
+        $totalKaryawanAktif = Karyawan::where('status', 'aktif')->count();
+        $totalAlpha = max($totalKaryawanAktif - ($totalHadir + $totalIzinSakit), 0);
+
         $stats = [
-            'hadir' => (clone $baseStats)->where('status', 'hadir')->count(),
-            'terlambat' => (clone $baseStats)->where('status', 'terlambat')->count(),
-            'izin_sakit' => (clone $baseStats)->whereIn('status', ['izin', 'sakit'])->count(),
-            'alpha' => (clone $baseStats)->where('status', 'alpha')->count(),
+            'hadir'      => $totalHadir,
+            'terlambat'  => $totalTerlambat,
+            'izin_sakit' => $totalIzinSakit,
+            'alpha'      => $totalAlpha,
         ];
 
-        $karyawanList = Karyawan::orderBy('nama_karyawan')->get();
-
-        return view('admin-karyawan.absensi-karyawan.index', compact('absensi', 'stats', 'tanggal', 'karyawanList'));
+        return view('admin-karyawan.absensi-karyawan.index', compact('absensi', 'stats', 'tanggal'));
     }
 
-    public function create()
+    public function show(Absensi $absensiKaryawan)
     {
-        $karyawanList = Karyawan::orderBy('nama_karyawan')->get();
-        return view('admin-karyawan.absensi-karyawan.create', compact('karyawanList'));
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'id_karyawan' => 'required|exists:karyawan,id_karyawan',
-            'tanggal' => 'required|date',
-            'jam_masuk' => 'nullable',
-            'jam_pulang' => 'nullable',
-            'status' => 'required|in:hadir,terlambat,izin,sakit,alpha',
-            'keterangan' => 'nullable|string',
-        ]);
-
-        AbsensiKaryawan::create($validated);
-
-        return redirect()->route('admin-karyawan.absensi-karyawan.index')
-            ->with('success', 'Absensi karyawan berhasil ditambahkan.');
-    }
-
-    public function show(AbsensiKaryawan $absensiKaryawan)
-    {
-        $absensiKaryawan->load('karyawan');
+        $absensiKaryawan->load('absentable');
         return view('admin-karyawan.absensi-karyawan.show', compact('absensiKaryawan'));
     }
 
-    public function edit(AbsensiKaryawan $absensiKaryawan)
+    public function edit(Absensi $absensiKaryawan)
     {
-        $absensiKaryawan->load('karyawan');
-        $karyawanList = Karyawan::orderBy('nama_karyawan')->get();
-        return view('admin-karyawan.absensi-karyawan.edit', compact('absensiKaryawan', 'karyawanList'));
+        $absensiKaryawan->load('absentable');
+        return view('admin-karyawan.absensi-karyawan.edit', compact('absensiKaryawan'));
     }
 
-    public function update(Request $request, AbsensiKaryawan $absensiKaryawan)
+    public function update(Request $request, Absensi $absensiKaryawan)
     {
         $validated = $request->validate([
-            'id_karyawan' => 'required|exists:karyawan,id_karyawan',
-            'tanggal' => 'required|date',
-            'jam_masuk' => 'nullable',
-            'jam_pulang' => 'nullable',
-            'status' => 'required|in:hadir,terlambat,izin,sakit,alpha',
+            'tanggal'    => 'required|date',
+            'jam_masuk'  => 'nullable',
+            'jam_keluar' => 'nullable',
+            'status'     => 'required|in:hadir,izin,sakit,alpha',
             'keterangan' => 'nullable|string',
         ]);
 
@@ -92,7 +83,7 @@ class AbsensiKaryawanController extends Controller
             ->with('success', 'Absensi karyawan berhasil diperbarui.');
     }
 
-    public function destroy(AbsensiKaryawan $absensiKaryawan)
+    public function destroy(Absensi $absensiKaryawan)
     {
         $absensiKaryawan->delete();
 

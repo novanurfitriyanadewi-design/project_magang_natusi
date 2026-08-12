@@ -221,6 +221,9 @@ class DashboardController extends Controller
             }
         }
 
+        // Sertakan user_id agar admin dapat menarik data berdasarkan user
+        $data['user_id'] = $user->id_user;
+
         Absensi::create($data);
 
         return redirect()

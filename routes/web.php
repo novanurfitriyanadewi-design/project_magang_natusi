@@ -482,7 +482,8 @@ Route::middleware(['auth', 'role:karyawan'])
 
         Route::get('/absensi', [KaryawanDashboardController::class, 'absensiIndex'])->name('absensi.index');
         Route::post('/absensi', [KaryawanDashboardController::class, 'absensiStore'])->name('absensi.store');
-
+        Route::post('/absensi/pulang', [KaryawanDashboardController::class, 'absensiPulangStore'])->name('absensi.pulang');
+        
         // Menambahkan rute alias untuk clockin agar sesuai dengan panggilan route('karyawan.absensi.clockin') di Blade
         Route::post('/absensi/clockin', [KaryawanDashboardController::class, 'absensiStore'])->name('absensi.clockin');
 

@@ -11,7 +11,6 @@ use Illuminate\Validation\ValidationException;
 use App\Models\Absensi;
 use App\Models\Pengumuman;
 use App\Models\Resign;
-use App\Models\PembayaranKaryawan;
 
 class DashboardController extends Controller
 {
@@ -19,7 +18,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $karyawan = $user->karyawan; // Mengambil data relasi karyawan
-        
+
         $now = Carbon::now();
         $currentMonth = $now->month;
         $currentYear = $now->year;
@@ -29,23 +28,20 @@ class DashboardController extends Controller
         $absensiBulanIni = collect();
 
         if ($karyawan) {
-            // Gunakan getKey() agar membaca 'id_karyawan' secara otomatis
-            $karyawanId = $karyawan->getKey(); 
-
             $sudahAbsenHariIni = Absensi::where('absentable_type', get_class($karyawan))
-                ->where('absentable_id', $karyawanId)
+                ->where('absentable_id', $karyawan->getKey())
                 ->whereDate('tanggal', $now->toDateString())
                 ->exists();
 
             $absensiBulanIni = Absensi::where('absentable_type', get_class($karyawan))
-                ->where('absentable_id', $karyawanId)
+                ->where('absentable_id', $karyawan->getKey())
                 ->whereYear('tanggal', $currentYear)
                 ->whereMonth('tanggal', $currentMonth)
                 ->get();
         }
 
         $jumlahHadir = $absensiBulanIni->where('status', 'hadir')->count();
-        
+
         $jumlahTelat = $absensiBulanIni->filter(function ($item) {
             if (!$item->jam_masuk) return false;
             return Carbon::parse($item->jam_masuk)->format('H:i:s') > '08:15:00';
@@ -62,7 +58,7 @@ class DashboardController extends Controller
 
         $jumlahHariMasuk = $absensiBulanIni->whereNotNull('jam_keluar')->count();
         $rataRataMenit = $jumlahHariMasuk > 0 ? ($totalMenitKerja / $jumlahHariMasuk) : 0;
-        
+
         $hours = floor($rataRataMenit / 60);
         $minutes = round($rataRataMenit % 60);
         $rataRataJam = $hours > 0 ? "{$hours}j {$minutes}m" : "0 Jam";
@@ -70,7 +66,7 @@ class DashboardController extends Controller
             $rataRataJam = "{$hours} Jam";
         }
 
-        $targetHariKerja = 20; 
+        $targetHariKerja = 20;
         $progressPersen = min(round(($jumlahHadir / max($targetHariKerja, 1)) * 100), 100);
 
         // Status Resign Aktif berdasarkan karyawan_id
@@ -86,14 +82,6 @@ class DashboardController extends Controller
             ->latest()
             ->take(3)
             ->get();
-
-             $slipGajiTerakhir = null;
-        if ($karyawan) {
-            $slipGajiTerakhir = PembayaranKaryawan::where('karyawan_id', $karyawan->id_karyawan)
-                ->orderByDesc('periode')
-                ->first();
-        }
-
 
         return view('karyawan.dashboard', compact(
             'user',
@@ -116,26 +104,26 @@ class DashboardController extends Controller
 
         $now = Carbon::now();
         $sudahAbsenHariIni = false;
-        
-        // Gunakan whereRaw('1 = 0') untuk menghasilkan query kosong yang aman tanpa menyebut nama kolom 'id'
-        $riwayat = Absensi::whereRaw('1 = 0')->paginate(15);
+        $absensiHariIni = null;
+        $riwayat = Absensi::whereRaw('1 = 0')->paginate(15); // hasil kosong default
 
         if ($karyawan) {
             $absentableType = get_class($karyawan);
-            $karyawanId = $karyawan->getKey(); // Mengambil id_karyawan
 
-            $sudahAbsenHariIni = Absensi::where('absentable_type', $absentableType)
-                ->where('absentable_id', $karyawanId)
+            $absensiHariIni = Absensi::where('absentable_type', $absentableType)
+                ->where('absentable_id', $karyawan->getKey())
                 ->whereDate('tanggal', $now->toDateString())
-                ->exists();
+                ->first();
+
+            $sudahAbsenHariIni = (bool) $absensiHariIni;
 
             $riwayat = Absensi::where('absentable_type', $absentableType)
-                ->where('absentable_id', $karyawanId)
+                ->where('absentable_id', $karyawan->getKey())
                 ->orderByDesc('tanggal')
                 ->paginate(15);
 
             $absensiBulanIni = Absensi::where('absentable_type', $absentableType)
-                ->where('absentable_id', $karyawanId)
+                ->where('absentable_id', $karyawan->getKey())
                 ->whereYear('tanggal', $now->year)
                 ->whereMonth('tanggal', $now->month)
                 ->get();
@@ -147,11 +135,13 @@ class DashboardController extends Controller
             'total_hadir'      => $absensiBulanIni->where('status', 'hadir')->count(),
             'total_sakit'      => $absensiBulanIni->where('status', 'sakit')->count(),
             'total_izin'       => $absensiBulanIni->where('status', 'izin')->count(),
-            'total_hari_kerja' => 20,
+            'total_hari_kerja' => 20, // sesuaikan dengan target/hari kerja efektif bulan berjalan
         ];
 
+        // View diambil dari resources/views/karyawan/absensi.blade.php
         return view('karyawan.absensi', [
             'sudahAbsenHariIni' => $sudahAbsenHariIni,
+            'absensiHariIni'    => $absensiHariIni,
             'riwayat'           => $riwayat,
             'stats'             => $stats,
             'officeLat'         => (float) config('office.latitude'),
@@ -171,10 +161,9 @@ class DashboardController extends Controller
 
         $now = Carbon::now();
         $absentableType = get_class($karyawan);
-        $karyawanId = $karyawan->getKey();
 
         $sudahAbsenHariIni = Absensi::where('absentable_type', $absentableType)
-            ->where('absentable_id', $karyawanId)
+            ->where('absentable_id', $karyawan->getKey())
             ->whereDate('tanggal', $now->toDateString())
             ->exists();
 
@@ -198,13 +187,14 @@ class DashboardController extends Controller
 
         $data = [
             'absentable_type' => $absentableType,
-            'absentable_id'   => $karyawanId,
+            'absentable_id'   => $karyawan->getKey(),
             'tanggal'         => $now->toDateString(),
             'status'          => $validated['status'],
             'keterangan'      => $validated['keterangan'] ?? null,
         ];
 
         if ($validated['status'] === 'hadir') {
+            // Validasi jarak dilakukan di SERVER, jangan percaya klien sepenuhnya
             $officeLat = (float) config('office.latitude');
             $officeLng = (float) config('office.longitude');
             $radius = (int) config('office.radius_meters');
@@ -235,6 +225,9 @@ class DashboardController extends Controller
             }
         }
 
+        // Sertakan user_id agar admin dapat menarik data berdasarkan user
+        $data['user_id'] = $user->id_user;
+
         Absensi::create($data);
 
         return redirect()
@@ -242,9 +235,79 @@ class DashboardController extends Controller
             ->with('success', 'Presensi berhasil dicatat.');
     }
 
+    /**
+     * Presensi pulang — mengisi jam_keluar pada record absensi hari ini.
+     * Hanya berlaku untuk record berstatus 'hadir' yang belum checkout.
+     */
+    public function absensiPulangStore(Request $request)
+    {
+        $user = Auth::user();
+        $karyawan = $user->karyawan;
+
+        if (!$karyawan) {
+            abort(403, 'Data karyawan tidak ditemukan.');
+        }
+
+        $now = Carbon::now();
+        $absentableType = get_class($karyawan);
+
+        $absensiHariIni = Absensi::where('absentable_type', $absentableType)
+            ->where('absentable_id', $karyawan->getKey())
+            ->whereDate('tanggal', $now->toDateString())
+            ->first();
+
+        if (!$absensiHariIni) {
+            return back()->withErrors(['status' => 'Anda belum melakukan presensi masuk hari ini.']);
+        }
+
+        if ($absensiHariIni->status !== 'hadir') {
+            return back()->withErrors(['status' => 'Presensi pulang hanya berlaku untuk status Hadir.']);
+        }
+
+        if ($absensiHariIni->jam_keluar) {
+            return back()->withErrors(['status' => 'Anda sudah melakukan presensi pulang hari ini.']);
+        }
+
+        $validated = $request->validate([
+            'latitude'  => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ], [
+            'latitude.required'  => 'Lokasi wajib dideteksi sebelum submit.',
+            'longitude.required' => 'Lokasi wajib dideteksi sebelum submit.',
+        ]);
+
+        $officeLat = (float) config('office.latitude');
+        $officeLng = (float) config('office.longitude');
+        $radius = (int) config('office.radius_meters');
+
+        $distance = $this->haversineDistance(
+            (float) $validated['latitude'],
+            (float) $validated['longitude'],
+            $officeLat,
+            $officeLng
+        );
+
+        if ($distance > $radius) {
+            throw ValidationException::withMessages([
+                'latitude' => 'Anda berada di luar area kantor (' . round($distance) . ' meter dari kantor). Presensi pulang tidak dapat dilakukan.',
+            ]);
+        }
+
+        $absensiHariIni->update([
+            'jam_keluar' => $now->format('H:i:s'),
+        ]);
+
+        return redirect()
+            ->route('karyawan.absensi.index')
+            ->with('success', 'Presensi pulang berhasil dicatat.');
+    }
+
+    /**
+     * Menghitung jarak antara dua koordinat (meter) menggunakan rumus Haversine.
+     */
     private function haversineDistance(float $lat1, float $lng1, float $lat2, float $lng2): float
     {
-        $earthRadius = 6371000;
+        $earthRadius = 6371000; // meter
 
         $dLat = deg2rad($lat2 - $lat1);
         $dLng = deg2rad($lng2 - $lng1);
