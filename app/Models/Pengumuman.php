@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pengumuman extends Model
 {
     use HasFactory;
 
     protected $table = 'pengumuman';
+
     protected $primaryKey = 'id_pengumuman';
 
     protected $fillable = [
@@ -34,6 +36,15 @@ class Pengumuman extends Model
             User::class,
             'dibuat_oleh',
             'id_user'
+        );
+    }
+
+    public function penerima()
+    {
+        return $this->hasMany(
+            PengumumanPenerima::class,
+            'id_pengumuman',
+            'id_pengumuman'
         );
     }
 }
