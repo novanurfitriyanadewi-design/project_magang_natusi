@@ -397,6 +397,7 @@ Route::middleware('admin.karyawan')
         
         // Pembayaran Gaji Karyawan
         Route::get('/pembayaran-karyawan', [AdminPembayaranKaryawanController::class, 'index'])->name('pembayaran-karyawan.index');
+        Route::put('/pembayaran-karyawan/{id}', [AdminPembayaranKaryawanController::class, 'update'])->name('pembayaran-karyawan.update');
         Route::post('/pembayaran-karyawan', [AdminPembayaranKaryawanController::class, 'store'])->name('pembayaran-karyawan.store');
         Route::delete('/pembayaran-karyawan/{id}', [AdminPembayaranKaryawanController::class, 'destroy'])->name('pembayaran-karyawan.destroy');
 
