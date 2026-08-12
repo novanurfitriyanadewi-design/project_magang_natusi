@@ -13,6 +13,7 @@ class AturanPerusahaan extends Model
     protected $primaryKey = 'id_aturan';
     protected $fillable = [
         'nama',
+        'untuk_role',
         'deskripsi',
         'status',
     ];

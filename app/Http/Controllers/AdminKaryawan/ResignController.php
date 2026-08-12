@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\AdminKaryawan;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notifikasi;
 use App\Models\Resign;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -51,6 +53,12 @@ class ResignController extends Controller
             'status' => 'disetujui',
         ]);
 
+        $this->kirimNotifikasiKeKaryawan(
+            $resign,
+            'Pengajuan Resign Diterima',
+            'Pengajuan resign Anda telah disetujui. Terima kasih atas kontribusi Anda selama bekerja di perusahaan.'
+        );
+
         return redirect()
             ->route('admin-karyawan.resign.index')
             ->with('success', 'Pengajuan resign berhasil disetujui.');
@@ -66,6 +74,12 @@ class ResignController extends Controller
             'status' => 'ditolak',
             'catatan_hrd' => $validated['catatan_hrd'],
         ]);
+
+        $this->kirimNotifikasiKeKaryawan(
+            $resign,
+            'Pengajuan Resign Ditolak',
+            'Pengajuan resign Anda ditolak. Catatan: ' . $validated['catatan_hrd']
+        );
 
         return redirect()
             ->route('admin-karyawan.resign.index')
@@ -138,6 +152,15 @@ class ResignController extends Controller
             'surat_resign_original_name' => $originalName,
         ]);
 
+        $this->kirimNotifikasiKeAdminKaryawan(
+            $resign,
+            'Pengajuan Resign Baru',
+            sprintf(
+                '%s mengajukan resign dan menunggu persetujuan HRD.',
+                $karyawan->nama_karyawan
+            )
+        );
+
         return redirect()
             ->route('karyawan.resign.show', $resign)
             ->with('success', 'Pengajuan resign berhasil dikirim dan sedang menunggu persetujuan.');
@@ -150,5 +173,43 @@ class ResignController extends Controller
         abort_unless($karyawan && $resign->karyawan_id === $karyawan->id_karyawan, 403);
 
         return view('karyawan.resign.show', compact('resign'));
+    }
+
+    private function kirimNotifikasiKeAdminKaryawan(Resign $resign, string $judul, string $pesan): void
+    {
+        $adminIds = User::query()
+            ->whereIn('role', ['admin', 'admin_karyawan'])
+            ->pluck('id_user');
+
+        foreach ($adminIds as $adminId) {
+            Notifikasi::query()->create([
+                'user_id' => $adminId,
+                'judul' => $judul,
+                'pesan' => $pesan,
+                'kategori' => 'pengajuan',
+                'tipe' => 'info',
+                'referensi_id' => $resign->getKey(),
+                'dibaca' => false,
+            ]);
+        }
+    }
+
+    private function kirimNotifikasiKeKaryawan(Resign $resign, string $judul, string $pesan): void
+    {
+        $userId = $resign->karyawan?->user_id ?? $resign->karyawan?->user?->id_user;
+
+        if (! $userId) {
+            return;
+        }
+
+        Notifikasi::query()->create([
+            'user_id' => $userId,
+            'judul' => $judul,
+            'pesan' => $pesan,
+            'kategori' => 'pengajuan',
+            'tipe' => 'sukses',
+            'referensi_id' => $resign->getKey(),
+            'dibaca' => false,
+        ]);
     }
 }

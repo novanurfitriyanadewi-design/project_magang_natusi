@@ -40,7 +40,8 @@ use App\Http\Controllers\AdminKaryawan\PembayaranKaryawanController as AdminPemb
 use App\Http\Controllers\AdminKaryawan\ResignController as AdminResignController;
 use App\Http\Controllers\AdminKaryawan\LaporanAbsensiKaryawanController;
 use App\Http\Controllers\AdminKaryawan\LaporanKaryawanController;
-use App\Http\Controllers\AdminKaryawan\PengumumanController as AdminKaryawanPengumumanController; 
+use App\Http\Controllers\AdminKaryawan\PengumumanController as AdminKaryawanPengumumanController;
+use App\Http\Controllers\AdminKaryawan\AturanController as AdminKaryawanAturanController;
 
 // Peserta Magang Controllers
 use App\Http\Controllers\PesertaMagang\DashboardController as PesertaMagangDashboardController;
@@ -383,23 +384,26 @@ Route::middleware('admin.karyawan')
     ->name('admin-karyawan.')
     ->group(function (): void {
         Route::get('/dashboard', AdminKaryawanDashboardController::class)->name('dashboard');
-        
+
         // Data Karyawan
         Route::get('/karyawan', [AdminKaryawanController::class, 'index'])->name('karyawan.index');
         Route::put('/karyawan/{karyawan}', [AdminKaryawanController::class, 'update'])->name('karyawan.update');
         Route::delete('/karyawan/{karyawan}', [AdminKaryawanController::class, 'destroy'])->name('karyawan.destroy');
-        
+
         // Absensi Karyawan
         Route::get('/absensi-karyawan/export', [AdminAbsensiKaryawanController::class, 'export'])->name('absensi-karyawan.export');
         Route::resource('absensi-karyawan', AdminAbsensiKaryawanController::class);
-        
+
         // Permintaan Lamaran Karyawan
         Route::get('/permintaan-lamaran', [AdminPermintaanLamaranController::class, 'index'])->name('permintaan-lamaran.index');
         Route::post('/permintaan-lamaran/{id}/action', [AdminPermintaanLamaranController::class, 'action'])->whereNumber('id')->name('permintaan-lamaran.action');
 
         // Pengumuman Karyawan
-        Route::resource('pengumuman',AdminKaryawanPengumumanController::class)->except(['show']);
-        
+        Route::resource('pengumuman', AdminKaryawanPengumumanController::class)->except(['show']);
+
+        // Aturan Perusahaan (Karyawan)
+        Route::resource('aturan', AdminKaryawanAturanController::class)->except(['show']);
+
         // Pembayaran Gaji Karyawan
         Route::get('/pembayaran-karyawan', [AdminPembayaranKaryawanController::class, 'index'])->name('pembayaran-karyawan.index');
         Route::put('/pembayaran-karyawan/{id}', [AdminPembayaranKaryawanController::class, 'update'])->name('pembayaran-karyawan.update');
@@ -420,8 +424,6 @@ Route::middleware('admin.karyawan')
             // Laporan Data Karyawan
             Route::get('/karyawan', [LaporanKaryawanController::class, 'index'])->name('karyawan');
             Route::get('/karyawan/export', [LaporanKaryawanController::class, 'export'])->name('karyawan.export');
-
-            
         });
     });
 

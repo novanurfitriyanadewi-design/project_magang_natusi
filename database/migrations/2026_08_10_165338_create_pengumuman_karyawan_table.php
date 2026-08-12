@@ -8,10 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Tabel sudah dibuat sebelumnya,
-        // jadi migration ini hanya memastikan foreign key-nya ada.
+        Schema::create('pengumuman_karyawan', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('pengumuman_id');
+            $table->unsignedBigInteger('karyawan_id');
+            $table->timestamps();
 
-        Schema::table('pengumuman_karyawan', function (Blueprint $table) {
             $table->foreign('pengumuman_id')
                 ->references('id_pengumuman')
                 ->on('pengumuman')
@@ -26,9 +28,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('pengumuman_karyawan', function (Blueprint $table) {
-            $table->dropForeign(['pengumuman_id']);
-            $table->dropForeign(['karyawan_id']);
-        });
+        Schema::dropIfExists('pengumuman_karyawan');
     }
 };

@@ -9,7 +9,9 @@ class AturanController extends Controller
 {
     public function index()
     {
-        $aturan = AturanPerusahaan::where('status', 'aktif')
+        $aturan = AturanPerusahaan::query()
+            ->where('status', 'aktif')
+            ->whereIn('untuk_role', ['magang', 'semua'])
             ->orderBy('nama')
             ->get();
 

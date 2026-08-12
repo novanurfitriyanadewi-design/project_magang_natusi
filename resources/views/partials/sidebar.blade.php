@@ -19,7 +19,6 @@
             ['label' => 'Kelola Divisi', 'route' => 'superadmin.divisi.index', 'match' => 'superadmin.divisi.*', 'icon' => 'users', 'tour' => 'manage-divisi'],
             ['label' => 'Jam Absensi', 'route' => 'superadmin.jam-absensi.index', 'match' => 'superadmin.jam-absensi.*', 'icon' => 'clock', 'tour' => 'attendance-hours'],
             ['label' => 'Metode Pembayaran', 'route' => 'superadmin.metode-pembayaran.index', 'match' => 'superadmin.metode-pembayaran.*', 'icon' => 'bank', 'tour' => 'payment-methods'],
-            ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
         'admin' => [
             ['label' => 'Dashboard', 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
@@ -66,7 +65,6 @@
                     ['label' => 'Pembayaran Karyawan', 'route' => 'admin.laporan.pembayaran-karyawan', 'match' => 'admin.laporan.pembayaran-karyawan', 'tour' => 'report-payments-karyawan'],
                 ],
             ],
-            ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
         'admin_peserta' => [
             ['label' => 'Dashboard', 'route' => 'admin-peserta.dashboard', 'match' => 'admin-peserta.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
@@ -98,13 +96,13 @@
                     ['label' => 'Laporan Pembayaran', 'route' => 'admin-peserta.laporan.pembayaran', 'match' => 'admin-peserta.laporan.pembayaran', 'tour' => 'report-payments'],
                 ],
             ],
-            ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
         'admin_karyawan' => [
             ['label' => 'Dashboard', 'route' => 'admin-karyawan.dashboard', 'match' => 'admin-karyawan.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
             ['label' => 'Permintaan Lamaran', 'route' => 'admin-karyawan.permintaan-lamaran.index', 'match' => 'admin-karyawan.permintaan-lamaran.*', 'icon' => 'inbox', 'tour' => 'permintaan-lamaran'],
             ['label' => 'Data Karyawan', 'route' => 'admin-karyawan.karyawan.index', 'match' => 'admin-karyawan.karyawan.*', 'icon' => 'users', 'tour' => 'data-karyawan'],
             ['label' => 'Pengumuman', 'route' => 'admin-karyawan.pengumuman.index', 'match' => 'admin-karyawan.pengumuman.*', 'icon' => 'announcement', 'tour' => 'pengumuman'],
+            ['label' => 'Aturan Perusahaan', 'route' => 'admin-karyawan.aturan.index', 'match' => 'admin-karyawan.aturan.*', 'icon' => 'rules', 'tour' => 'aturan'],
             ['label' => 'Absensi Karyawan', 'route' => 'admin-karyawan.absensi-karyawan.index', 'match' => 'admin-karyawan.absensi-karyawan.*', 'icon' => 'attendance-user', 'tour' => 'absensi-karyawan'],
             ['label' => 'Pembayaran Gaji', 'route' => 'admin-karyawan.pembayaran-karyawan.index', 'match' => 'admin-karyawan.pembayaran-karyawan.*', 'icon' => 'payment', 'tour' => 'pembayaran-karyawan'],
             ['label' => 'Pengajuan Resign', 'route' => 'admin-karyawan.resign.index', 'match' => 'admin-karyawan.resign.*', 'icon' => 'clock', 'tour' => 'resign'],
@@ -118,10 +116,8 @@
                     ['label' => 'Laporan Absensi Karyawan', 'route' => 'admin-karyawan.laporan.absensi', 'match' => 'admin-karyawan.laporan.absensi*', 'tour' => 'report-attendance-karyawan'],
                 ],
             ],
-            ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
-        
-            'karyawan' => [
+        'karyawan' => [
             ['label' => 'Dashboard', 'route' => 'karyawan.dashboard', 'match' => 'karyawan.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
             ['label' => 'Absensi', 'route' => 'karyawan.absensi.index', 'match' => 'karyawan.absensi.*', 'icon' => 'attendance-user', 'tour' => 'absensi'],
             ['label' => 'Pengumuman', 'route' => 'karyawan.pengumuman.index', 'match' => 'karyawan.pengumuman.*', 'icon' => 'announcement', 'tour' => 'pengumuman'],
@@ -137,10 +133,7 @@
             ],
             ['label' => 'Slip Gaji', 'route' => 'karyawan.payslip.index', 'match' => 'karyawan.payslip.*', 'icon' => 'payment', 'tour' => 'payslip'],
             ['label' => 'Aturan Perusahaan', 'route' => 'karyawan.aturan.index', 'match' => 'karyawan.aturan.*', 'icon' => 'rules', 'tour' => 'aturan'],
-            ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
-            ['label' => 'Bantuan', 'route' => 'karyawan.helpdesk.index', 'match' => 'karyawan.helpdesk.*', 'icon' => 'help', 'tour' => 'helpdesk'],
         ],
-
         default => [
             ['label' => 'Dashboard', 'route' => 'peserta-magang.dashboard', 'match' => 'peserta-magang.dashboard', 'icon' => 'dashboard'],
             ['label' => 'Absensi', 'route' => 'peserta-magang.absensi.index', 'match' => 'peserta-magang.absensi.*', 'icon' => 'attendance-user'],
@@ -148,7 +141,6 @@
             ['label' => 'Laporan Mingguan', 'route' => 'peserta-magang.laporan-mingguan.index', 'match' => 'peserta-magang.laporan-mingguan.*', 'icon' => 'report'],
             ['label' => 'Pembayaran', 'route' => 'peserta-magang.pembayaran.index', 'match' => 'peserta-magang.pembayaran.*', 'icon' => 'payment'],
             ['label' => 'Aturan Perusahaan', 'route' => 'peserta-magang.aturan.index', 'match' => 'peserta-magang.aturan.*', 'icon' => 'rules'],
-            ['label' => 'Profile', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile'],
         ],
     };
 
@@ -203,48 +195,6 @@
             0 0 20px rgba(6, 95, 137, 0.15),
             0 10px 28px rgba(0, 32, 58, 0.22);
     }
-
-    /* Smooth collapse/expand transitions */
-    .sidebar-collapse-enter {
-        max-height: 0;
-        opacity: 0;
-        transform: translateY(-4px);
-    }
-    .sidebar-collapse-enter-active {
-        max-height: 500px;
-        opacity: 1;
-        transform: translateY(0);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .sidebar-collapse-leave {
-        max-height: 500px;
-        opacity: 1;
-        transform: translateY(0);
-    }
-    .sidebar-collapse-leave-active {
-        max-height: 0;
-        opacity: 0;
-        transform: translateY(-4px);
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* Sidebar link hover effect */
-    .sidebar-link-hover {
-        position: relative;
-        overflow: hidden;
-    }
-    .sidebar-link-hover::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
-        opacity: 0;
-        transition: opacity 0.2s ease;
-    }
-    .sidebar-link-hover:hover::before {
-        opacity: 1;
-    }
 </style>
 
 <aside
@@ -296,11 +246,11 @@
                             type="button"
                             data-tour="{{ $menu['tour'] ?? '' }}"
                             @click="openGroup = (openGroup === {{ $i }} ? null : {{ $i }})"
-                        @class([
-                            'group flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200',
-                            'bg-white font-semibold text-[#05658f] sidebar-active-glow' => $groupActive,
-                            'font-medium text-sky-50/85 hover:translate-x-0.5 hover:bg-white/10 hover:text-white' => ! $groupActive,
-                        ])
+                            @class([
+                                'group flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200',
+                                'bg-white font-semibold text-[#05658f] sidebar-active-glow' => $groupActive,
+                                'font-medium text-sky-50/85 hover:translate-x-0.5 hover:bg-white/10 hover:text-white' => ! $groupActive,
+                            ])
                         >
                             <span @class([
                                 'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-all duration-200',
@@ -416,9 +366,6 @@
                                 @case('users')
                                     <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c.5-3.5 2.3-5.2 5.5-5.2s5 1.7 5.5 5.2M16 7.5h5M18.5 5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
                                     @break
-                                @case('profile')
-                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M6 20v-1a6 6 0 0 1 12 0v1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                                    @break
                                 @case('rules')
                                     <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M5 19h14M8 15l7-7 3 3-7 7H8v-3ZM13 6l3-3 3 3-3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                                     @break
@@ -437,56 +384,78 @@
                                 @case('announcement')
                                     <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M3 11v2a2 2 0 0 0 2 2h1l3 4v-4h8a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H8L5 2v3H5a2 2 0 0 0-2 2v4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
                                     @break
-                                @case('reimbursement')
-                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 6.5a4 4 0 0 0-4-2.5H10a3.5 3.5 0 0 0 0 7h4a3.5 3.5 0 0 1 0 7h-3a4 4 0 0 1-4-2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                                    @break
-                                @case('help')
-                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.9-2.4 2.1-2.4 3.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                                    @break
                                 @default
-                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M6 3h9l3 3v15H6V3Zm3 7h6M9 14h6M9 18h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/></svg>
                             @endswitch
                         </span>
 
-                        <span class="min-w-0 flex-1 truncate">{{ $menu['label'] }}</span>
+                        <span class="min-w-0 flex-1 truncate text-left">{{ $menu['label'] }}</span>
 
                         @if (! $available)
-                            <span class="ml-auto rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-1 text-[7px] font-bold uppercase tracking-wide text-white/40">Soon</span>
-                        @elseif ($active)
-                            <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.15)]"></span>
+                            <span class="rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-1 text-[7px] font-bold uppercase tracking-wide text-white/40">Soon</span>
                         @endif
                     </a>
                 @endif
             @endforeach
-        </nav>
 
-        <div class="mt-4 space-y-1 border-t border-white/10 pt-4">
-            <button
-                type="button"
-                data-tour-support
-                onclick="window.NatusiTour?.start()"
-                class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sky-50/80 transition duration-200 hover:bg-white/10 hover:text-white"
+            <!-- Kelola Profil (Di atas Garis Pemisah) -->
+            @php
+                $profileActive = request()->routeIs('profile.*');
+                $profileHref = Route::has('profile.edit') ? route('profile.edit') : '#';
+            @endphp
+            <a
+                href="{{ $profileHref }}"
+                data-tour="profile"
+                @click="sidebarOpen = false"
+                @class([
+                    'group flex min-h-[48px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200',
+                    'bg-white font-semibold text-[#05658f] sidebar-active-glow' => $profileActive,
+                    'font-medium text-sky-50/85 hover:translate-x-0.5 hover:bg-white/10 hover:text-white' => ! $profileActive,
+                ])
             >
-                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/10 ring-1 ring-white/10 transition group-hover:bg-white/15">
-                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"/>
-                        <path d="M9.7 9a2.4 2.4 0 0 1 4.6.9c0 1.8-2.3 2-2.3 3.6M12 17h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-                    </svg>
+                <span @class([
+                    'grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-all duration-200',
+                    'bg-gradient-to-br from-sky-100 to-cyan-50 text-[#0573a3] shadow-sm ring-1 ring-sky-100' => $profileActive,
+                    'bg-white/10 text-white ring-1 ring-white/10 group-hover:bg-white/15 group-hover:scale-105' => ! $profileActive,
+                ])>
+                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M6 20v-1a6 6 0 0 1 12 0v1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
                 </span>
-                <span>Support</span>
-            </button>
+                <span class="min-w-0 flex-1 truncate text-left">Kelola Profil</span>
+            </a>
 
-            <form method="POST" action="{{ route('logout') }}">
+            <!-- Garis Pemisah (Divider) -->
+            <div class="my-3 border-t border-white/10"></div>
+
+            <!-- Support (Di bawah Garis Pemisah) -->
+            <a
+                href="#"
+                @click="sidebarOpen = false"
+                class="group flex min-h-[48px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sky-50/85 transition-all duration-200 hover:translate-x-0.5 hover:bg-white/10 hover:text-white"
+            >
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/10 text-white ring-1 ring-white/10 transition-all duration-200 group-hover:scale-105 group-hover:bg-white/15">
+                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="min-w-0 flex-1 truncate text-left font-semibold">Support</span>
+            </a>
+
+            <!-- Logout (Di bawah Garis Pemisah) -->
+            <form method="POST" action="{{ route('logout') }}" class="w-full">
                 @csrf
-                <button type="submit" class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-200 transition duration-200 hover:bg-rose-500/15 hover:text-white">
-                    <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-rose-400/10 ring-1 ring-rose-300/10 transition group-hover:bg-rose-400/20">
-                        <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M10 5H5v14h5M14 8l4 4-4 4M8 12h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <button
+                    type="submit"
+                    class="group flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sky-50/85 transition-all duration-200 hover:translate-x-0.5 hover:bg-white/10 hover:text-white"
+                >
+                    <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/10 text-white ring-1 ring-white/10 transition-all duration-200 group-hover:scale-105 group-hover:bg-white/15">
+                        <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </span>
-                    <span>Logout</span>
+                    <span class="min-w-0 flex-1 truncate text-left font-semibold">Logout</span>
                 </button>
             </form>
-        </div>
+        </nav>
 
-        <p class="mt-4 text-center text-[8px] font-medium tracking-[0.13em] text-white/25">CV NATUSI PORTAL &copy; V1.0</p>
+        <!-- Footer Text -->
+        <div class="mt-4 px-2 text-center">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-sky-100/40">CV NATUSI PORTAL &copy; V1.0</span>
+        </div>
     </div>
 </aside>
