@@ -3,7 +3,34 @@
 @section('title', 'Slip Gaji')
 
 @section('content')
-<div class="p-6 space-y-6" x-data="{ showModal: false }">
+<div
+    class="p-6 space-y-6"
+    x-data="{
+        showModal: false,
+        editMode: false,
+        editId: null,
+        editData: { karyawan_id: '', periode: '', nominal: '', tanggal_bayar: '', status: 'belum_terbayar', keterangan: '' },
+        openCreate() {
+            this.editMode = false;
+            this.editId = null;
+            this.editData = { karyawan_id: '', periode: '{{ $periodeFilter }}', nominal: '', tanggal_bayar: '', status: 'belum_terbayar', keterangan: '' };
+            this.showModal = true;
+        },
+        openEdit(item) {
+            this.editMode = true;
+            this.editId = item.id;
+            this.editData = {
+                karyawan_id: item.karyawan_id,
+                periode: item.periode,
+                nominal: item.nominal,
+                tanggal_bayar: item.tanggal_bayar ?? '',
+                status: item.status,
+                keterangan: item.keterangan ?? '',
+            };
+            this.showModal = true;
+        }
+    }"
+>
 
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-3">
         <div>
@@ -21,7 +48,7 @@
                 </select>
             </form>
 
-            <button type="button" @click="showModal = true"
+            <button type="button" @click="openCreate()"
                 class="bg-[#006191] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#004b70] transition-colors">
                 + Bayar Gaji
             </button>
@@ -32,9 +59,7 @@
         <div class="bg-green-100 text-green-700 px-4 py-3 rounded-lg text-sm">{{ session('success') }}</div>
     @endif
 
-    <!-- CARD STATISTIK DENGAN UKURAN PROPORSIONAL & PROPORTIONAL PADDING -->
     <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <!-- Total Karyawan -->
         <div class="bg-gradient-to-br from-blue-600 to-[#006191] text-white p-4 rounded-xl shadow-md flex items-center justify-between">
             <div class="space-y-0.5">
                 <span class="text-blue-100 text-[11px] font-bold uppercase tracking-wider block">Total Karyawan</span>
@@ -45,7 +70,6 @@
             </div>
         </div>
 
-        <!-- Sudah Dibayar -->
         <div class="bg-gradient-to-br from-emerald-500 to-green-600 text-white p-4 rounded-xl shadow-md flex items-center justify-between">
             <div class="space-y-0.5">
                 <span class="text-emerald-100 text-[11px] font-bold uppercase tracking-wider block">Sudah Dibayar</span>
@@ -56,7 +80,6 @@
             </div>
         </div>
 
-        <!-- Belum Dibayar -->
         <div class="bg-gradient-to-br from-rose-500 to-red-600 text-white p-4 rounded-xl shadow-md flex items-center justify-between">
             <div class="space-y-0.5">
                 <span class="text-rose-100 text-[11px] font-bold uppercase tracking-wider block">Belum Dibayar</span>
@@ -108,11 +131,28 @@
                                 @endif
                             </td>
                             <td class="px-6 py-3">
-                                <form action="{{ route('admin-karyawan.pembayaran-karyawan.destroy', $item->id_pembayaran) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-red-700" onclick="return confirm('Hapus data ini?')">Hapus</button>
-                                </form>
+                                <div class="flex gap-2">
+                                    <button
+                                        type="button"
+                                        class="bg-amber-500 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-amber-600"
+                                        @click="openEdit({
+                                            id: {{ $item->id_pembayaran }},
+                                            karyawan_id: {{ $item->karyawan_id }},
+                                            periode: @js($item->periode),
+                                            nominal: {{ $item->nominal }},
+                                            tanggal_bayar: @js($item->tanggal_bayar ? \Illuminate\Support\Carbon::parse($item->tanggal_bayar)->format('Y-m-d') : ''),
+                                            status: @js($item->status),
+                                            keterangan: @js($item->keterangan),
+                                        })"
+                                    >
+                                        Edit
+                                    </button>
+                                    <form action="{{ route('admin-karyawan.pembayaran-karyawan.destroy', $item->id_pembayaran) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="bg-red-600 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-red-700" onclick="return confirm('Hapus data ini?')">Hapus</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -127,14 +167,22 @@
 
     <div x-show="showModal" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style="display: none;">
         <div class="bg-white rounded-xl shadow-lg w-full max-w-lg p-6" @click.outside="showModal = false">
-            <h3 class="text-lg font-semibold mb-4">Bayar Gaji Karyawan</h3>
+            <h3 class="text-lg font-semibold mb-4" x-text="editMode ? 'Edit Slip Gaji' : 'Bayar Gaji Karyawan'"></h3>
 
-            <form action="{{ route('admin-karyawan.pembayaran-karyawan.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <form
+                :action="editMode ? '{{ url('admin-karyawan/pembayaran-karyawan') }}/' + editId : '{{ route('admin-karyawan.pembayaran-karyawan.store') }}'"
+                method="POST"
+                enctype="multipart/form-data"
+                class="space-y-4"
+            >
                 @csrf
+                <template x-if="editMode">
+                    <input type="hidden" name="_method" value="PUT">
+                </template>
 
                 <div>
                     <label class="block text-sm font-medium mb-1">Karyawan</label>
-                    <select name="karyawan_id" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                    <select name="karyawan_id" x-model="editData.karyawan_id" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
                         <option value="">-- Pilih Karyawan --</option>
                         @foreach($karyawan as $k)
                             <option value="{{ $k->id_karyawan }}">{{ $k->nama_karyawan }}</option>
@@ -145,22 +193,22 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-medium mb-1">Periode</label>
-                        <input type="month" name="periode" required value="{{ $periodeFilter }}" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                        <input type="month" name="periode" x-model="editData.periode" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Nominal (Rp)</label>
-                        <input type="number" name="nominal" required min="0" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                        <input type="number" name="nominal" x-model="editData.nominal" required min="0" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-sm font-medium mb-1">Tanggal Bayar</label>
-                        <input type="date" name="tanggal_bayar" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                        <input type="date" name="tanggal_bayar" x-model="editData.tanggal_bayar" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Status</label>
-                        <select name="status" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                        <select name="status" x-model="editData.status" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
                             <option value="belum_terbayar">Belum Terbayar</option>
                             <option value="terbayar">Terbayar</option>
                         </select>
@@ -169,17 +217,17 @@
 
                 <div>
                     <label class="block text-sm font-medium mb-1">Keterangan (opsional)</label>
-                    <textarea name="keterangan" rows="2" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></textarea>
+                    <textarea name="keterangan" x-model="editData.keterangan" rows="2" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></textarea>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Bukti Transfer (opsional)</label>
+                    <label class="block text-sm font-medium mb-1">Bukti Transfer (opsional, kosongkan jika tidak diubah)</label>
                     <input type="file" name="bukti_transfer" accept=".jpg,.jpeg,.png,.pdf" class="w-full text-sm">
                 </div>
 
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" @click="showModal = false" class="px-4 py-2 rounded-lg text-sm font-semibold border border-slate-300">Batal</button>
-                    <button type="submit" class="px-4 py-2 rounded-lg text-sm font-semibold bg-[#006191] text-white hover:bg-[#004b70]">Simpan</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg text-sm font-semibold bg-[#006191] text-white hover:bg-[#004b70]" x-text="editMode ? 'Simpan Perubahan' : 'Simpan'"></button>
                 </div>
             </form>
         </div>

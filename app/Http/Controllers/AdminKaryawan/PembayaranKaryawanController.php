@@ -109,6 +109,64 @@ class PembayaranKaryawanController extends Controller
         return back()->with('success', 'Slip gaji berhasil disimpan.');
     }
 
+    public function update(Request $request, $id)
+    {
+        $pembayaran = PembayaranKaryawan::findOrFail($id);
+
+        $validated = $request->validate([
+            'karyawan_id' => 'required|exists:karyawan,id_karyawan',
+            'periode' => 'required|date_format:Y-m',
+            'nominal' => 'required|integer|min:0',
+            'tanggal_bayar' => 'nullable|date',
+            'status' => 'required|in:terbayar,belum_terbayar',
+            'keterangan' => 'nullable|string|max:500',
+            'bukti_transfer' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ]);
+
+        $path = $pembayaran->bukti_transfer;
+        if ($request->hasFile('bukti_transfer')) {
+            if ($path) {
+                Storage::disk('public')->delete($path);
+            }
+            $path = $request->file('bukti_transfer')->store('bukti-pembayaran-karyawan', 'public');
+        }
+
+        $statusSebelumnya = $pembayaran->status;
+
+        $pembayaran->update([
+            'karyawan_id' => $validated['karyawan_id'],
+            'periode' => $validated['periode'],
+            'nominal' => $validated['nominal'],
+            'tanggal_bayar' => $validated['tanggal_bayar'] ?? null,
+            'status' => $validated['status'],
+            'keterangan' => $validated['keterangan'] ?? null,
+            'bukti_transfer' => $path,
+        ]);
+
+        if ($validated['status'] === 'terbayar' && $statusSebelumnya !== 'terbayar') {
+            $karyawan = Karyawan::find($validated['karyawan_id']);
+
+            if ($karyawan && $karyawan->user_id) {
+                $periodeLabel = Carbon::createFromFormat('Y-m', $validated['periode'])->translatedFormat('F Y');
+
+                Notifikasi::create([
+                    'user_id' => $karyawan->user_id,
+                    'judul' => 'Slip Gaji Telah Dibayarkan',
+                    'pesan' => sprintf(
+                        'Gaji Anda periode %s sebesar Rp %s telah dibayarkan.',
+                        $periodeLabel,
+                        number_format($validated['nominal'], 0, ',', '.')
+                    ),
+                    'kategori' => 'pembayaran',
+                    'tipe' => 'sukses',
+                    'referensi_id' => $pembayaran->id_pembayaran,
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Slip gaji berhasil diperbarui.');
+    }
+
     public function destroy($id)
     {
         $pembayaran = PembayaranKaryawan::findOrFail($id);
