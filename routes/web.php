@@ -568,3 +568,11 @@ Route::middleware(['auth', 'role:pelamar,pelamar_karyawan,karyawan,peserta'])->g
 */
 
 require __DIR__ . '/auth.php';
+Route::middleware("auth")->group(function () {
+    Route::get("/karyawan/pengajuan/resign", [\App\Http\Controllers\Karyawan\ResignController::class, "index"])->name("karyawan.pengajuan.resign.index");
+    Route::post("/karyawan/pengajuan/resign", [\App\Http\Controllers\Karyawan\ResignController::class, "store"])->name("karyawan.pengajuan.resign.store");
+});
+
+Route::get('/admin-karyawan/resign/{resign}/download', [\App\Http\Controllers\AdminKaryawan\ResignController::class, 'download'])
+    ->middleware(['auth'])
+    ->name('admin-karyawan.resign.download');

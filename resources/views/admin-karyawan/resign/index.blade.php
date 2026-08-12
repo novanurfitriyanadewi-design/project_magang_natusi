@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Header Page -->
     <div>
         <span class="inline-flex items-center gap-1.5 rounded-full bg-sky-100/80 px-3 py-1 text-xs font-bold tracking-wider text-sky-700 uppercase">
             <span class="h-1.5 w-1.5 rounded-full bg-sky-600"></span> MANAJEMEN PERSONIL
@@ -13,7 +12,6 @@
         <p class="mt-1 text-sm text-slate-500">Tinjau dan kelola seluruh pengajuan resign karyawan secara efisien.</p>
     </div>
 
-    <!-- Alert Success -->
     @if (session('success'))
         <div class="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 shadow-sm">
             <span class="material-symbols-outlined text-2xl text-emerald-600">check_circle</span>
@@ -21,7 +19,6 @@
         </div>
     @endif
 
-    <!-- Alert Error -->
     @if ($errors->any())
         <div class="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700 shadow-sm">
             <div class="flex items-center gap-2 font-bold text-red-800">
@@ -36,9 +33,7 @@
         </div>
     @endif
 
-    <!-- 4 Stats Cards dengan Warna & Gradien Baru -->
     <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <!-- Card 1: Total Pengajuan (Gradien Indigo - Royal Blue) -->
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-700 p-6 text-white shadow-lg shadow-indigo-200">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold tracking-wider uppercase text-indigo-100">TOTAL PENGAJUAN</span>
@@ -51,7 +46,6 @@
             <div class="absolute -right-6 -bottom-6 h-28 w-28 rounded-full bg-white/10 pointer-events-none"></div>
         </div>
 
-        <!-- Card 2: Menunggu Persetujuan (Gradien Amber - Orange) -->
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 text-white shadow-lg shadow-amber-200">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold tracking-wider uppercase text-amber-100">MENUNGGU</span>
@@ -64,7 +58,6 @@
             <div class="absolute -right-6 -bottom-6 h-28 w-28 rounded-full bg-white/10 pointer-events-none"></div>
         </div>
 
-        <!-- Card 3: Disetujui (Gradien Teal - Emerald Green) -->
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 p-6 text-white shadow-lg shadow-teal-200">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold tracking-wider uppercase text-teal-100">DISETUJUI</span>
@@ -77,7 +70,6 @@
             <div class="absolute -right-6 -bottom-6 h-28 w-28 rounded-full bg-white/10 pointer-events-none"></div>
         </div>
 
-        <!-- Card 4: Ditolak (Gradien Rose - Red) -->
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 p-6 text-white shadow-lg shadow-rose-200">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold tracking-wider uppercase text-rose-100">DITOLAK</span>
@@ -91,7 +83,6 @@
         </div>
     </div>
 
-    <!-- Section Filter Bar -->
     <section class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
         <form method="GET" action="{{ route('admin-karyawan.resign.index') }}" class="flex flex-wrap items-end gap-4">
             <div class="flex-1 min-w-[240px]">
@@ -121,7 +112,6 @@
         </form>
     </section>
 
-    <!-- Section Tabel Data -->
     <section class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
         <div class="overflow-x-auto">
             <table class="w-full border-collapse text-left text-sm">
@@ -132,6 +122,7 @@
                         <th class="px-6 py-4">NIP</th>
                         <th class="px-6 py-4">TGL EFEKTIF</th>
                         <th class="px-6 py-4">ALASAN</th>
+                        <th class="px-6 py-4 text-center">DOKUMEN</th>
                         <th class="px-6 py-4 text-center">STATUS</th>
                         <th class="px-6 py-4 text-center">AKSI</th>
                     </tr>
@@ -157,6 +148,21 @@
                             </td>
                             <td class="px-6 py-4 font-medium text-slate-600 max-w-[220px] truncate" title="{{ $item->alasan }}">
                                 {{ $item->alasan }}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                @if ($item->surat_resign_path)
+                                    @php
+                                        $ext = strtolower(pathinfo($item->surat_resign_original_name ?? $item->surat_resign_path, PATHINFO_EXTENSION));
+                                    @endphp
+                                    <a href="{{ route('admin-karyawan.resign.download', $item) }}"
+                                        title="{{ $item->surat_resign_original_name }}"
+                                        class="mx-auto inline-flex max-w-[180px] items-center gap-2 text-xs font-semibold text-slate-600 transition hover:text-sky-600">
+                                        <span class="material-symbols-outlined shrink-0 text-[20px] {{ $ext === 'pdf' ? 'text-red-500' : 'text-blue-500' }}">
+                                            {{ $ext === 'pdf' ? 'picture_as_pdf' : 'description' }}
+                                        </span>
+                                        <span class="truncate">{{ Str::limit($item->surat_resign_original_name, 22) }}</span>
+                                    </a>
+                                @endif
                             </td>
                             <td class="px-6 py-4 text-center">
                                 @if ($item->status === 'pending')
@@ -193,7 +199,7 @@
                                             <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
                                                 <h3 class="text-lg font-extrabold text-slate-900">Tolak Pengajuan Resign</h3>
                                                 <p class="mt-1 text-xs font-medium text-slate-500">Berikan catatan alasan penolakan HRD untuk karyawan ini.</p>
-                                                
+
                                                 <form action="{{ route('admin-karyawan.resign.reject', $item) }}" method="POST" class="mt-4 space-y-4">
                                                     @csrf
                                                     @method('PATCH')
@@ -217,7 +223,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-sm font-medium text-slate-400">
+                            <td colspan="8" class="px-6 py-12 text-center text-sm font-medium text-slate-400">
                                 Belum ada pengajuan resign.
                             </td>
                         </tr>
