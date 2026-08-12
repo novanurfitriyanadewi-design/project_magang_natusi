@@ -65,7 +65,7 @@
         ? route('profile.edit')
         : '#';
 
-    $showNotification = $user?->role !== 'superadmin' && $user?->role !== 'admin_peserta' && $user?->role !== 'admin_karyawan';
+    $showNotification = (bool) $user;
 
     $profilePhotoUrl = (
         filled($user?->foto_profil)

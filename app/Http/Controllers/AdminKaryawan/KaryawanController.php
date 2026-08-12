@@ -54,6 +54,27 @@ class KaryawanController extends Controller
         ));
     }
 
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_karyawan' => ['required', 'string', 'max:255'],
+            'email'         => ['required', 'email', 'max:255', 'unique:karyawan,email'],
+            'nip'           => ['nullable', 'string', 'max:50', 'unique:karyawan,nip'],
+            'no_hp'         => ['nullable', 'string', 'max:20'],
+            'alamat'        => ['nullable', 'string'],
+            'jabatan'       => ['nullable', 'string', 'max:255'],
+            'status'        => ['required', 'in:aktif,nonaktif'],
+            'divisi_id'     => ['nullable', 'exists:divisi,id_divisi'],
+        ]);
+
+        // Otomatis mengisi tanggal_bergabung saat karyawan baru ditambahkan/diterima
+        $validated['tanggal_bergabung'] = now();
+
+        Karyawan::create($validated);
+
+        return back()->with('success', 'Karyawan berhasil ditambahkan.');
+    }
+
     public function update(Request $request, Karyawan $karyawan)
     {
         $validated = $request->validate([
@@ -71,5 +92,12 @@ class KaryawanController extends Controller
         $karyawan->update($validated);
 
         return back()->with('success', 'Data karyawan berhasil diperbarui.');
+    }
+
+    public function destroy(Karyawan $karyawan)
+    {
+        $karyawan->delete();
+
+        return back()->with('success', 'Data karyawan berhasil dihapus.');
     }
 }
