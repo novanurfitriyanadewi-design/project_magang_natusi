@@ -120,34 +120,27 @@
             ],
             ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
         ],
-        'karyawan' => [
+        
+            'karyawan' => [
             ['label' => 'Dashboard', 'route' => 'karyawan.dashboard', 'match' => 'karyawan.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
             ['label' => 'Absensi', 'route' => 'karyawan.absensi.index', 'match' => 'karyawan.absensi.*', 'icon' => 'attendance-user', 'tour' => 'absensi'],
             ['label' => 'Pengumuman', 'route' => 'karyawan.pengumuman.index', 'match' => 'karyawan.pengumuman.*', 'icon' => 'announcement', 'tour' => 'pengumuman'],
             [
                 'label' => 'Pengajuan',
                 'icon' => 'tasks',
-                'match' => 'karyawan.cuti.*',
+                'match' => 'karyawan.cuti.*|karyawan.resign.*',
                 'tour' => 'pengajuan',
                 'children' => [
                     ['label' => 'Ajukan Cuti', 'route' => 'karyawan.cuti.index', 'match' => 'karyawan.cuti.*', 'tour' => 'cuti'],
                     ['label' => 'Ajukan Resign', 'route' => 'karyawan.resign.create', 'match' => 'karyawan.resign.create', 'tour' => 'resign-create'],
                 ],
             ],
-            [
-                'label' => 'Keuangan',
-                'icon' => 'payment',
-                'match' => 'karyawan.payslip.*',
-                'tour' => 'keuangan',
-                'children' => [
-                    ['label' => 'Slip Gaji', 'route' => 'karyawan.payslip.index', 'match' => 'karyawan.payslip.*', 'tour' => 'payslip'],
-                    ['label' => 'Reimbursement', 'route' => 'karyawan.reimbursement.index', 'match' => 'karyawan.reimbursement.*', 'tour' => 'reimbursement'],
-                ],
-            ],
+            ['label' => 'Slip Gaji', 'route' => 'karyawan.payslip.index', 'match' => 'karyawan.payslip.*', 'icon' => 'payment', 'tour' => 'payslip'],
             ['label' => 'Aturan Perusahaan', 'route' => 'karyawan.aturan.index', 'match' => 'karyawan.aturan.*', 'icon' => 'rules', 'tour' => 'aturan'],
             ['label' => 'Kelola Profil', 'route' => 'profile.edit', 'match' => 'profile.*', 'icon' => 'profile', 'tour' => 'profile'],
             ['label' => 'Bantuan', 'route' => 'karyawan.helpdesk.index', 'match' => 'karyawan.helpdesk.*', 'icon' => 'help', 'tour' => 'helpdesk'],
         ],
+
         default => [
             ['label' => 'Dashboard', 'route' => 'peserta-magang.dashboard', 'match' => 'peserta-magang.dashboard', 'icon' => 'dashboard'],
             ['label' => 'Absensi', 'route' => 'peserta-magang.absensi.index', 'match' => 'peserta-magang.absensi.*', 'icon' => 'attendance-user'],
