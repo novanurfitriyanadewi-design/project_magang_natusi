@@ -21,6 +21,8 @@ class Resign extends Model
         'tanggal_efektif',
         'status',
         'catatan_hrd',
+        'surat_resign_path',
+        'surat_resign_original_name',
     ];
 
     protected $casts = [
