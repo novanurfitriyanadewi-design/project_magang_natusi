@@ -106,6 +106,7 @@
             ['label' => 'Absensi Karyawan', 'route' => 'admin-karyawan.absensi-karyawan.index', 'match' => 'admin-karyawan.absensi-karyawan.*', 'icon' => 'attendance-user', 'tour' => 'absensi-karyawan'],
             ['label' => 'Pembayaran Gaji', 'route' => 'admin-karyawan.pembayaran-karyawan.index', 'match' => 'admin-karyawan.pembayaran-karyawan.*', 'icon' => 'payment', 'tour' => 'pembayaran-karyawan'],
             ['label' => 'Pengajuan Resign', 'route' => 'admin-karyawan.resign.index', 'match' => 'admin-karyawan.resign.*', 'icon' => 'clock', 'tour' => 'resign'],
+            ['label' => 'Pengajuan Cuti', 'route' => 'admin-karyawan.cuti.index', 'match' => 'admin-karyawan.cuti.*', 'icon' => 'calendar', 'tour' => 'cuti'],
             [
                 'label' => 'Laporan',
                 'icon' => 'rules',

@@ -38,6 +38,7 @@ use App\Http\Controllers\AdminKaryawan\AbsensiKaryawanController as AdminAbsensi
 use App\Http\Controllers\AdminKaryawan\PermintaanLamaranController as AdminPermintaanLamaranController;
 use App\Http\Controllers\AdminKaryawan\PembayaranKaryawanController as AdminPembayaranKaryawanController;
 use App\Http\Controllers\AdminKaryawan\ResignController as AdminResignController;
+use App\Http\Controllers\AdminKaryawan\CutiController as AdminCutiController;
 use App\Http\Controllers\AdminKaryawan\LaporanAbsensiKaryawanController;
 use App\Http\Controllers\AdminKaryawan\LaporanKaryawanController;
 use App\Http\Controllers\AdminKaryawan\PengumumanController as AdminKaryawanPengumumanController;
@@ -415,6 +416,11 @@ Route::middleware('admin.karyawan')
         Route::patch('/resign/{resign}/approve', [AdminResignController::class, 'approve'])->name('resign.approve');
         Route::patch('/resign/{resign}/reject', [AdminResignController::class, 'reject'])->name('resign.reject');
 
+        // Pengajuan Cuti (sisi admin)
+        Route::get('/cuti', [AdminCutiController::class, 'index'])->name('cuti.index');
+        Route::patch('/cuti/{cuti}/approve', [AdminCutiController::class, 'approve'])->name('cuti.approve');
+        Route::patch('/cuti/{cuti}/reject', [AdminCutiController::class, 'reject'])->name('cuti.reject');
+
         // Laporan Karyawan & Absensi
         Route::prefix('laporan')->name('laporan.')->group(function () {
             // Laporan Absensi
@@ -508,9 +514,8 @@ Route::middleware(['auth', 'role:karyawan'])
         Route::get('/aturan', [AturanController::class, 'index'])->name('aturan.index');
 
         // Menu Tambahan Karyawan (View Langsung)
-        Route::get('/cuti', function () {
-            return view('karyawan.cuti.index');
-        })->name('cuti.index');
+        Route::get('/cuti', [\App\Http\Controllers\Karyawan\CutiController::class, 'index'])->name('cuti.index');
+Route::post('/cuti', [\App\Http\Controllers\Karyawan\CutiController::class, 'store'])->name('cuti.store');
 
         Route::get('/payslip', [\App\Http\Controllers\Karyawan\PayslipController::class, 'index'])->name('payslip.index');
 
