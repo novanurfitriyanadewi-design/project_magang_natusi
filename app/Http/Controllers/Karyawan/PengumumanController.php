@@ -5,14 +5,14 @@ namespace App\Http\Controllers\Karyawan;
 use App\Http\Controllers\Controller;
 use App\Models\Pengumuman;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PengumumanController extends Controller
 {
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        // Ambil data karyawan yang sedang login
         $karyawan = $user->karyawan;
 
         $query = Pengumuman::with('pembuat')
@@ -22,26 +22,40 @@ class PengumumanController extends Controller
                 // Pengumuman umum
                 $query->whereDoesntHave('penerima')
 
-                    // ATAU pengumuman khusus untuk karyawan ini
+                    // Pengumuman khusus karyawan ini
                     ->orWhereHas('penerima', function ($q) use ($karyawan) {
+
                         $q->where('tipe_penerima', 'karyawan')
-                          ->where('id_penerima', $karyawan?->id_karyawan);
+                            ->where(
+                                'id_penerima',
+                                $karyawan?->id_karyawan
+                            );
                     });
             });
 
-        // Search
+
+        /*
+        |--------------------------------------------------------------------------
+        | Search
+        |--------------------------------------------------------------------------
+        */
+
         if ($request->filled('search')) {
+
             $search = $request->search;
 
             $query->where(function ($q) use ($search) {
+
                 $q->where('judul', 'like', '%' . $search . '%')
                     ->orWhere('isi', 'like', '%' . $search . '%');
             });
         }
 
+
         $pengumuman = $query
             ->latest()
             ->get();
+
 
         return view(
             'karyawan.pengumuman.index',
