@@ -172,6 +172,7 @@
 
             {{-- AKTIF --}}
             <label class="flex cursor-pointer items-center gap-3">
+                <input type="hidden" name="aktif" value="0">
                 <input
                     type="checkbox"
                     name="aktif"

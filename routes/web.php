@@ -125,6 +125,14 @@ Route::middleware('auth')->group(function (): void {
         ->name('profile.photo.show');
 
     // Notifikasi
+    Route::get('/notifikasi/ringkasan', function () {
+        return response()->json([
+            'unread_count' => auth()->user()->notifikasi()
+                ->where('dibaca', false)
+                ->count(),
+        ]);
+    })->name('notifikasi.summary');
+
     Route::patch('/notifikasi/baca-semua', [AdminNotifikasiController::class, 'tandaiSemuaDibacaWeb'])
         ->name('notifikasi.read-all');
 

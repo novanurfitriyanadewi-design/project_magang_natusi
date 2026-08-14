@@ -4,6 +4,7 @@ namespace App\Http\Controllers\AdminKaryawan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Karyawan;
+use App\Models\Notifikasi;
 use App\Models\Pengumuman;
 use App\Models\PengumumanPenerima;
 use Illuminate\Http\Request;
@@ -81,18 +82,43 @@ public function store(Request $request)
         'isi' => $validated['isi'],
         'kategori' => $validated['kategori'],
         'dibuat_oleh' => Auth::id(),
-        'aktif' => $request->boolean('aktif'),
+        'aktif' => $request->has('aktif') ? $request->boolean('aktif') : true, // Default true jika tidak ada input
     ]);
 
-    // Jika target individu
+    // Ambil daftar karyawan penerima
+    $penerimaBanyak = [];
+    
     if ($validated['target'] === 'individu') {
+        // Target individu: gunakan karyawan yang dipilih
+        $penerimaBanyak = Karyawan::whereIn('id_karyawan', $validated['karyawan_id'])
+            ->get();
 
         foreach ($validated['karyawan_id'] as $karyawanId) {
-
             PengumumanPenerima::create([
                 'id_pengumuman' => $pengumuman->id_pengumuman,
                 'tipe_penerima' => 'karyawan',
                 'id_penerima' => $karyawanId,
+            ]);
+        }
+    } else {
+        // Target umum: gunakan semua karyawan aktif
+        $penerimaBanyak = Karyawan::where('status', 'aktif')->get();
+    }
+
+    // Buat notifikasi untuk setiap penerima
+    foreach ($penerimaBanyak as $karyawan) {
+        if ($karyawan->user) {
+            Notifikasi::create([
+                'user_id' => $karyawan->user->id_user,
+                'judul' => $pengumuman->judul,
+                'pesan' => 'Pengumuman baru: ' . $pengumuman->judul,
+                // `tipe` menentukan tampilan notifikasi dan hanya menerima
+                // info, peringatan, atau sukses. Pengumuman dibedakan lewat
+                // kategori agar record-nya tersimpan dan dibaca oleh lonceng.
+                'kategori' => 'pengumuman',
+                'tipe' => 'info',
+                'referensi_id' => $pengumuman->id_pengumuman,
+                'dibaca' => false,
             ]);
         }
     }
@@ -180,42 +206,53 @@ public function edit(Pengumuman $pengumuman)
 
         /*
         |--------------------------------------------------------------------------
-        | Hapus penerima lama
+        | Hapus penerima lama dan notifikasi lama
         |--------------------------------------------------------------------------
         */
 
         $pengumuman->penerima()->delete();
+        // Hapus notifikasi lama
+        Notifikasi::where('referensi_id', $pengumuman->id_pengumuman)
+            ->where('kategori', 'pengumuman')
+            ->delete();
 
 
         /*
         |--------------------------------------------------------------------------
-        | Tambahkan penerima baru
+        | Tambahkan penerima baru dan buat notifikasi baru
         |--------------------------------------------------------------------------
         */
 
+        $penerimaBanyak = [];
+
         if ($validated['target'] === 'umum') {
-
-            $karyawan = Karyawan::where('status', 'aktif')->get();
-
-            foreach ($karyawan as $item) {
-
-                PengumumanPenerima::create([
-                    'id_pengumuman' => $pengumuman->id_pengumuman,
-                    'tipe_penerima' => 'karyawan',
-                    'id_penerima' => $item->id_karyawan,
-                ]);
-            }
-        }
-
-
-        if ($validated['target'] === 'individu') {
+            // Target umum: gunakan semua karyawan aktif
+            $penerimaBanyak = Karyawan::where('status', 'aktif')->get();
+        } else {
+            // Target individu: gunakan karyawan yang dipilih
+            $penerimaBanyak = Karyawan::whereIn('id_karyawan', $validated['karyawan_id'])
+                ->get();
 
             foreach ($validated['karyawan_id'] as $karyawanId) {
-
                 PengumumanPenerima::create([
                     'id_pengumuman' => $pengumuman->id_pengumuman,
                     'tipe_penerima' => 'karyawan',
                     'id_penerima' => $karyawanId,
+                ]);
+            }
+        }
+
+        // Buat notifikasi untuk setiap penerima
+        foreach ($penerimaBanyak as $karyawan) {
+            if ($karyawan->user) {
+                Notifikasi::create([
+                    'user_id' => $karyawan->user->id_user,
+                    'judul' => $pengumuman->judul,
+                    'pesan' => 'Pengumuman diperbarui: ' . $pengumuman->judul,
+                    'kategori' => 'pengumuman',
+                    'tipe' => 'info',
+                    'referensi_id' => $pengumuman->id_pengumuman,
+                    'dibaca' => false,
                 ]);
             }
         }
