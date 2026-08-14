@@ -6,10 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Absensi;
 use App\Models\LaporanMingguan;
 use App\Models\Pembayaran;
+use App\Models\PengumpulanTugas;
+use App\Models\PenugasanPeserta;
 use App\Models\PesertaMagang;
 use App\Models\Notifikasi;
 use App\Models\Pengumuman;
-use App\Models\Tugas;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,14 +25,14 @@ class DashboardController extends Controller
         $user = Auth::user();
         $rentang = $request->query('rentang', 'bulan');
 
-        $userId    = $user->getKey();                          // users.id_user — dipakai untuk Tugas
-        $pesertaId = $user->pesertaMagang?->id_peserta;         // peserta_magang.id_peserta — dipakai untuk Absensi, Pembayaran, LaporanMingguan
+        $pesertaId = $user->pesertaMagang?->id_peserta;         // peserta_magang.id_peserta — dipakai untuk Absensi, Pembayaran, LaporanMingguan, Penugasan
 
         $absensi         = $this->getRingkasanAbsensi($pesertaId, $rentang);
-        $penugasan       = $this->getRingkasanPenugasan($userId);
+        $penugasan       = $this->getRingkasanPenugasan($pesertaId);
         $pembayaran      = $this->getRingkasanPembayaran($pesertaId);
         $laporanMingguan = $this->getRingkasanLaporanMingguan($pesertaId);
-        $progressHarian  = $this->getProgressHarian($userId, $rentang);
+        $progressHarian  = $this->getProgressHarian($pesertaId, $rentang);
+        $tugasBelumMingguIni = $this->getTugasBelumMingguIni($pesertaId);
         $pengumuman      = Pengumuman::where('aktif', true)
             ->latest()
             ->take(4)
@@ -44,6 +45,7 @@ class DashboardController extends Controller
             'pembayaran',
             'laporanMingguan',
             'progressHarian',
+            'tugasBelumMingguIni',
             'pengumuman',
             'rentang'
         ));
@@ -57,52 +59,116 @@ class DashboardController extends Controller
 
         $totalHariKerja = Carbon::now()->diffInWeekdays($awalPeriode) + 1;
 
+        $breakdownKosong = [
+            'hadir' => 0,
+            'terlambat' => 0,
+            'izin' => 0,
+            'sakit' => 0,
+            'alpa' => 0,
+        ];
+
         if (! $pesertaId) {
             return [
                 'hadir_hari_ini'   => false,
+                'status_hari_ini'  => null,
                 'total_hadir'      => 0,
                 'total_hari_kerja' => $totalHariKerja,
                 'status'           => 'perlu_perhatian',
+                'breakdown'        => $breakdownKosong,
             ];
         }
 
-        $totalHadir = Absensi::where('absentable_id', $pesertaId)
+        $breakdown = Absensi::where('absentable_id', $pesertaId)
             ->where('absentable_type', PesertaMagang::class)
-            ->where('status', 'hadir')
             ->whereBetween('tanggal', [$awalPeriode, Carbon::now()])
-            ->count();
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
-        $hadirHariIni = Absensi::where('absentable_id', $pesertaId)
+        foreach ($breakdownKosong as $key => $default) {
+            $breakdownKosong[$key] = (int) ($breakdown[$key] ?? 0);
+        }
+
+        $totalHadir = $breakdownKosong['hadir'] + $breakdownKosong['terlambat'];
+
+        $absensiHariIni = Absensi::where('absentable_id', $pesertaId)
             ->where('absentable_type', PesertaMagang::class)
             ->whereDate('tanggal', Carbon::today())
-            ->where('status', 'hadir')
-            ->exists();
+            ->first();
 
         $persentaseKehadiran = $totalHariKerja > 0 ? ($totalHadir / $totalHariKerja) * 100 : 0;
 
         return [
-            'hadir_hari_ini'   => $hadirHariIni,
+            'hadir_hari_ini'   => $absensiHariIni && in_array($absensiHariIni->status, ['hadir', 'terlambat'], true),
+            'status_hari_ini'  => $absensiHariIni?->status,
             'total_hadir'      => $totalHadir,
             'total_hari_kerja' => $totalHariKerja,
             'status'           => $persentaseKehadiran >= 80 ? 'on_track' : 'perlu_perhatian',
+            'breakdown'        => $breakdownKosong,
         ];
     }
 
-    private function getRingkasanPenugasan(int $userId): array
+    private function getRingkasanPenugasan(?int $pesertaId): array
     {
-        $aktif = Tugas::where('user_id', $userId)
+        if (! $pesertaId) {
+            return ['aktif' => 0, 'selesai' => 0, 'mendekati_deadline' => 0];
+        }
+
+        $sudahDikumpulkan = PengumpulanTugas::where('peserta_id', $pesertaId)
+            ->pluck('tugas_id');
+
+        $aktif = PenugasanPeserta::where('peserta_id', $pesertaId)
             ->where('status', 'aktif')
+            ->whereNotIn('tugas_id', $sudahDikumpulkan)
             ->count();
 
-        $mendekatiDeadline = Tugas::where('user_id', $userId)
+        $selesai = PenugasanPeserta::where('peserta_id', $pesertaId)
+            ->whereIn('tugas_id', $sudahDikumpulkan)
+            ->count();
+
+        $mendekatiDeadline = PenugasanPeserta::where('peserta_id', $pesertaId)
             ->where('status', 'aktif')
-            ->whereBetween('pengumpulan', [Carbon::now(), Carbon::now()->addDays(2)])
+            ->whereNotIn('tugas_id', $sudahDikumpulkan)
+            ->whereBetween('deadline', [Carbon::now(), Carbon::now()->addDays(2)])
             ->count();
 
         return [
             'aktif'              => $aktif,
+            'selesai'            => $selesai,
             'mendekati_deadline' => $mendekatiDeadline,
         ];
+    }
+
+    /**
+     * Daftar tugas yang belum dikerjakan (belum ada pengumpulan) dengan
+     * deadline jatuh pada minggu berjalan (Senin s/d Minggu ini).
+     */
+    private function getTugasBelumMingguIni(?int $pesertaId): \Illuminate\Support\Collection
+    {
+        if (! $pesertaId) {
+            return collect();
+        }
+
+        $sudahDikumpulkan = PengumpulanTugas::where('peserta_id', $pesertaId)
+            ->pluck('tugas_id');
+
+        return PenugasanPeserta::with('tugas')
+            ->where('peserta_id', $pesertaId)
+            ->whereIn('status', ['aktif', 'terjadwal'])
+            ->whereNotIn('tugas_id', $sudahDikumpulkan)
+            ->whereBetween('deadline', [
+                Carbon::now()->startOfWeek(),
+                Carbon::now()->endOfWeek(),
+            ])
+            ->orderBy('deadline')
+            ->get()
+            ->filter(fn (PenugasanPeserta $p) => $p->tugas !== null)
+            ->map(fn (PenugasanPeserta $p) => [
+                'judul'    => $p->tugas->judul,
+                'deadline' => $p->deadline,
+                'terlambat' => $p->deadline && $p->deadline->isPast(),
+            ])
+            ->values();
     }
 
     private function getRingkasanPembayaran(?int $pesertaId): array
@@ -141,23 +207,40 @@ class DashboardController extends Controller
 
     /**
      * Data batang progress penugasan harian, dipakai untuk chart sederhana di view.
+     * Dihitung dari deadline tugas yang dijadwalkan untuk peserta ini per hari.
      */
-    private function getProgressHarian(int $userId, string $rentang): array
+    private function getProgressHarian(?int $pesertaId, string $rentang): array
     {
-        $jumlahHari = $rentang === 'minggu' ? 5 : 5; // Senin-Jumat untuk kedua rentang
+        $jumlahHari = 5; // Senin-Jumat
         $awal = Carbon::now()->startOfWeek();
         $hasil = [];
+
+        if (! $pesertaId) {
+            for ($i = 0; $i < $jumlahHari; $i++) {
+                $tanggal = $awal->copy()->addDays($i);
+                $hasil[] = [
+                    'label' => $tanggal->translatedFormat('D'),
+                    'persentase' => 5,
+                    'is_today' => $tanggal->isToday(),
+                ];
+            }
+
+            return $hasil;
+        }
+
+        $sudahDikumpulkan = PengumpulanTugas::where('peserta_id', $pesertaId)
+            ->pluck('tugas_id');
 
         for ($i = 0; $i < $jumlahHari; $i++) {
             $tanggal = $awal->copy()->addDays($i);
 
-            $totalTugas = Tugas::where('user_id', $userId)
-                ->whereDate('created_at', $tanggal)
+            $totalTugas = PenugasanPeserta::where('peserta_id', $pesertaId)
+                ->whereDate('deadline', $tanggal)
                 ->count();
 
-            $selesai = Tugas::where('user_id', $userId)
-                ->whereDate('created_at', $tanggal)
-                ->where('status', 'selesai')
+            $selesai = PenugasanPeserta::where('peserta_id', $pesertaId)
+                ->whereDate('deadline', $tanggal)
+                ->whereIn('tugas_id', $sudahDikumpulkan)
                 ->count();
 
             $persentase = $totalTugas > 0 ? round(($selesai / $totalTugas) * 100) : 0;

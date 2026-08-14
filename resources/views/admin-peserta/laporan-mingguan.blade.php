@@ -11,7 +11,7 @@
 
     @if (session('success'))
         <div class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm">
-            <span class="material-symbols-outlined text-[21px]">check_circle</span>
+            <svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span>{{ session('success') }}</span>
         </div>
     @endif
@@ -19,7 +19,7 @@
     @if ($errors->any())
         <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
             <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-[20px] text-rose-600">error</span>
+                <svg class="h-5 w-5 shrink-0 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <span>Data belum dapat diproses</span>
             </div>
             <ul class="mt-2 list-disc space-y-1 pl-6 text-xs font-medium">
@@ -30,6 +30,7 @@
         </div>
     @endif
 
+    {{-- Template Laporan --}}
     <section class="overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
         <div class="h-1.5 bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600"></div>
 
@@ -40,27 +41,18 @@
                 </span>
                 <div>
                     <h2 class="text-lg font-bold text-slate-900">Template Laporan Peserta</h2>
-                    <p class="mt-0.5 text-sm text-slate-500">File Word dapat diunduh peserta. Ketentuan laporan disimpan terpisah dan tampil langsung pada setiap penugasan berkategori laporan.</p>
+                    <p class="mt-0.5 text-sm text-slate-500">File Word dapat diunduh peserta. Ketentuan laporan tampil langsung pada setiap penugasan berkategori laporan.</p>
                 </div>
             </div>
         </div>
 
         <div class="grid gap-6 p-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
+            {{-- Form Template --}}
             <form action="{{ route('admin-peserta.laporan-mingguan.template.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
                 @csrf
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label class="mb-1.5 block text-sm font-bold text-slate-700">Judul Template</label>
-                        <input type="text" name="judul_template" value="{{ old('judul_template', 'Template Laporan Magang') }}" required class="h-11 w-full rounded-xl border border-slate-300 px-4 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
-                    </div>
-                    <div>
-                        <label class="mb-1.5 block text-sm font-bold text-slate-700">Instansi</label>
-                        <select name="instansi_laporan" required class="h-11 w-full rounded-xl border border-slate-300 px-4 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
-                            <option value="universitas">Universitas</option>
-                            <option value="sekolah">Sekolah</option>
-                            <option value="semua">Semua Instansi</option>
-                        </select>
-                    </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-bold text-slate-700">Judul Template</label>
+                    <input type="text" name="judul_template" value="{{ old('judul_template', 'Template Laporan Magang') }}" required class="h-11 w-full rounded-xl border border-slate-300 px-4 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-100">
                 </div>
 
                 <div>
@@ -81,6 +73,7 @@
                 </button>
             </form>
 
+            {{-- Daftar Template Tersimpan --}}
             <div>
                 <h3 class="text-sm font-bold text-slate-900">Template yang Tersimpan</h3>
                 <div class="mt-3 space-y-3">
@@ -96,7 +89,7 @@
                                             <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">ARSIP</span>
                                         @endif
                                     </div>
-                                    <p class="mt-1 text-xs text-slate-500">{{ ucfirst($template->instansi) }} · {{ basename($template->file_word) }}</p>
+                                    <p class="mt-1 text-xs text-slate-500">{{ basename($template->file_word) }}</p>
                                     <p class="mt-2 line-clamp-3 whitespace-pre-line text-xs leading-5 text-slate-600">{{ $template->ketentuan }}</p>
                                 </div>
                                 <form action="{{ route('admin-peserta.laporan-mingguan.template.destroy', $template) }}" method="POST" onsubmit="return confirm('Hapus template laporan ini?');">
@@ -118,13 +111,14 @@
         </div>
     </section>
 
+    {{-- Riwayat Laporan Masuk --}}
     <section class="overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[0_18px_45px_rgba(15,52,94,0.08)] backdrop-blur">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50 px-5 py-4 sm:px-6">
             <h2 class="text-base font-extrabold text-slate-950">Riwayat Laporan Masuk</h2>
 
             <form method="GET" action="{{ route('admin-peserta.laporan-mingguan.index') }}" class="flex flex-wrap items-center gap-2">
                 <div class="relative">
-                    <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">search</span>
+                    <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input type="search" name="search" value="{{ $search }}" placeholder="Cari nama peserta..."
                         class="w-56 rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100">
                 </div>
@@ -211,6 +205,7 @@
         @endif
     </section>
 
+    {{-- Belum Lapor Minggu Ini --}}
     @if ($belumLaporMingguIni->isNotEmpty())
         <section class="overflow-hidden rounded-3xl border border-rose-100 bg-white/90 shadow-[0_18px_45px_rgba(15,52,94,0.08)]">
             <header class="border-b border-rose-100 bg-rose-50 px-5 py-4 sm:px-6">

@@ -1,11 +1,8 @@
 @extends('layouts.portal')
-
 @section('title', 'Laporan Absensi - CV Natusi')
-
 @section('content')
-<div class="p-6 space-y-6">
 
-    {{-- Header --}}
+<div class="p-6 space-y-6">
     <section class="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-[#006191]">Laporan Absensi</h1>
@@ -13,7 +10,6 @@
         </div>
     </section>
 
-    {{-- Filter --}}
     <section class="bg-white p-4 rounded-xl border border-slate-200">
         <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
             <div>
@@ -52,52 +48,10 @@
         </form>
     </section>
 
-    {{-- Statistik --}}
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 border-l-4 border-l-[#006191]">
-            <p class="text-xs font-bold text-slate-500 uppercase">Total Kehadiran</p>
-            <h3 class="text-2xl font-bold mt-1">{{ $stats['tingkat_kehadiran'] ?? 0 }}%</h3>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 border-l-4 border-l-[#bb0014]">
-            <p class="text-xs font-bold text-slate-500 uppercase">Rata-rata Terlambat</p>
-            <h3 class="text-2xl font-bold mt-1">{{ $stats['rata_terlambat_menit'] ?? 0 }} <span class="text-sm font-normal text-slate-500">menit</span></h3>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 border-l-4 border-l-[#4d5d70]">
-            <p class="text-xs font-bold text-slate-500 uppercase">Total Izin/Sakit</p>
-            <h3 class="text-2xl font-bold mt-1">{{ $stats['total_izin_sakit'] ?? 0 }}</h3>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 border-l-4 border-l-[#0b1c30]">
-            <p class="text-xs font-bold text-slate-500 uppercase">Tingkat Ketidakhadiran</p>
-            <h3 class="text-2xl font-bold mt-1">{{ $stats['tingkat_ketidakhadiran'] ?? 0 }}%</h3>
-        </div>
-    </section>
-
-    {{-- Grafik tren --}}
-    <section class="bg-white p-6 rounded-xl border border-slate-200">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-lg font-semibold">Trend Frekuensi Kehadiran ({{ now()->year }})</h3>
-            <span class="flex items-center gap-1 text-xs"><span class="w-3 h-3 rounded-full bg-[#006191] inline-block"></span> Kehadiran (%)</span>
-        </div>
-
-        <div class="h-56 flex items-end justify-between gap-3 px-2">
-            @php $bulanLabel = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']; @endphp
-            @foreach ($monthlyRate as $bulan => $persen)
-                <div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
-                    <div class="w-full flex items-end h-full">
-                        <div class="w-full bg-[#006191] rounded-t transition-all duration-300" style="height: {{ max(4, $persen) }}%;" title="{{ $persen }}%"></div>
-                    </div>
-                    <span class="text-[10px] text-slate-500 mt-2">{{ $bulanLabel[$bulan - 1] }}</span>
-                </div>
-            @endforeach
-        </div>
-    </section>
-
-    {{-- Tabel rekap per peserta --}}
     <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h3 class="text-lg font-semibold">Data Detail Peserta</h3>
             <form method="GET">
-                {{-- Maintain filter params --}}
                 <input type="hidden" name="kategori" value="{{ $kategori ?? '' }}">
                 <input type="hidden" name="status" value="{{ $status ?? '' }}">
                 <input type="hidden" name="dari_tanggal" value="{{ $dariTgl ?? '' }}">

@@ -72,7 +72,6 @@
             ['label' => 'Data Peserta Magang', 'route' => 'admin-peserta.peserta.index', 'match' => 'admin-peserta.peserta.*', 'icon' => 'users', 'tour' => 'internship-participants'],
             ['label' => 'Absensi Peserta', 'route' => 'admin-peserta.absensi.index', 'match' => 'admin-peserta.absensi.*', 'icon' => 'attendance-user', 'tour' => 'attendance-data'],
             ['label' => 'Pembayaran Sumbangan', 'route' => 'admin-peserta.pembayaran.index', 'match' => 'admin-peserta.pembayaran.*', 'icon' => 'payment', 'tour' => 'pembayaran-peserta'],
-            ['label' => 'Kelola Jurusan', 'route' => 'admin-peserta.jurusan.index', 'match' => 'admin-peserta.jurusan.*', 'icon' => 'rules', 'tour' => 'manage-jurusan'],
             [
                 'label' => 'Kelola Tugas',
                 'icon' => 'tasks',
@@ -84,6 +83,8 @@
                     ['label' => 'Data Penugasan', 'route' => 'admin-peserta.pengumpulan-tugas.index', 'match' => 'admin-peserta.pengumpulan-tugas.*', 'tour' => 'task-submissions'],
                 ],
             ],
+            ['label' => 'Kelola Jurusan', 'route' => 'admin-peserta.jurusan.index', 'match' => 'admin-peserta.jurusan.*', 'icon' => 'rules', 'tour' => 'manage-jurusan'],
+            ['label' => 'Kelola Sertifikat', 'route' => 'admin-peserta.sertifikat.index', 'match' => 'admin-peserta.sertifikat.*', 'icon' => 'report', 'tour' => 'manage-sertifikat'],
             [
                 'label' => 'Laporan',
                 'icon' => 'rules',
@@ -141,6 +142,7 @@
             ['label' => 'Penugasan', 'route' => 'peserta-magang.penugasan.index', 'match' => 'peserta-magang.penugasan.*', 'icon' => 'assignment'],
             ['label' => 'Laporan Mingguan', 'route' => 'peserta-magang.laporan-mingguan.index', 'match' => 'peserta-magang.laporan-mingguan.*', 'icon' => 'report'],
             ['label' => 'Pembayaran', 'route' => 'peserta-magang.pembayaran.index', 'match' => 'peserta-magang.pembayaran.*', 'icon' => 'payment'],
+            ['label' => 'Sertifikat Saya', 'route' => 'peserta-magang.sertifikat.index', 'match' => 'peserta-magang.sertifikat.*', 'icon' => 'report'],
             ['label' => 'Aturan Perusahaan', 'route' => 'peserta-magang.aturan.index', 'match' => 'peserta-magang.aturan.*', 'icon' => 'rules'],
         ],
     };

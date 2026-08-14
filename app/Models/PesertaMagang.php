@@ -64,6 +64,10 @@ class PesertaMagang extends Model
     {
         return $this->morphMany(Absensi::class, 'absentable');
     }
+    public function sertifikat(): HasMany
+    {
+        return $this->hasMany(Sertifikat::class, 'peserta_id', 'id_peserta');
+    }
     public function laporanMingguan(): HasMany
     {
         return $this->hasMany(

@@ -115,13 +115,10 @@ class TugasController extends Controller
 
     public function downloadTemplate()
     {
-       $file = public_path('template/template_tugas_mingguan.xlsx');
-
-        if (!file_exists($file)) {
-            abort(404);
-        }
-
-        return response()->download($file);
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\TemplateTugasMingguanExport(),
+            'template_tugas_mingguan.xlsx'
+        );
     }
 
 

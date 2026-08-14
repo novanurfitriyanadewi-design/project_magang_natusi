@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\PesertaMagang;
 
 use App\Http\Controllers\Controller;
+use App\Models\PesertaMagang;
 use App\Models\Tugas;
 use App\Models\PengumpulanTugas;
 use Illuminate\Http\Request;

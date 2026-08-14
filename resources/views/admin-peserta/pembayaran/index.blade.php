@@ -9,10 +9,23 @@
     tolakOpen: false,
     tolakAction: '',
     tolakId: null,
-    openDetail(data) { this.detail = data; this.detailOpen = true; },
-    closeDetail() { this.detailOpen = false; },
-    openTolak(id, action) { this.tolakId = id; this.tolakAction = action; this.tolakOpen = true; },
-    closeTolak() { this.tolakOpen = false; this.tolakId = null; this.tolakAction = ''; }
+    openDetail(data) {
+        this.detail = data;
+        this.detailOpen = true;
+    },
+    closeDetail() {
+        this.detailOpen = false;
+    },
+    openTolak(id, action) {
+        this.tolakId = id;
+        this.tolakAction = action;
+        this.tolakOpen = true;
+    },
+    closeTolak() {
+        this.tolakOpen = false;
+        this.tolakId = null;
+        this.tolakAction = '';
+    }
 }">
 
     {{-- Judul --}}
@@ -26,6 +39,12 @@
         <div class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
             <svg class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span>{{ session('success') }}</span>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
+            <svg class="mt-0.5 h-5 w-5 shrink-0 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>{{ session('error') }}</span>
         </div>
     @endif
 
@@ -106,6 +125,7 @@
                             $tanggalText = $tanggalKirim?->translatedFormat('d M Y, H:i') ?? '-';
                             $nominalFormatted = 'Rp ' . number_format($pembayaran->nominal ?? 0, 0, ',', '.');
                             $idPembayaran = $pembayaran->id_pembayaran;
+                            $payId = 'PAY-' . str_pad((string) $idPembayaran, 5, '0', STR_PAD_LEFT);
                         @endphp
 
                         <tr class="group transition hover:bg-sky-50/40">
@@ -115,7 +135,7 @@
                                     <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-100 to-blue-100 text-xs font-extrabold text-sky-700 ring-1 ring-sky-200">{{ $initials ?: 'P' }}</span>
                                     <div class="min-w-0">
                                         <p class="max-w-52 truncate text-sm font-extrabold text-slate-900" title="{{ $nama }}">{{ $nama }}</p>
-                                        <p class="mt-0.5 text-xs text-slate-400">#PAY-{{ str_pad((string) $idPembayaran, 5, '0', STR_PAD_LEFT) }}</p>
+                                        <p class="mt-0.5 text-xs text-slate-400">#{{ $payId }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -146,6 +166,7 @@
                             <td class="px-5 py-4">
                                 @if ($buktiUrl)
                                     <button type="button" @click="openDetail(@js([
+                                        'id' => $payId,
                                         'nama' => $nama,
                                         'jenjang' => $jenjang,
                                         'telepon' => $telepon,
@@ -156,6 +177,7 @@
                                         'buktiNama' => $buktiNama,
                                         'isPdf' => $isPdf,
                                         'acceptAction' => $acceptAction,
+                                        'tolakAction' => $tolakAction,
                                         'canAccept' => !$isAccepted,
                                     ]))" class="inline-flex max-w-52 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-sky-700 shadow-sm transition hover:border-sky-200 hover:bg-sky-50">
                                         <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12.5 12.5 8a3 3 0 1 1 4.2 4.2l-6.1 6.1a4.5 4.5 0 1 1-6.4-6.4l6-6"/></svg>
@@ -180,42 +202,24 @@
 
                             {{-- Aksi --}}
                             <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    {{-- Detail --}}
-                                    <button type="button" @click="openDetail(@js([
-                                        'nama' => $nama,
-                                        'jenjang' => $jenjang,
-                                        'telepon' => $telepon,
-                                        'tanggal' => $tanggalText . ' WIB',
-                                        'nominal' => $nominalFormatted,
-                                        'status' => $statusLabel,
-                                        'buktiUrl' => $buktiUrl ?? '',
-                                        'buktiNama' => $buktiNama,
-                                        'isPdf' => $isPdf,
-                                        'acceptAction' => $acceptAction,
-                                        'canAccept' => !$isAccepted,
-                                    ]))" class="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-2 text-xs font-extrabold text-sky-700 transition hover:-translate-y-0.5 hover:bg-sky-100 focus:outline-none focus:ring-4 focus:ring-sky-100">
-                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                        Show Detail
-                                    </button>
-
-                                    @if (!$isAccepted)
-                                        {{-- Terima --}}
-                                        <form method="POST" action="{{ $acceptAction }}" onsubmit="return confirm('Terima pembayaran ini dan ubah status menjadi lunas?')">
-                                            @csrf @method('PATCH')
-                                            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-3.5 py-2 text-xs font-extrabold text-white shadow-[0_8px_18px_rgba(16,185,129,0.22)] transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-emerald-100">
-                                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
-                                                Terima
-                                            </button>
-                                        </form>
-
-                                        {{-- Tolak --}}
-                                        <button type="button" @click="openTolak({{ $idPembayaran }}, '{{ $tolakAction }}')" class="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-xs font-extrabold text-red-600 transition hover:-translate-y-0.5 hover:bg-red-50">
-                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
-                                            Tolak
-                                        </button>
-                                    @endif
-                                </div>
+                                <button type="button" @click="openDetail(@js([
+                                    'id' => $payId,
+                                    'nama' => $nama,
+                                    'jenjang' => $jenjang,
+                                    'telepon' => $telepon,
+                                    'tanggal' => $tanggalText . ' WIB',
+                                    'nominal' => $nominalFormatted,
+                                    'status' => $statusLabel,
+                                    'buktiUrl' => $buktiUrl ?? '',
+                                    'buktiNama' => $buktiNama,
+                                    'isPdf' => $isPdf,
+                                    'acceptAction' => $acceptAction,
+                                    'tolakAction' => $tolakAction,
+                                    'canAccept' => !$isAccepted,
+                                ]))" class="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-2 text-xs font-extrabold text-sky-700 transition hover:-translate-y-0.5 hover:bg-sky-100 focus:outline-none focus:ring-4 focus:ring-sky-100">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    Show Detail
+                                </button>
                             </td>
                         </tr>
                     @empty
@@ -247,17 +251,17 @@
 
     {{-- Modal Detail Pembayaran --}}
     <template x-teleport="body">
-        <div x-cloak x-show="detailOpen" x-transition.opacity class="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/60 px-4 py-6 backdrop-blur-sm" @click.self="closeDetail()">
+        <div x-cloak x-show="detailOpen" x-transition.opacity class="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/60 px-4 py-6" @click.self="closeDetail()">
             <div class="flex min-h-full items-center justify-center">
-                <article x-show="detailOpen" x-transition.scale.origin.center role="dialog" aria-modal="true" aria-labelledby="detail-pembayaran-title" class="w-full max-w-4xl overflow-hidden rounded-3xl border border-white/70 bg-white shadow-2xl">
-                    {{-- Header --}}
-                    <header class="flex items-start justify-between gap-4 bg-gradient-to-r from-sky-600 to-blue-600 px-6 py-5 text-white">
+                <article x-show="detailOpen" x-transition.scale.origin.center role="dialog" aria-modal="true" aria-labelledby="detail-pembayaran-title" class="w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+                    {{-- Header putih --}}
+                    <header class="flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5">
                         <div>
-                            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-sky-100">Verifikasi pembayaran</p>
-                            <h2 id="detail-pembayaran-title" class="mt-1 text-xl font-extrabold">Detail Pembayaran Peserta</h2>
-                            <p class="mt-0.5 text-sm text-white/80">Periksa identitas dan bukti pembayaran sebelum menerima transaksi.</p>
+                            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">Verifikasi pembayaran</p>
+                            <h2 id="detail-pembayaran-title" class="mt-1 text-xl font-extrabold text-slate-900">Detail Pembayaran Peserta</h2>
+                            <p class="mt-0.5 text-sm text-slate-500">Periksa identitas dan bukti pembayaran sebelum menerima transaksi.</p>
                         </div>
-                        <button type="button" @click="closeDetail()" class="rounded-xl p-2 text-white/80 transition hover:bg-white/10 hover:text-white" aria-label="Tutup detail">
+                        <button type="button" @click="closeDetail()" class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600" aria-label="Tutup detail">
                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
                         </button>
                     </header>
@@ -299,12 +303,6 @@
                                     </dd>
                                 </div>
                             </dl>
-                            <template x-if="detail.canAccept">
-                                <form :action="detail.acceptAction" method="POST" class="mt-6" onsubmit="return confirm('Terima pembayaran ini?')">
-                                    @csrf @method('PATCH')
-                                    <button type="submit" class="w-full rounded-xl bg-emerald-600 py-3 text-sm font-extrabold text-white transition hover:bg-emerald-700">Terima Pembayaran</button>
-                                </form>
-                            </template>
                         </section>
 
                         {{-- Bukti --}}
@@ -331,6 +329,38 @@
                             </div>
                         </section>
                     </div>
+
+                    {{-- Footer modal dengan tombol aksi --}}
+                    <div class="border-t border-slate-200 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="text-xs text-slate-500">
+                            <span class="font-bold">ID Pembayaran:</span>
+                            <span x-text="detail.id || '#'"></span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <template x-if="detail.canAccept">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    {{-- Tombol Terima --}}
+                                    <form :action="detail.acceptAction" method="POST" onsubmit="return confirm('Terima pembayaran ini?')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-xs font-extrabold text-white shadow-[0_8px_18px_rgba(16,185,129,0.22)] transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
+                                            Terima
+                                        </button>
+                                    </form>
+
+                                    {{-- Tombol Tolak --}}
+                                    <button type="button" @click="closeDetail(); $nextTick(() => { openTolak(detail.id, detail.tolakAction) })" class="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-xs font-extrabold text-red-600 transition hover:-translate-y-0.5 hover:bg-red-50">
+                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                                        Tolak
+                                    </button>
+                                </div>
+                            </template>
+                            <template x-if="!detail.canAccept">
+                                <span class="text-xs text-slate-400 italic">Pembayaran sudah diterima</span>
+                            </template>
+                        </div>
+                    </div>
                 </article>
             </div>
         </div>
@@ -338,22 +368,24 @@
 
     {{-- Modal Tolak Pembayaran --}}
     <template x-teleport="body">
-        <div x-cloak x-show="tolakOpen" x-transition.opacity class="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/60 px-4 py-6 backdrop-blur-sm" @click.self="closeTolak()">
+        <div x-cloak x-show="tolakOpen" x-transition.opacity class="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/60 px-4 py-6" @click.self="closeTolak()">
             <div class="flex min-h-full items-center justify-center">
-                <article x-show="tolakOpen" x-transition.scale.origin.center role="dialog" aria-modal="true" aria-labelledby="tolak-pembayaran-title" class="w-full max-w-lg overflow-hidden rounded-3xl border border-white/70 bg-white shadow-2xl">
-                    <header class="flex items-start justify-between gap-4 bg-gradient-to-r from-rose-600 to-red-600 px-6 py-5 text-white">
+                <article x-show="tolakOpen" x-transition.scale.origin.center role="dialog" aria-modal="true" aria-labelledby="tolak-pembayaran-title" class="w-full max-w-lg overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+                    {{-- Header putih --}}
+                    <header class="flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5">
                         <div>
-                            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-rose-100">Tolak pembayaran</p>
-                            <h2 id="tolak-pembayaran-title" class="mt-1 text-xl font-extrabold">Konfirmasi Penolakan</h2>
-                            <p class="mt-0.5 text-sm text-white/80">Berikan alasan penolakan agar peserta dapat memperbaiki.</p>
+                            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">Tolak pembayaran</p>
+                            <h2 id="tolak-pembayaran-title" class="mt-1 text-xl font-extrabold text-slate-900">Konfirmasi Penolakan</h2>
+                            <p class="mt-0.5 text-sm text-slate-500">Berikan alasan penolakan agar peserta dapat memperbaiki.</p>
                         </div>
-                        <button type="button" @click="closeTolak()" class="rounded-xl p-2 text-white/80 transition hover:bg-white/10 hover:text-white" aria-label="Tutup modal">
+                        <button type="button" @click="closeTolak()" class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600" aria-label="Tutup modal">
                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
                         </button>
                     </header>
 
                     <form method="POST" :action="tolakAction" class="p-6">
-                        @csrf @method('PATCH')
+                        @csrf
+                        @method('PATCH')
                         <div>
                             <label for="tolak-keterangan" class="mb-1.5 block text-sm font-bold text-slate-700">Alasan Penolakan</label>
                             <textarea id="tolak-keterangan" name="keterangan" rows="4" required placeholder="Tuliskan alasan penolakan dengan jelas..." class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-100"></textarea>

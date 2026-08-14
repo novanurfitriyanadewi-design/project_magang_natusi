@@ -4,9 +4,11 @@
 
 @section('content')
     @php
-        $bankCodeByName = array_flip($bankOptions);
+        $bankCodeByName = array_flip($bankOptions ?? []);
         $oldContext = old('form_context');
         $editBankId = old('bank_id');
+        $search = request('search', '');
+        $totalBanks = $banks->count();
     @endphp
 
     <div
@@ -32,17 +34,16 @@
         @keydown.escape.window="closeModals()"
         x-effect="document.body.classList.toggle('overflow-hidden', historyOpen || editOpen)"
     >
+        {{-- Header --}}
         <section class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
                     Manajemen Rekening Bank
                 </h1>
-
                 <p class="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
                     Kelola nominal administrasi dan rekening bank resmi CV Natusi untuk transaksi pendaftaran peserta magang.
                 </p>
             </div>
-
             <button
                 type="button"
                 @click="historyOpen = true"
@@ -56,6 +57,7 @@
             </button>
         </section>
 
+        {{-- Global Error --}}
         @if ($errors->any())
             <div class="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 <p class="font-bold">Data belum dapat disimpan.</p>
@@ -63,6 +65,7 @@
             </div>
         @endif
 
+        {{-- Form Nominal --}}
         <section class="mt-5 overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.08)] backdrop-blur">
             <div class="border-l-4 border-sky-600 px-5 py-5 sm:px-6">
                 <div class="flex items-center gap-3">
@@ -99,17 +102,15 @@
                                 inputmode="numeric"
                                 min="1000"
                                 step="1000"
-                                value="{{ $oldContext === 'nominal' ? old('jumlah_nominal') : ($nominal?->jumlah_nominal ?? '') }}"
+                                value="{{ $oldContext === 'nominal' ? old('jumlah_nominal') : ($nominal->jumlah_nominal ?? '') }}"
                                 placeholder="Contoh: 150000"
                                 required
                                 class="w-full rounded-xl border-slate-300 py-3 pl-12 pr-4 text-sm focus:border-sky-500 focus:ring-sky-500"
                             >
                         </div>
-                        @if ($oldContext === 'nominal')
-                            @error('jumlah_nominal')
-                                <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
-                            @enderror
-                        @endif
+                        @error('jumlah_nominal')
+                            <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <button
@@ -125,6 +126,7 @@
             </div>
         </section>
 
+        {{-- Form Tambah Rekening --}}
         <section class="mt-5 overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.08)] backdrop-blur">
             <div class="border-l-4 border-sky-600 px-5 py-5 sm:px-6">
                 <div class="flex items-center gap-3">
@@ -162,11 +164,9 @@
                                 </option>
                             @endforeach
                         </select>
-                        @if ($oldContext === 'create')
-                            @error('nama_bank')
-                                <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
-                            @enderror
-                        @endif
+                        @error('nama_bank')
+                            <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
@@ -182,11 +182,9 @@
                             required
                             class="w-full rounded-xl border-slate-300 py-3 text-sm focus:border-sky-500 focus:ring-sky-500"
                         >
-                        @if ($oldContext === 'create')
-                            @error('no_rekening')
-                                <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
-                            @enderror
-                        @endif
+                        @error('no_rekening')
+                            <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
@@ -201,11 +199,9 @@
                             required
                             class="w-full rounded-xl border-slate-300 py-3 text-sm uppercase focus:border-sky-500 focus:ring-sky-500"
                         >
-                        @if ($oldContext === 'create')
-                            @error('nama_pemilik')
-                                <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
-                            @enderror
-                        @endif
+                        @error('nama_pemilik')
+                            <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <button
@@ -215,12 +211,134 @@
                         <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path d="M5 4h12l2 2v14H5V4Zm3 0v6h8V4M8 16h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        Simpan Metode Pembayaran
+                        Simpan Rekening
                     </button>
                 </form>
             </div>
         </section>
 
+        {{-- Form Upload/Ganti QRIS --}}
+        <section class="mt-5 overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.08)] backdrop-blur">
+            <div class="border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5">
+                <div class="flex items-center gap-3">
+                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-100">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 3h3m-3 3h6v-6h-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Upload / Ganti Kode QRIS</h2>
+                        <p class="text-sm text-slate-500">Pasangkan gambar QRIS resmi ke salah satu rekening yang sudah terdaftar. Terpisah dari data rekening di atas.</p>
+                    </div>
+                </div>
+            </div>
+
+            @if ($banks->isNotEmpty())
+                <form
+                    method="POST"
+                    action="{{ route('superadmin.metode-pembayaran.qris.store') }}"
+                    enctype="multipart/form-data"
+                    class="p-6"
+                >
+                    @csrf
+
+                    <div class="grid gap-6 md:grid-cols-2">
+                        <div>
+                            <label for="qris_bank_id" class="mb-1.5 block text-sm font-bold text-slate-700">Pilih Rekening</label>
+                            <select
+                                id="qris_bank_id"
+                                name="bank_id"
+                                required
+                                class="w-full rounded-xl border-slate-300 py-3 text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                            >
+                                <option value="">-- Pilih Rekening --</option>
+                                @foreach ($banks as $bank)
+                                    <option value="{{ $bank->id_bank }}" @selected(old('bank_id') == $bank->id_bank)>
+                                        {{ $bank->nama_bank }} – {{ $bank->no_rekening }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('bank_id')
+                                <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="qris_image" class="mb-1.5 block text-sm font-bold text-slate-700">Gambar QRIS</label>
+                            <input
+                                id="qris_image"
+                                name="qris_image"
+                                type="file"
+                                accept=".jpg,.jpeg,.png"
+                                required
+                                class="block w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-100 file:px-3 file:py-2 file:text-xs file:font-bold file:text-emerald-700"
+                            >
+                            <p class="mt-1.5 text-xs text-slate-500">JPG/PNG, maks 2MB. Jika rekening sudah punya QRIS, gambar lama akan diganti.</p>
+                            @error('qris_image')
+                                <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button
+                            type="submit"
+                            class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 px-6 text-sm font-bold text-white shadow-[0_10px_24px_rgba(5,150,105,0.24)] transition hover:-translate-y-0.5 hover:from-emerald-700 hover:to-teal-800"
+                        >
+                            <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 4v12m0 0 4-4m-4 4-4-4M5 18h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Simpan QR Code
+                        </button>
+                    </div>
+                </form>
+            @else
+                <div class="p-6 text-center text-sm text-slate-500">
+                    Belum ada rekening. Tambahkan rekening terlebih dahulu untuk memasang QRIS.
+                </div>
+            @endif
+
+            {{-- Daftar QRIS Terpasang --}}
+            @if ($banks->whereNotNull('qris_image')->isNotEmpty())
+                <div class="border-t border-slate-100 p-6">
+                    <p class="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">QRIS Terpasang</p>
+                    <div class="flex flex-wrap gap-4">
+                        @foreach ($banks->whereNotNull('qris_image') as $bank)
+                            <div class="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+                                <img
+                                    src="{{ asset('storage/'.$bank->qris_image) }}"
+                                    alt="QRIS {{ $bank->nama_bank }}"
+                                    class="h-14 w-14 rounded-lg border border-slate-200 object-cover"
+                                >
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">{{ $bank->nama_bank }}</p>
+                                    <p class="text-xs text-slate-500">{{ $bank->no_rekening }}</p>
+                                </div>
+                                <form
+                                    action="{{ route('superadmin.metode-pembayaran.qris.destroy', $bank) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Hapus QRIS untuk {{ $bank->nama_bank }}?')"
+                                >
+                                    @csrf
+                                    @method('DELETE')
+                                    <button
+                                        type="submit"
+                                        class="grid h-8 w-8 place-items-center rounded-lg bg-rose-50 text-rose-600 transition hover:bg-rose-100"
+                                        title="Hapus QRIS"
+                                    >
+                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                                            <path d="M5 7h14M9 7V4.5h6V7M8 10v7M12 10v7M16 10v7M6.5 7l.7 12h9.6l.7-12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </section>
+
+        {{-- Daftar Rekening --}}
         <section class="mt-5 overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
             <div class="flex flex-col gap-3 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-3">
@@ -231,7 +349,7 @@
                     </span>
                     <div>
                         <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-slate-800">Daftar Rekening Pembayaran</h2>
-                        @if ($search !== '')
+                        @if ($search)
                             <p class="mt-0.5 text-xs text-slate-500">Hasil pencarian “{{ $search }}”.</p>
                         @endif
                     </div>
@@ -251,6 +369,7 @@
                             <th class="px-5 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-500">Nama Bank</th>
                             <th class="px-5 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-500">Nomor Rekening</th>
                             <th class="px-5 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-500">Atas Nama</th>
+                            <th class="px-5 py-3.5 text-center text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-500">QRIS</th>
                             <th class="w-28 px-5 py-3.5 text-center text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-500">Aksi</th>
                         </tr>
                     </thead>
@@ -280,6 +399,17 @@
                                 </td>
                                 <td class="px-5 py-4 font-mono text-sm font-semibold tracking-[0.08em] text-slate-700">{{ $bank->no_rekening }}</td>
                                 <td class="px-5 py-4 text-sm font-semibold text-slate-700">{{ $bank->nama_pemilik }}</td>
+                                <td class="px-5 py-4 text-center">
+                                    @if ($bank->qris_image)
+                                        <img
+                                            src="{{ asset('storage/'.$bank->qris_image) }}"
+                                            alt="QRIS {{ $bank->nama_bank }}"
+                                            class="mx-auto h-12 w-12 rounded-lg border border-slate-200 object-cover"
+                                        >
+                                    @else
+                                        <span class="inline-flex rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-400">Belum ada</span>
+                                    @endif
+                                </td>
                                 <td class="px-5 py-4">
                                     <div class="flex items-center justify-center gap-1">
                                         <button
@@ -314,17 +444,17 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-5 py-14 text-center">
+                                <td colspan="6" class="px-5 py-14 text-center">
                                     <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-sky-50 text-sky-500">
                                         <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                             <path d="M4 9h16M6 9V6h12v3M5 9v10h14V9M8 13h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
                                     </span>
                                     <p class="mt-3 font-bold text-slate-800">
-                                        {{ $search !== '' ? 'Rekening tidak ditemukan' : 'Belum ada rekening pembayaran' }}
+                                        {{ $search ? 'Rekening tidak ditemukan' : 'Belum ada rekening pembayaran' }}
                                     </p>
                                     <p class="mt-1 text-sm text-slate-500">
-                                        {{ $search !== '' ? 'Coba gunakan kata kunci lain pada kolom pencarian.' : 'Tambahkan rekening resmi melalui formulir di atas.' }}
+                                        {{ $search ? 'Coba gunakan kata kunci lain pada kolom pencarian.' : 'Tambahkan rekening resmi melalui formulir di atas.' }}
                                     </p>
                                 </td>
                             </tr>
@@ -338,7 +468,7 @@
             </div>
         </section>
 
-        {{-- Modal edit rekening --}}
+        {{-- Modal Edit --}}
         <template x-teleport="body">
             <div
                 x-cloak
@@ -381,26 +511,30 @@
                                             <option value="{{ $bankName }}">{{ $code }} — {{ $bankName }}</option>
                                         @endforeach
                                     </select>
-                                    @if ($oldContext === 'edit')
-                                        @error('nama_bank')<p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>@enderror
-                                    @endif
+                                    @error('nama_bank')
+                                        <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
                                 <div>
                                     <label for="edit_no_rekening" class="mb-1.5 block text-sm font-bold text-slate-700">Nomor Rekening</label>
                                     <input id="edit_no_rekening" name="no_rekening" type="text" inputmode="numeric" maxlength="30" x-model="editBank.no_rekening" required class="w-full rounded-xl border-slate-300 focus:border-sky-500 focus:ring-sky-500">
-                                    @if ($oldContext === 'edit')
-                                        @error('no_rekening')<p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>@enderror
-                                    @endif
+                                    @error('no_rekening')
+                                        <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
                                 <div>
                                     <label for="edit_nama_pemilik" class="mb-1.5 block text-sm font-bold text-slate-700">Atas Nama</label>
                                     <input id="edit_nama_pemilik" name="nama_pemilik" type="text" maxlength="100" x-model="editBank.nama_pemilik" required class="w-full rounded-xl border-slate-300 uppercase focus:border-sky-500 focus:ring-sky-500">
-                                    @if ($oldContext === 'edit')
-                                        @error('nama_pemilik')<p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>@enderror
-                                    @endif
+                                    @error('nama_pemilik')
+                                        <p class="mt-1.5 text-xs font-medium text-rose-600">{{ $message }}</p>
+                                    @enderror
                                 </div>
+
+                                <p class="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                                    Untuk mengatur gambar QRIS rekening ini, gunakan form "Upload / Ganti Kode QRIS" di halaman utama.
+                                </p>
                             </div>
 
                             <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -413,7 +547,7 @@
             </div>
         </template>
 
-        {{-- Modal riwayat perubahan --}}
+        {{-- Modal Riwayat --}}
         <template x-teleport="body">
             <div
                 x-cloak
