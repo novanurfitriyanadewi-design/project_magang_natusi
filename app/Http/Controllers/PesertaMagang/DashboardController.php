@@ -11,6 +11,7 @@ use App\Models\PenugasanPeserta;
 use App\Models\PesertaMagang;
 use App\Models\Notifikasi;
 use App\Models\Pengumuman;
+use App\Services\PenugasanTemplateService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,12 +21,17 @@ class DashboardController extends Controller
     /**
      * Tampilkan dashboard overview untuk karyawan/intern yang sedang login.
      */
-    public function index(Request $request)
+    public function index(Request $request, PenugasanTemplateService $penugasanService)
     {
         $user = Auth::user();
         $rentang = $request->query('rentang', 'bulan');
 
         $pesertaId = $user->pesertaMagang?->id_peserta;         // peserta_magang.id_peserta — dipakai untuk Absensi, Pembayaran, LaporanMingguan, Penugasan
+
+        if ($user->pesertaMagang) {
+            $penugasanService->syncForParticipant($user->pesertaMagang);
+            $penugasanService->refreshStatuses($user->pesertaMagang);
+        }
 
         $absensi         = $this->getRingkasanAbsensi($pesertaId, $rentang);
         $penugasan       = $this->getRingkasanPenugasan($pesertaId);

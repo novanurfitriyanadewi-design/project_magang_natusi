@@ -10,48 +10,22 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class MetodePembayaranController extends Controller
 {
-    /**
-     * Daftar bank yang ditampilkan pada pilihan metode pembayaran.
-     * Nilai disimpan sebagai nama lengkap agar tetap kompatibel dengan API lama.
-     */
-    private const BANK_OPTIONS = [
-        'BCA' => 'Bank Central Asia',
-        'MANDIRI' => 'Bank Mandiri',
-        'BRI' => 'Bank Rakyat Indonesia',
-        'BNI' => 'Bank Negara Indonesia',
-        'BSI' => 'Bank Syariah Indonesia',
-        'BTN' => 'Bank Tabungan Negara',
-        'CIMB' => 'CIMB Niaga',
-        'DANAMON' => 'Bank Danamon',
-        'PERMATA' => 'PermataBank',
-        'OCBC' => 'OCBC Indonesia',
-        'MAYBANK' => 'Maybank Indonesia',
-        'MEGA' => 'Bank Mega',
-    ];
+    private const QRIS_BANK_NAME = 'QRIS';
+    private const QRIS_ACCOUNT = 'QRIS-CV-NATUSI';
 
     public function index(Request $request): View
     {
-        $search = trim((string) $request->query('search', ''));
-
-        $banks = Bank::query()
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($query) use ($search) {
-                    $query
-                        ->where('nama_bank', 'like', "%{$search}%")
-                        ->orWhere('no_rekening', 'like', "%{$search}%")
-                        ->orWhere('nama_pemilik', 'like', "%{$search}%");
-                });
-            })
-            ->latest('id_bank')
-            ->get();
-
         $nominal = NominalPembayaran::query()
             ->latest('id_nominal')
+            ->first();
+
+        $qris = Bank::query()
+            ->where('nama_bank', self::QRIS_BANK_NAME)
+            ->where('no_rekening', self::QRIS_ACCOUNT)
             ->first();
 
         $histories = RiwayatMetodePembayaran::query()
@@ -61,24 +35,16 @@ class MetodePembayaranController extends Controller
             ->get();
 
         return view('superadmin.metode-pembayaran', [
-            'banks' => $banks,
             'nominal' => $nominal,
+            'qris' => $qris,
             'histories' => $histories,
-            'bankOptions' => self::BANK_OPTIONS,
-            'search' => $search,
-            'totalBanks' => Bank::query()->count(),
         ]);
     }
 
     public function updateNominal(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'jumlah_nominal' => [
-                'required',
-                'integer',
-                'min:1000',
-                'max:999999999',
-            ],
+            'jumlah_nominal' => ['required', 'integer', 'min:1000', 'max:999999999'],
         ], [
             'jumlah_nominal.required' => 'Jumlah pembayaran wajib diisi.',
             'jumlah_nominal.integer' => 'Jumlah pembayaran harus berupa angka bulat.',
@@ -92,15 +58,10 @@ class MetodePembayaranController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            $oldData = $nominal?->only([
-                'id_nominal',
-                'jumlah_nominal',
-            ]);
+            $oldData = $nominal?->only(['id_nominal', 'jumlah_nominal']);
 
             if ($nominal) {
-                $nominal->update([
-                    'jumlah_nominal' => $validated['jumlah_nominal'],
-                ]);
+                $nominal->update(['jumlah_nominal' => $validated['jumlah_nominal']]);
             } else {
                 $nominal = NominalPembayaran::query()->create([
                     'jumlah_nominal' => $validated['jumlah_nominal'],
@@ -112,10 +73,7 @@ class MetodePembayaranController extends Controller
                 entity: 'nominal',
                 description: 'Jumlah pembayaran pendaftaran/administrasi diperbarui.',
                 oldData: $oldData,
-                newData: $nominal->fresh()->only([
-                    'id_nominal',
-                    'jumlah_nominal',
-                ]),
+                newData: $nominal->fresh()->only(['id_nominal', 'jumlah_nominal']),
             );
         });
 
@@ -124,220 +82,76 @@ class MetodePembayaranController extends Controller
             ->with('success', 'Jumlah pembayaran berhasil disimpan.');
     }
 
-    public function storeBank(Request $request): RedirectResponse
-    {
-        $validated = $request->validate(
-            $this->bankRules($request),
-            $this->bankMessages(),
-        );
-
-        $bank = DB::transaction(function () use ($validated): Bank {
-            $bank = Bank::query()->create($this->normalizeBankData($validated));
-
-            $this->recordHistory(
-                action: 'tambah',
-                entity: 'rekening_bank',
-                description: "Rekening {$bank->nama_bank} atas nama {$bank->nama_pemilik} ditambahkan.",
-                oldData: null,
-                newData: $bank->only([
-                    'id_bank',
-                    'nama_bank',
-                    'no_rekening',
-                    'nama_pemilik',
-                ]),
-            );
-
-            return $bank;
-        });
-
-        return redirect()
-            ->route('superadmin.metode-pembayaran.index')
-            ->with('success', "Rekening {$bank->nama_bank} berhasil ditambahkan.");
-    }
-
-    public function updateBank(Request $request, Bank $bank): RedirectResponse
-    {
-        $validated = $request->validate(
-            $this->bankRules($request, $bank),
-            $this->bankMessages(),
-        );
-
-        DB::transaction(function () use ($bank, $validated): void {
-            $oldData = $bank->only([
-                'id_bank',
-                'nama_bank',
-                'no_rekening',
-                'nama_pemilik',
-            ]);
-
-            $bank->update($this->normalizeBankData($validated));
-
-            $this->recordHistory(
-                action: 'ubah',
-                entity: 'rekening_bank',
-                description: "Rekening {$bank->nama_bank} atas nama {$bank->nama_pemilik} diperbarui.",
-                oldData: $oldData,
-                newData: $bank->fresh()->only([
-                    'id_bank',
-                    'nama_bank',
-                    'no_rekening',
-                    'nama_pemilik',
-                ]),
-            );
-        });
-
-        return redirect()
-            ->route('superadmin.metode-pembayaran.index')
-            ->with('success', 'Data rekening bank berhasil diperbarui.');
-    }
-
     /**
-     * Upload/ganti gambar QRIS untuk sebuah rekening — terpisah dari form data rekening.
+     * QRIS dibuat sebagai satu metode pembayaran tunggal.
+     * Record Bank di bawah hanya dipakai internal agar tetap kompatibel dengan
+     * struktur tabel pembayaran lama yang mewajibkan id_bank.
      */
     public function storeQris(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'bank_id' => ['required', 'exists:bank,id_bank'],
-            'qris_image' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+        $request->validate([
+            'qris_image' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:4096'],
         ], [
-            'bank_id.required' => 'Pilih rekening yang akan dipasangkan QRIS-nya.',
-            'qris_image.required' => 'Pilih gambar QRIS terlebih dahulu.',
+            'qris_image.required' => 'Pilih gambar kode QR terlebih dahulu.',
+            'qris_image.image' => 'File QR harus berupa gambar.',
+            'qris_image.mimes' => 'Format QR harus JPG, JPEG, atau PNG.',
+            'qris_image.max' => 'Ukuran gambar QR maksimal 4 MB.',
         ]);
 
-        $bank = Bank::query()->findOrFail($validated['bank_id']);
+        $qris = Bank::query()->firstOrCreate(
+            [
+                'nama_bank' => self::QRIS_BANK_NAME,
+                'no_rekening' => self::QRIS_ACCOUNT,
+            ],
+            ['nama_pemilik' => 'CV NATUSI']
+        );
 
-        if ($bank->qris_image) {
-            Storage::disk('public')->delete($bank->qris_image);
+        $oldImage = $qris->qris_image;
+
+        if ($oldImage) {
+            Storage::disk('public')->delete($oldImage);
         }
 
-        $bank->update([
-            'qris_image' => $request->file('qris_image')->store('qris', 'public'),
-        ]);
+        $path = $request->file('qris_image')->store('qris', 'public');
+        $qris->update(['qris_image' => $path]);
 
         $this->recordHistory(
-            action: 'ubah',
-            entity: 'rekening_bank',
-            description: "QRIS untuk rekening {$bank->nama_bank} ({$bank->no_rekening}) berhasil diunggah/diganti.",
-            oldData: null,
-            newData: $bank->only(['id_bank', 'nama_bank', 'no_rekening']),
+            action: $oldImage ? 'ubah' : 'tambah',
+            entity: 'qris',
+            description: $oldImage ? 'Kode QR pembayaran diganti.' : 'Kode QR pembayaran diunggah.',
+            oldData: $oldImage ? ['qris_image' => $oldImage] : null,
+            newData: ['qris_image' => $path],
         );
 
         return redirect()
             ->route('superadmin.metode-pembayaran.index')
-            ->with('success', "QRIS untuk {$bank->nama_bank} — {$bank->no_rekening} berhasil disimpan.");
+            ->with('success', 'Kode QR pembayaran berhasil disimpan.');
     }
 
-    public function destroyQris(Bank $bank): RedirectResponse
+    public function destroyQris(): RedirectResponse
     {
-        if ($bank->qris_image) {
-            Storage::disk('public')->delete($bank->qris_image);
-            $bank->update(['qris_image' => null]);
-        }
+        $qris = Bank::query()
+            ->where('nama_bank', self::QRIS_BANK_NAME)
+            ->where('no_rekening', self::QRIS_ACCOUNT)
+            ->first();
 
-        return redirect()
-            ->route('superadmin.metode-pembayaran.index')
-            ->with('success', "QRIS untuk {$bank->nama_bank} berhasil dihapus.");
-    }
-
-    public function destroyBank(Bank $bank): RedirectResponse
-    {
-        if ($bank->pembayaran()->exists()) {
-            return redirect()
-                ->route('superadmin.metode-pembayaran.index')
-                ->with('error', 'Rekening tidak dapat dihapus karena sudah digunakan pada transaksi pembayaran.');
-        }
-
-        $bankName = $bank->nama_bank;
-
-        DB::transaction(function () use ($bank): void {
-            $oldData = $bank->only([
-                'id_bank',
-                'nama_bank',
-                'no_rekening',
-                'nama_pemilik',
-            ]);
-
-            if ($bank->qris_image) {
-                Storage::disk('public')->delete($bank->qris_image);
-            }
-
-            $bank->delete();
+        if ($qris?->qris_image) {
+            $oldImage = $qris->qris_image;
+            Storage::disk('public')->delete($oldImage);
+            $qris->update(['qris_image' => null]);
 
             $this->recordHistory(
                 action: 'hapus',
-                entity: 'rekening_bank',
-                description: "Rekening {$oldData['nama_bank']} atas nama {$oldData['nama_pemilik']} dihapus.",
-                oldData: $oldData,
+                entity: 'qris',
+                description: 'Kode QR pembayaran dihapus.',
+                oldData: ['qris_image' => $oldImage],
                 newData: null,
             );
-        });
+        }
 
         return redirect()
             ->route('superadmin.metode-pembayaran.index')
-            ->with('success', "Rekening {$bankName} berhasil dihapus.");
-    }
-
-    private function bankRules(Request $request, ?Bank $bank = null): array
-    {
-        $normalizedAccount = preg_replace(
-            '/\D+/',
-            '',
-            (string) $request->input('no_rekening', '')
-        );
-
-        $request->merge([
-            'no_rekening' => $normalizedAccount,
-        ]);
-
-        $uniqueAccount = Rule::unique('bank', 'no_rekening')
-            ->where(fn ($query) => $query->where(
-                'nama_bank',
-                (string) $request->input('nama_bank')
-            ));
-
-        if ($bank) {
-            $uniqueAccount->ignore($bank->id_bank, 'id_bank');
-        }
-
-        return [
-            'nama_bank' => [
-                'required',
-                'string',
-                Rule::in(array_values(self::BANK_OPTIONS)),
-            ],
-            'no_rekening' => [
-                'required',
-                'digits_between:6,30',
-                $uniqueAccount,
-            ],
-            'nama_pemilik' => [
-                'required',
-                'string',
-                'max:100',
-            ],
-        ];
-    }
-
-    private function bankMessages(): array
-    {
-        return [
-            'nama_bank.required' => 'Nama bank wajib dipilih.',
-            'nama_bank.in' => 'Nama bank tidak tersedia pada daftar pilihan.',
-            'no_rekening.required' => 'Nomor rekening wajib diisi.',
-            'no_rekening.digits_between' => 'Nomor rekening harus terdiri dari 6 sampai 30 digit.',
-            'no_rekening.unique' => 'Nomor rekening tersebut sudah terdaftar pada bank yang sama.',
-            'nama_pemilik.required' => 'Nama pemilik rekening wajib diisi.',
-            'nama_pemilik.max' => 'Nama pemilik rekening maksimal 100 karakter.',
-        ];
-    }
-
-    private function normalizeBankData(array $validated): array
-    {
-        return [
-            'nama_bank' => trim($validated['nama_bank']),
-            'no_rekening' => preg_replace('/\D+/', '', $validated['no_rekening']),
-            'nama_pemilik' => mb_strtoupper(trim($validated['nama_pemilik'])),
-        ];
+            ->with('success', 'Kode QR pembayaran berhasil dihapus.');
     }
 
     private function recordHistory(

@@ -36,6 +36,18 @@ class Sertifikat extends Model
         return $this->belongsTo(Divisi::class, 'divisi_id', 'id_divisi');
     }
 
+    /**
+     * Nama view Blade untuk cetak sertifikat, dipilih otomatis sesuai
+     * jenjang jurusan peserta (SMK atau Kuliah/Universitas).
+     * Default ke template Universitas kalau jenjang tidak diketahui.
+     */
+    public function viewCetak(): string
+    {
+        return $this->peserta?->jurusan?->tingkat === 'smk'
+            ? 'sertifikat.cetak-smk'
+            : 'sertifikat.cetak-universitas';
+    }
+
     public function penerbit(): BelongsTo
     {
         return $this->belongsTo(User::class, 'diterbitkan_oleh', 'id_user');

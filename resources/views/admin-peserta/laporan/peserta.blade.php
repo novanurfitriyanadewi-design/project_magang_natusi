@@ -7,9 +7,8 @@
         showAddModal: false,
         showEditModal: false,
         editItem: {},
-        baseUrl: '{{ url('admin/laporan-peserta') }}'
-    }"
-    x-cloak>
+        baseUrl: '{{ url('admin-peserta/laporan-peserta') }}'
+    }">
 
     @if(session('success'))
         <div class="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded">
@@ -45,6 +44,7 @@
             </select>
 
             <select name="year" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="0" @selected((int) $year === 0)>Semua Tahun</option>
                 @foreach($availableYears as $th)
                     <option value="{{ $th }}" @selected((int) $year === (int) $th)>{{ $th }}</option>
                 @endforeach
@@ -108,21 +108,26 @@
 
                         <td class="px-6 py-4">
                             <div class="flex justify-center gap-2">
+                                @php
+                                    $editPayload = [
+                                        'id' => $item->id_peserta,
+                                        'user_id' => $item->user_id,
+                                        'permintaan_id' => $item->permintaan_id,
+                                        'alamat' => $item->alamat,
+                                        'tingkat_pendidikan' => $item->tingkat_pendidikan,
+                                        'kelas' => $item->kelas,
+                                        'tgl_mulai' => optional($item->tgl_mulai)->format('Y-m-d'),
+                                        'tgl_selesai' => optional($item->tgl_selesai)->format('Y-m-d'),
+                                        'durasi_magang' => $item->durasi_magang,
+                                        'nama_guru' => $item->nama_guru,
+                                        'no_hpguru' => $item->no_hpguru,
+                                        'status' => $item->status,
+                                    ];
+                                @endphp
                                 <button
-                                    @click="showEditModal = true; editItem = {
-                                        id: {{ $item->id_peserta }},
-                                        user_id: {{ $item->user_id }},
-                                        permintaan_id: {{ $item->permintaan_id ?? 'null' }},
-                                        alamat: @js($item->alamat),
-                                        tingkat_pendidikan: @js($item->tingkat_pendidikan),
-                                        kelas: @js($item->kelas),
-                                        tgl_mulai: @js(optional($item->tgl_mulai)->format('Y-m-d')),
-                                        tgl_selesai: @js(optional($item->tgl_selesai)->format('Y-m-d')),
-                                        durasi_magang: @js($item->durasi_magang),
-                                        nama_guru: @js($item->nama_guru),
-                                        no_hpguru: @js($item->no_hpguru),
-                                        status: @js($item->status)
-                                    }"
+                                    type="button"
+                                    data-edit='{{ e(json_encode($editPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) }}'
+                                    @click="showEditModal = true; editItem = JSON.parse($event.currentTarget.dataset.edit)"
                                     class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm transition">
                                     Edit
                                 </button>

@@ -78,26 +78,37 @@
                 <h3 class="text-sm font-bold text-slate-900">Template yang Tersimpan</h3>
                 <div class="mt-3 space-y-3">
                     @forelse ($templateLaporan as $template)
+                        @php
+                            $ext = strtoupper(pathinfo((string) $template->file_word, PATHINFO_EXTENSION) ?: 'DOCX');
+                        @endphp
                         <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="min-w-0">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <h4 class="truncate text-sm font-semibold text-slate-900">{{ $template->judul }}</h4>
-                                        @if ($template->is_active)
-                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">AKTIF</span>
-                                        @else
-                                            <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">ARSIP</span>
-                                        @endif
-                                    </div>
-                                    <p class="mt-1 text-xs text-slate-500">{{ basename($template->file_word) }}</p>
-                                    <p class="mt-2 line-clamp-3 whitespace-pre-line text-xs leading-5 text-slate-600">{{ $template->ketentuan }}</p>
+                            <div class="flex items-start gap-4">
+                                <div class="relative grid h-20 w-16 shrink-0 place-items-center rounded-xl border border-blue-200 bg-gradient-to-b from-blue-50 to-white shadow-sm">
+                                    <span class="material-symbols-outlined text-[34px] text-blue-700">description</span>
+                                    <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-md bg-blue-700 px-2 py-0.5 text-[9px] font-extrabold tracking-wide text-white">{{ $ext }}</span>
                                 </div>
-                                <form action="{{ route('admin-peserta.laporan-mingguan.template.destroy', $template) }}" method="POST" onsubmit="return confirm('Hapus template laporan ini?');">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="rounded-lg p-2 text-rose-500 transition hover:bg-rose-50" title="Hapus">
-                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7h14M9 7V4.5h6V7M8 10v7M12 10v7M16 10v7M6.5 7l.7 12h9.6l.7-12"/></svg>
-                                    </button>
-                                </form>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div class="min-w-0">
+                                            <h4 class="truncate text-sm font-extrabold text-slate-900">{{ $template->judul }}</h4>
+                                            <p class="mt-1 truncate text-xs font-medium text-slate-500">{{ basename($template->file_word) }}</p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            @if ($template->is_active)
+                                                <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-700">AKTIF</span>
+                                            @else
+                                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-500">ARSIP</span>
+                                            @endif
+                                            <form action="{{ route('admin-peserta.laporan-mingguan.template.destroy', $template) }}" method="POST" onsubmit="return confirm('Hapus template laporan ini?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="grid h-9 w-9 place-items-center rounded-xl border border-rose-100 bg-rose-50 text-rose-600 transition hover:bg-rose-100" title="Hapus">
+                                                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <p class="mt-3 line-clamp-3 whitespace-pre-line text-xs leading-5 text-slate-600">{{ $template->ketentuan }}</p>
+                                </div>
                             </div>
                         </article>
                     @empty

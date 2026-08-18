@@ -22,8 +22,13 @@ class PermintaanMagang extends Model
         'nama_sekolah',
         'no_induk',
         'jurusan',
+        'jenjang',
+        'tipe_pengajuan',
+        'jumlah_anggota',
         'no_hp',
         'pesan',
+        'cv_path',
+        'surat_pengajuan_path',
         'status',
         'username_peserta',
         'password_awal',
@@ -36,6 +41,7 @@ class PermintaanMagang extends Model
     {
         return [
             'akun_dibuat' => 'boolean',
+            'jumlah_anggota' => 'integer',
         ];
     }
 
@@ -55,6 +61,25 @@ class PermintaanMagang extends Model
             'permintaan_id',
             'id_permintaan'
         );
+    }
+
+    public function pesertas(): HasMany
+    {
+        return $this->hasMany(
+            PesertaMagang::class,
+            'permintaan_id',
+            'id_permintaan'
+        );
+    }
+
+
+    public function anggota(): HasMany
+    {
+        return $this->hasMany(
+            PermintaanMagangAnggota::class,
+            'permintaan_id',
+            'id_permintaan'
+        )->orderByDesc('is_ketua')->orderBy('id_anggota');
     }
 
     public function riwayatBerkas(): HasMany

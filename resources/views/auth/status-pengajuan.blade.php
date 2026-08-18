@@ -81,7 +81,7 @@
             'information_title' => $isEmployee ? 'Selamat, Lamaran Anda Diterima' : 'Selamat, Anda Diterima',
             'information' => $isEmployee 
                 ? 'Akun karyawan Anda telah aktif/dibuat. Silakan periksa notifikasi lonceng atau kartu akun di bawah untuk memperoleh kredensial masuk portal kerja.' 
-                : 'Akun peserta magang telah dibuat otomatis. Lihat notifikasi lonceng atau kartu akun di bawah untuk memperoleh username dan password awal.',
+                : 'Akun peserta magang telah dibuat otomatis. Lihat notifikasi lonceng atau kartu akun di bawah untuk memperoleh email login dan password awal.',
         ],
         'ditolak' => [
             'title' => 'PENGAJUAN BELUM DISETUJUI',
@@ -297,7 +297,7 @@
                             @csrf
                             <p class="text-sm font-bold text-amber-900">Unggah Berkas Revisi</p>
                             <input name="jenis_berkas" required placeholder="Jenis berkas, mis. surat pengantar" class="mt-3 w-full rounded-lg border-amber-200 text-sm" />
-                            <input type="file" name="berkas" required accept=".pdf,.jpg,.jpeg,.png" class="mt-3 block w-full text-sm" />
+                            <input type="file" name="berkas" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="mt-3 block w-full text-sm" />
                             @error('berkas')<p class="mt-2 text-xs text-rose-600">{{ $message }}</p>@enderror
                             <button class="mt-3 rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white">Kirim Berkas Baru</button>
                         </form>
@@ -305,41 +305,62 @@
 
                     {{-- Kartu Kredensial --}}
                     @if($status === 'disetujui')
-                        @php
-                            $usernameAkun = $permintaan->username_karyawan ?? $permintaan->username_peserta ?? $permintaan->email ?? null;
-                            $passwordAkun = $permintaan->password_karyawan ?? $permintaan->password_awal ?? null;
-                        @endphp
-
-                        <section class="overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50/60 shadow-[0_16px_38px_rgba(16,185,129,0.08)]">
-                            <header class="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5">
-                                <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">
-                                    Akun {{ $isEmployee ? 'Karyawan' : 'Peserta Magang' }} Baru
-                                </p>
-                                <h2 class="mt-1 text-lg font-extrabold text-slate-950">Simpan kredensial berikut untuk login</h2>
-                            </header>
-
-                            <div class="grid gap-4 px-6 py-6 sm:grid-cols-2">
-                                <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
-                                    <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Username / Email Login</p>
-                                    <p class="mt-2 break-all font-mono text-lg font-black text-slate-900">{{ $usernameAkun ?? '-' }}</p>
+                        @if($isEmployee)
+                            @php
+                                $usernameAkun = $permintaan->username_karyawan ?? $permintaan->email ?? null;
+                                $passwordAkun = $permintaan->password_karyawan ?? null;
+                            @endphp
+                            <section class="overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50/60 shadow-[0_16px_38px_rgba(16,185,129,0.08)]">
+                                <header class="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5">
+                                    <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">Akun Karyawan Baru</p>
+                                    <h2 class="mt-1 text-lg font-extrabold text-slate-950">Simpan kredensial berikut untuk login</h2>
+                                </header>
+                                <div class="grid gap-4 px-6 py-6 sm:grid-cols-2">
+                                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                                        <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Username / Email Login</p>
+                                        <p class="mt-2 break-all font-mono text-lg font-black text-slate-900">{{ $usernameAkun ?? '-' }}</p>
+                                    </div>
+                                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                                        <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Password Baru</p>
+                                        <p class="mt-2 inline-block break-all rounded-lg bg-emerald-100 px-3 py-1 font-mono text-lg font-black text-emerald-700">{{ $passwordAkun ?? 'Password telah diset' }}</p>
+                                    </div>
                                 </div>
-                                <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
-                                    <p class="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Password Baru</p>
-                                    <p class="mt-2 break-all font-mono text-lg font-black text-emerald-700 bg-emerald-100 px-3 py-1 rounded-lg inline-block">
-                                        {{ $passwordAkun ?? 'Password telah diset' }}
-                                    </p>
+                            </section>
+                        @else
+                            @php
+                                $anggotaStatus = collect($permintaan->anggota ?? []);
+                                if ($anggotaStatus->isEmpty()) {
+                                    $anggotaStatus = collect([(object) [
+                                        'nama' => $permintaan->nama_pemohon,
+                                        'email' => $permintaan->email,
+                                        'is_ketua' => true,
+                                    ]]);
+                                }
+                            @endphp
+                            <section class="overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-white to-emerald-50/60 shadow-[0_16px_38px_rgba(16,185,129,0.08)]">
+                                <header class="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-5">
+                                    <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">Akun Peserta Magang Sudah Dibuat</p>
+                                    <h2 class="mt-1 text-lg font-extrabold text-slate-950">Kredensial dikirim ke email masing-masing peserta</h2>
+                                    <p class="mt-1 text-xs leading-5 text-emerald-800">Setiap anggota menerima email pribadi berisi email login, password awal, dan tautan untuk membuka Portal Peserta Magang. Halaman status ini tetap hanya dapat diakses oleh ketua/pemohon menggunakan email dan password pendaftaran.</p>
+                                </header>
+                                <div class="grid gap-3 px-6 py-6 sm:grid-cols-2">
+                                    @foreach($anggotaStatus as $anggotaAkun)
+                                        <div class="rounded-xl border border-emerald-100 bg-white px-4 py-3 shadow-sm">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <div class="min-w-0">
+                                                    <p class="truncate text-sm font-extrabold text-slate-900">{{ $anggotaAkun->nama ?? '-' }}</p>
+                                                    <p class="mt-1 break-all text-xs text-slate-500">{{ $anggotaAkun->email ?? '-' }}</p>
+                                                </div>
+                                                <span class="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">Email Akun</span>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
-                            </div>
-
-                            <div class="border-t border-emerald-100 bg-emerald-50 px-6 py-4 flex items-center justify-end">
-                                <form method="POST" action="{{ route('logout') }}" class="shrink-0">
-                                    @csrf
-                                    <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-extrabold text-white transition hover:bg-emerald-700 shadow-sm">
-                                        Keluar
-                                    </button>
-                                </form>
-                            </div>
-                        </section>
+                                <div class="border-t border-emerald-100 bg-emerald-50/60 px-6 py-4 text-xs leading-5 text-emerald-800">
+                                    Jika email belum terlihat, minta anggota memeriksa folder Spam/Promosi. Gunakan email masing-masing anggota dan password awal yang tercantum pada email tersebut untuk masuk ke Portal Peserta Magang.
+                                </div>
+                            </section>
+                        @endif
                     @endif
 
                     {{-- Detail Berkas --}}
@@ -380,6 +401,71 @@
                             </div>
                         </div>
                     </section>
+
+                    @if(!$isEmployee)
+                        @php
+                            $anggotaDetail = collect($permintaan->anggota ?? []);
+                            if ($anggotaDetail->isEmpty()) {
+                                $anggotaDetail = collect([(object) [
+                                    'nama' => $permintaan->nama_pemohon,
+                                    'email' => $permintaan->email,
+                                    'no_induk' => $permintaan->no_induk,
+                                    'jurusan' => $permintaan->jurusan,
+                                    'no_hp' => $permintaan->no_hp,
+                                    'is_ketua' => true,
+                                    'cv_path' => $permintaan->cv_path,
+                                    'surat_pengajuan_path' => $permintaan->surat_pengajuan_path,
+                                ]]);
+                            }
+                        @endphp
+                        <section class="mt-5 overflow-hidden rounded-2xl border border-sky-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
+                            <header class="flex flex-wrap items-center justify-between gap-3 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-cyan-50 px-6 py-5">
+                                <div>
+                                    <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-sky-600">Data Kelompok</p>
+                                    <h2 class="mt-1 text-lg font-extrabold text-slate-950">Data seluruh peserta pengajuan</h2>
+                                    <p class="mt-1 text-xs text-slate-500">Hanya ketua/pemohon yang dapat login ke halaman konfirmasi ini.</p>
+                                </div>
+                                <span class="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-sky-700 ring-1 ring-sky-200">{{ $anggotaDetail->count() }} peserta</span>
+                            </header>
+                            <div class="grid gap-4 p-6 lg:grid-cols-2">
+                                @foreach($anggotaDetail as $index => $anggotaItem)
+                                    @php
+                                        $cvAnggota = $anggotaItem->cv_path ?? (($anggotaItem->is_ketua ?? false) ? $permintaan->cv_path : null);
+                                        $suratAnggota = $anggotaItem->surat_pengajuan_path ?? (($anggotaItem->is_ketua ?? false) ? $permintaan->surat_pengajuan_path : null);
+                                    @endphp
+                                    <article class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Peserta {{ $index + 1 }}</p>
+                                                <h3 class="mt-1 text-base font-extrabold text-slate-900">{{ $anggotaItem->nama ?? '-' }}</h3>
+                                            </div>
+                                            @if($anggotaItem->is_ketua ?? false)
+                                                <span class="rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-sky-700">Ketua / Pemohon</span>
+                                            @endif
+                                        </div>
+                                        <dl class="mt-4 grid gap-x-4 gap-y-3 sm:grid-cols-2">
+                                            <div><dt class="text-[9px] font-bold uppercase tracking-wide text-slate-400">Email</dt><dd class="mt-1 break-all text-xs font-semibold text-slate-700">{{ $anggotaItem->email ?? '-' }}</dd></div>
+                                            <div><dt class="text-[9px] font-bold uppercase tracking-wide text-slate-400">NIS / NIM</dt><dd class="mt-1 text-xs font-semibold text-slate-700">{{ $anggotaItem->no_induk ?? '-' }}</dd></div>
+                                            <div><dt class="text-[9px] font-bold uppercase tracking-wide text-slate-400">Jurusan</dt><dd class="mt-1 text-xs font-semibold text-slate-700">{{ $anggotaItem->jurusan ?? '-' }}</dd></div>
+                                            <div><dt class="text-[9px] font-bold uppercase tracking-wide text-slate-400">WhatsApp</dt><dd class="mt-1 text-xs font-semibold text-slate-700">{{ $anggotaItem->no_hp ?? '-' }}</dd></div>
+                                        </dl>
+                                        <div class="mt-4 flex flex-wrap gap-2 border-t border-slate-200 pt-3">
+                                            @if($cvAnggota)
+                                                <a href="{{ route('pengajuan.berkas.lihat', ['permintaan' => $permintaan, 'jenis' => 'cv', 'ref' => ($anggotaItem->id_anggota ?? null) ?: 'ketua']) }}" target="_blank" class="rounded-lg bg-sky-700 px-3 py-2 text-[11px] font-bold text-white hover:bg-sky-800">Lihat CV</a>
+                                            @else
+                                                <span class="rounded-lg bg-slate-200 px-3 py-2 text-[11px] font-semibold text-slate-500">CV belum tersedia</span>
+                                            @endif
+                                            @if($suratAnggota)
+                                                <a href="{{ route('pengajuan.berkas.lihat', ['permintaan' => $permintaan, 'jenis' => 'surat', 'ref' => ($anggotaItem->id_anggota ?? null) ?: 'ketua']) }}" target="_blank" class="rounded-lg bg-indigo-700 px-3 py-2 text-[11px] font-bold text-white hover:bg-indigo-800">Lihat Surat Pengantar</a>
+                                            @else
+                                                <span class="rounded-lg bg-slate-200 px-3 py-2 text-[11px] font-semibold text-slate-500">Surat belum tersedia</span>
+                                            @endif
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </section>
+                    @endif
                 @endif
             </div>
 
@@ -395,7 +481,7 @@
                     <ol class="mt-4 space-y-3 text-xs leading-5 text-slate-700">
                         <li class="flex items-start gap-3">
                             <span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-200 text-xs font-black text-slate-700">1</span>
-                            <span><strong>Masuk</strong> menggunakan email dan kata sandi yang dibuat saat pendaftaran.</span>
+                            <span><strong>Masuk</strong> menggunakan email dan kata sandi ketua/pemohon yang dibuat saat pendaftaran. Anggota lain tidak menggunakan halaman konfirmasi ini.</span>
                         </li>
                         <li class="flex items-start gap-3">
                             <span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-200 text-xs font-black text-slate-700">2</span>
@@ -407,11 +493,11 @@
                         </li>
                         <li class="flex items-start gap-3">
                             <span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-200 text-xs font-black text-slate-700">4</span>
-                            <span>Setelah diterima, lonceng atau halaman ini menampilkan <strong>akun resmi</strong> Anda.</span>
+                            <span>Setelah diterima, halaman ini menampilkan <strong>akun resmi setiap anggota</strong> untuk diteruskan oleh ketua kepada kelompok.</span>
                         </li>
                         <li class="flex items-start gap-3">
                             <span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-200 text-xs font-black text-slate-700">5</span>
-                            <span>Masuk kembali memakai <strong>username dan password</strong> tersebut.</span>
+                            <span>Masuk kembali memakai <strong>email dan password</strong> tersebut.</span>
                         </li>
                     </ol>
                     <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2 text-center text-[11px] font-semibold text-amber-800">

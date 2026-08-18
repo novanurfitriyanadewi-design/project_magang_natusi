@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 
 // Profile & Shared Controllers
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SertifikatAssetController;
 
 // Superadmin Controllers
 use App\Http\Controllers\Superadmin\AdminController as SuperadminAdminController;
@@ -68,6 +69,9 @@ use App\Http\Controllers\Karyawan\AturanController;
 */
 
 Route::get('/', static fn () => redirect()->route('login'));
+
+Route::get('/verifikasi/sertifikat/ttd-direktur', [SertifikatAssetController::class, 'ttdDirektur'])
+    ->name('sertifikat.ttd-direktur');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/register/pelamar', function () {
@@ -190,12 +194,10 @@ Route::middleware(['auth', 'role:superadmin'])
             ->name('metode-pembayaran.index');
         Route::put('/metode-pembayaran/nominal', [SuperadminMetodePembayaranController::class, 'updateNominal'])
             ->name('metode-pembayaran.nominal.update');
-        Route::post('/metode-pembayaran/rekening', [SuperadminMetodePembayaranController::class, 'storeBank'])
-            ->name('metode-pembayaran.bank.store');
-        Route::put('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'updateBank'])
-            ->name('metode-pembayaran.bank.update');
-        Route::delete('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'destroyBank'])
-            ->name('metode-pembayaran.bank.destroy');
+        Route::post('/metode-pembayaran/qris', [SuperadminMetodePembayaranController::class, 'storeQris'])
+            ->name('metode-pembayaran.qris.store');
+        Route::delete('/metode-pembayaran/qris', [SuperadminMetodePembayaranController::class, 'destroyQris'])
+            ->name('metode-pembayaran.qris.destroy');
 
         /* QRIS Pembayaran (mandiri, tidak terikat rekening) */
         Route::get('/qris-pembayaran', [SuperadminQrisPembayaranController::class, 'index'])
@@ -381,11 +383,12 @@ Route::middleware('admin.peserta')
         Route::post('/sertifikat', [AdminSertifikatController::class, 'store'])
             ->name('sertifikat.store');
 
+        Route::put('/sertifikat/{sertifikat}', [AdminSertifikatController::class, 'update'])
+            ->name('sertifikat.update');
+
         Route::post('/sertifikat/{sertifikat}/cabut', [AdminSertifikatController::class, 'cabut'])
             ->name('sertifikat.cabut');
 
-        Route::get('/sertifikat/{sertifikat}/cetak', [AdminSertifikatController::class, 'cetak'])
-            ->name('sertifikat.cetak');
 
         /* Notifikasi */
         Route::get('/notifikasi', [AdminNotifikasiController::class, 'index'])
@@ -518,7 +521,7 @@ Route::middleware(['auth', 'role:peserta'])
         Route::post('/laporan-mingguan', [PesertaMagangLaporanMingguanController::class, 'store'])->name('laporan-mingguan.store');
 
         Route::get('/sertifikat', [PesertaMagangSertifikatController::class, 'index'])->name('sertifikat.index');
-        Route::get('/sertifikat/{sertifikat}/cetak', [PesertaMagangSertifikatController::class, 'cetak'])->name('sertifikat.cetak');
+        Route::get('/sertifikat/{sertifikat}/unduh', [PesertaMagangSertifikatController::class, 'unduh'])->name('sertifikat.unduh');
     });
 
 /*

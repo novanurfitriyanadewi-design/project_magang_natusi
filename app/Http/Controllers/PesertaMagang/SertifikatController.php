@@ -4,8 +4,10 @@ namespace App\Http\Controllers\PesertaMagang;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sertifikat;
+use App\Services\CertificatePdfService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class SertifikatController extends Controller
 {
@@ -14,7 +16,7 @@ class SertifikatController extends Controller
         $pesertaId = Auth::user()->pesertaMagang?->id_peserta;
 
         $sertifikat = Sertifikat::query()
-            ->with('divisi')
+            ->with(['divisi', 'peserta'])
             ->where('peserta_id', $pesertaId)
             ->where('status', 'terbit')
             ->orderByDesc('tanggal_terbit')
@@ -23,7 +25,7 @@ class SertifikatController extends Controller
         return view('peserta-magang.sertifikat', compact('sertifikat'));
     }
 
-    public function cetak(Sertifikat $sertifikat): View
+    public function unduh(Sertifikat $sertifikat, CertificatePdfService $pdfService): Response
     {
         abort_unless(
             $sertifikat->peserta_id === Auth::user()->pesertaMagang?->id_peserta,
@@ -33,8 +35,6 @@ class SertifikatController extends Controller
 
         abort_if($sertifikat->status !== 'terbit', 404, 'Sertifikat tidak ditemukan atau sudah dicabut.');
 
-        $sertifikat->load(['peserta.user', 'peserta.permintaan', 'peserta.jurusan', 'divisi']);
-
-        return view('sertifikat.cetak', compact('sertifikat'));
+        return $pdfService->download($sertifikat);
     }
 }

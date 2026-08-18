@@ -7,36 +7,56 @@
     class="space-y-6"
     x-data="{
         issueOpen: false,
+        showOpen: false,
+        editOpen: false,
+        selected: {},
+        openShow(data) {
+            this.selected = { ...data };
+            this.showOpen = true;
+        },
+        openEdit(data) {
+            this.selected = { ...data };
+            this.editOpen = true;
+        },
+        closeAll() {
+            this.issueOpen = false;
+            this.showOpen = false;
+            this.editOpen = false;
+        }
     }"
+    @keydown.escape.window="closeAll()"
 >
-    <header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-            <h1 class="mt-5 text-2xl font-bold tracking-tight text-slate-950 sm:mt-0">Kelola Sertifikat</h1>
-            <p class="mt-1 text-sm text-slate-500">Terbitkan sertifikat magang untuk peserta yang selesai/keluar. Desain sertifikat mengikuti format resmi CV Natusi.</p>
+            <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:mt-0 sm:text-3xl">Kelola Sertifikat</h1>
+            <p class="mt-1 text-sm text-slate-500">Admin menerbitkan, melihat, dan mengedit data sertifikat. Unduh PDF hanya tersedia di akun peserta.</p>
         </div>
-
-        <button type="button" @click="issueOpen = true" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5">
-            <span class="material-symbols-outlined text-[18px]">workspace_premium</span>
+        <button
+            type="button"
+            @click="issueOpen = true"
+            class="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-sky-700"
+        >
+            <span class="material-symbols-outlined text-[18px]">add</span>
             Terbitkan Sertifikat
         </button>
     </header>
 
     @if (session('success'))
-        <div class="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm">
-            <span class="material-symbols-outlined text-[21px]">check_circle</span>
-            <span>{{ session('success') }}</span>
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+            {{ session('success') }}
         </div>
     @endif
+
     @if (session('error'))
-        <div class="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 shadow-sm">
-            <span class="material-symbols-outlined text-[21px]">error</span>
-            <span>{{ session('error') }}</span>
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            {{ session('error') }}
         </div>
     @endif
+
     @if ($errors->any())
-        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 shadow-sm">
-            <p class="mb-1">Periksa kembali data yang diisi:</p>
-            <ul class="list-inside list-disc space-y-0.5 font-normal">
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <p class="font-bold">Periksa kembali data sertifikat:</p>
+            <ul class="mt-1 list-inside list-disc">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -44,23 +64,51 @@
         </div>
     @endif
 
-    {{-- Riwayat --}}
-    <section class="overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[0_18px_45px_rgba(15,52,94,0.08)] backdrop-blur">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50 px-5 py-4 sm:px-6">
-            <h2 class="text-base font-extrabold text-slate-950">Riwayat Sertifikat Diterbitkan</h2>
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+            <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">Sertifikat Terbit</p>
+            <p class="mt-2 text-2xl font-extrabold text-sky-700">{{ $stats['total_terbit'] ?? 0 }}</p>
+        </div>
+        <div class="rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
+            <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">Belum Disertifikasi</p>
+            <p class="mt-2 text-2xl font-extrabold text-indigo-700">{{ $stats['belum_disertifikasi'] ?? 0 }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">Riwayat Dicabut</p>
+            <p class="mt-2 text-2xl font-extrabold text-slate-700">{{ $stats['total_dicabut'] ?? 0 }}</p>
+        </div>
+    </section>
+
+    <section class="overflow-hidden rounded-3xl border border-sky-100 bg-white shadow-[0_18px_45px_rgba(15,52,94,0.08)]">
+        <div class="flex flex-col gap-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div>
+                <h2 class="text-base font-extrabold text-slate-950">Daftar Sertifikat</h2>
+                <p class="mt-0.5 text-xs text-slate-500">Aksi admin per sertifikat hanya Show dan Edit.</p>
+            </div>
+
             <form method="GET" action="{{ route('admin-peserta.sertifikat.index') }}" class="flex flex-wrap items-center gap-2">
-                <input type="search" name="search" value="{{ $search }}" placeholder="Cari nama / nomor sertifikat..." class="w-56 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100">
-                <select name="status" onchange="this.form.submit()" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100">
+                <input
+                    type="search"
+                    name="search"
+                    value="{{ $search }}"
+                    placeholder="Cari nama / nomor..."
+                    class="h-10 w-52 rounded-xl border border-slate-200 bg-white px-3 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                >
+                <select
+                    name="status"
+                    onchange="this.form.submit()"
+                    class="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                >
                     <option value="">Semua Status</option>
-                    <option value="terbit" {{ $status === 'terbit' ? 'selected' : '' }}>Terbit</option>
-                    <option value="dicabut" {{ $status === 'dicabut' ? 'selected' : '' }}>Dicabut</option>
+                    <option value="terbit" @selected($status === 'terbit')>Terbit</option>
+                    <option value="dicabut" @selected($status === 'dicabut')>Dicabut</option>
                 </select>
-                <button type="submit" class="rounded-xl bg-sky-600 px-4 py-2 text-sm font-bold text-white hover:bg-sky-700">Cari</button>
+                <button type="submit" class="h-10 rounded-xl bg-sky-600 px-4 text-sm font-bold text-white hover:bg-sky-700">Cari</button>
             </form>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[960px] border-collapse text-left">
+            <table class="w-full min-w-[980px] border-collapse text-left">
                 <thead>
                     <tr class="border-b border-slate-200 bg-sky-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
                         <th class="px-6 py-4">Nomor</th>
@@ -69,40 +117,63 @@
                         <th class="px-5 py-4">Predikat</th>
                         <th class="px-5 py-4">Tanggal Terbit</th>
                         <th class="px-5 py-4 text-center">Status</th>
-                        <th class="px-5 py-4 text-center">Aksi</th>
+                        <th class="px-6 py-4 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($riwayat as $item)
+                        @php
+                            $payload = [
+                                'nama' => $item->peserta?->user?->nama ?? '-',
+                                'instansi' => $item->peserta?->permintaan?->nama_sekolah ?? '-',
+                                'nomor' => $item->nomor_sertifikat,
+                                'divisi' => $item->divisi?->nama_divisi ?? '-',
+                                'divisi_id' => (string) $item->divisi_id,
+                                'predikat' => $item->predikat,
+                                'judul' => $item->judul,
+                                'tanggal' => $item->tanggal_terbit?->format('Y-m-d'),
+                                'tanggal_label' => $item->tanggal_terbit?->translatedFormat('d F Y'),
+                                'status' => $item->status,
+                                'catatan' => $item->catatan ?? '',
+                                'update_url' => route('admin-peserta.sertifikat.update', $item),
+                            ];
+                        @endphp
                         <tr class="transition hover:bg-sky-50/40">
                             <td class="px-6 py-4 text-xs font-mono text-slate-500">{{ $item->nomor_sertifikat }}</td>
                             <td class="px-5 py-4">
-                                <p class="text-sm font-bold text-slate-900">{{ $item->peserta?->user?->nama ?? '-' }}</p>
-                                <p class="text-xs text-slate-500">{{ $item->peserta?->permintaan?->nama_sekolah ?? '-' }}</p>
+                                <p class="text-sm font-extrabold text-slate-900">{{ $item->peserta?->user?->nama ?? '-' }}</p>
+                                <p class="mt-0.5 text-xs text-slate-500">{{ $item->peserta?->permintaan?->nama_sekolah ?? '-' }}</p>
                             </td>
-                            <td class="px-5 py-4 text-sm text-slate-700">{{ $item->divisi?->nama_divisi ?? '-' }}</td>
+                            <td class="px-5 py-4 text-sm font-medium text-slate-700">{{ $item->divisi?->nama_divisi ?? '-' }}</td>
                             <td class="px-5 py-4 text-sm text-slate-700">{{ $item->predikat }}</td>
-                            <td class="px-5 py-4 text-sm text-slate-700">{{ $item->tanggal_terbit->translatedFormat('d M Y') }}</td>
+                            <td class="px-5 py-4 text-sm text-slate-700">{{ $item->tanggal_terbit?->translatedFormat('d M Y') ?? '-' }}</td>
                             <td class="px-5 py-4 text-center">
                                 <span @class([
-                                    'rounded-full px-3 py-1 text-xs font-bold',
+                                    'inline-flex rounded-full px-3 py-1 text-xs font-bold',
                                     'bg-emerald-100 text-emerald-700' => $item->status === 'terbit',
                                     'bg-slate-100 text-slate-500' => $item->status !== 'terbit',
-                                ])>{{ $item->status === 'terbit' ? 'Terbit' : 'Dicabut' }}</span>
+                                ])>
+                                    {{ $item->status === 'terbit' ? 'Terbit' : 'Dicabut' }}
+                                </span>
                             </td>
-                            <td class="px-5 py-4">
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <a href="{{ route('admin-peserta.sertifikat.cetak', $item) }}" target="_blank" class="grid h-9 w-9 place-items-center rounded-xl bg-sky-50 text-sky-700 ring-1 ring-sky-100 transition hover:bg-sky-100" title="Lihat/Cetak">
-                                        <svg class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/></svg>
-                                    </a>
-                                    @if ($item->status === 'terbit')
-                                        <form action="{{ route('admin-peserta.sertifikat.cabut', $item) }}" method="POST" onsubmit="return confirm('Cabut sertifikat {{ $item->nomor_sertifikat }}?')">
-                                            @csrf
-                                            <button type="submit" class="grid h-9 w-9 place-items-center rounded-xl bg-rose-50 text-rose-600 ring-1 ring-rose-100 transition hover:bg-rose-100" title="Cabut sertifikat">
-                                                <svg class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                                            </button>
-                                        </form>
-                                    @endif
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button
+                                        type="button"
+                                        @click="openShow(@js($payload))"
+                                        class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 text-xs font-bold text-sky-700 transition hover:bg-sky-100"
+                                    >
+                                        <span class="material-symbols-outlined text-[17px]">visibility</span>
+                                        Show
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="openEdit(@js($payload))"
+                                        class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100"
+                                    >
+                                        <span class="material-symbols-outlined text-[17px]">edit</span>
+                                        Edit
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -122,81 +193,173 @@
         @endif
     </section>
 
-    {{-- Modal: Terbitkan Sertifikat --}}
-    <div x-show="issueOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display:none;">
-        <div class="flex min-h-full items-center justify-center p-4">
-            <div class="fixed inset-0 bg-slate-950/60" @click="issueOpen = false"></div>
-            <div class="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl" @click.stop>
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-extrabold text-slate-950">Terbitkan Sertifikat</h3>
-                    <button type="button" @click="issueOpen = false" class="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    {{-- Modal Terbitkan --}}
+    <template x-teleport="body">
+        <div x-show="issueOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-950/65 p-4" @click.self="issueOpen = false">
+            <section class="my-auto flex w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-white shadow-2xl" style="max-height:90vh">
+                <header class="flex items-center justify-between border-b border-sky-100 bg-gradient-to-r from-sky-50 to-blue-50 px-5 py-4">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-600">Sertifikat Baru</p>
+                        <h3 class="mt-1 text-lg font-extrabold text-slate-950">Terbitkan Sertifikat</h3>
+                    </div>
+                    <button type="button" @click="issueOpen = false" class="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-rose-50 hover:text-rose-600">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
                     </button>
-                </div>
+                </header>
 
-                <form method="POST" action="{{ route('admin-peserta.sertifikat.store') }}" class="mt-5 space-y-4">
+                <form method="POST" action="{{ route('admin-peserta.sertifikat.store') }}" class="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
                     @csrf
-                    <div>
-                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">Peserta</label>
-                        <select name="peserta_id" required class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100">
-                            <option value="">Pilih peserta yang selesai/keluar magang</option>
-                            @foreach ($pesertaBisaDisertifikasi as $p)
-                                <option value="{{ $p->id_peserta }}">
-                                    {{ $p->user?->nama ?? 'Tanpa nama' }}
-                                    ({{ $p->status === 'selesai' ? 'Selesai' : 'Keluar' }})
-                                    — {{ $p->permintaan?->nama_sekolah ?? '-' }}
-                                </option>
+                    <label class="block text-sm font-bold text-slate-700">
+                        Peserta
+                        <select name="peserta_id" required class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 text-sm focus:border-sky-500 focus:ring-sky-100">
+                            <option value="">Pilih peserta</option>
+                            @foreach ($pesertaBisaDisertifikasi as $peserta)
+                                <option value="{{ $peserta->id_peserta }}">{{ $peserta->user?->nama ?? 'Tanpa nama' }} — {{ $peserta->permintaan?->nama_sekolah ?? '-' }}</option>
                             @endforeach
                         </select>
-                        @if ($pesertaBisaDisertifikasi->isEmpty())
-                            <p class="mt-1.5 text-xs text-amber-600">Tidak ada peserta berstatus "selesai"/"dibatalkan" yang belum punya sertifikat aktif saat ini.</p>
-                        @endif
-                    </div>
+                    </label>
 
-                    <div>
-                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">Divisi</label>
-                        <select name="divisi_id" required class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100">
-                            <option value="">Pilih divisi tempat peserta ditempatkan</option>
-                            @foreach ($divisiList as $d)
-                                <option value="{{ $d->id_divisi }}">{{ $d->nama_divisi }}</option>
+                    <label class="block text-sm font-bold text-slate-700">
+                        Divisi
+                        <select name="divisi_id" required class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 text-sm focus:border-sky-500 focus:ring-sky-100">
+                            <option value="">Pilih divisi</option>
+                            @foreach ($divisiList as $divisi)
+                                <option value="{{ $divisi->id_divisi }}">{{ $divisi->nama_divisi }}</option>
                             @endforeach
                         </select>
-                        @if ($divisiList->isEmpty())
-                            <p class="mt-1.5 text-xs text-amber-600">Belum ada divisi terdaftar. Tambahkan dulu lewat menu Kelola Divisi (superadmin).</p>
-                        @endif
+                    </label>
+
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <label class="block text-sm font-bold text-slate-700">
+                            Predikat
+                            <select name="predikat" required class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 text-sm">
+                                @foreach ($predikatOptions as $predikat)
+                                    <option value="{{ $predikat }}" @selected($predikat === 'Sangat Baik')>{{ $predikat }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <label class="block text-sm font-bold text-slate-700">
+                            Tanggal Terbit
+                            <input type="date" name="tanggal_terbit" value="{{ now()->format('Y-m-d') }}" required class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 text-sm">
+                        </label>
                     </div>
 
-                    <div>
-                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">Predikat</label>
-                        <select name="predikat" required class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100">
-                            @foreach ($predikatOptions as $p)
-                                <option value="{{ $p }}" @selected($p === 'Sangat Baik')>{{ $p }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <label class="block text-sm font-bold text-slate-700">
+                        Judul
+                        <input type="text" name="judul" value="Sertifikat Magang" required class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 text-sm">
+                    </label>
 
-                    <div>
-                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">Judul Sertifikat (untuk catatan internal)</label>
-                        <input type="text" name="judul" value="Sertifikat Magang" required maxlength="255" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100">
-                    </div>
+                    <label class="block text-sm font-bold text-slate-700">
+                        Catatan
+                        <textarea name="catatan" rows="3" class="mt-1.5 w-full rounded-xl border border-slate-200 text-sm"></textarea>
+                    </label>
 
-                    <div>
-                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">Tanggal Terbit</label>
-                        <input type="date" name="tanggal_terbit" value="{{ now()->format('Y-m-d') }}" required class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100">
-                    </div>
-
-                    <div>
-                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">Catatan (opsional, internal)</label>
-                        <textarea name="catatan" rows="2" maxlength="1000" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"></textarea>
-                    </div>
-
-                    <div class="flex justify-end gap-3 pt-2">
-                        <button type="button" @click="issueOpen = false" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
-                        <button type="submit" class="rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(14,165,233,0.24)] hover:-translate-y-0.5">Terbitkan</button>
+                    <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+                        <button type="button" @click="issueOpen = false" class="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="h-10 rounded-xl bg-sky-600 px-5 text-sm font-bold text-white hover:bg-sky-700">Terbitkan</button>
                     </div>
                 </form>
-            </div>
+            </section>
         </div>
-    </div>
+    </template>
+
+    {{-- Modal Show --}}
+    <template x-teleport="body">
+        <div x-show="showOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-950/65 p-4" @click.self="showOpen = false">
+            <section class="my-auto flex w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl" style="max-height:90vh">
+                <header class="flex items-start justify-between gap-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5">
+                    <div>
+                        <span class="rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-sky-700 ring-1 ring-sky-200">Detail Sertifikat</span>
+                        <h3 class="mt-3 text-xl font-extrabold text-slate-950" x-text="selected.nama || '-'">-</h3>
+                        <p class="mt-1 text-sm text-slate-500">Data sertifikat peserta.</p>
+                    </div>
+                    <button type="button" @click="showOpen = false" class="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-rose-50 hover:text-rose-600">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                </header>
+
+                <div class="min-h-0 flex-1 overflow-y-auto p-6">
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <template x-for="row in [
+                            ['Nomor Sertifikat', selected.nomor],
+                            ['Instansi', selected.instansi],
+                            ['Divisi', selected.divisi],
+                            ['Predikat', selected.predikat],
+                            ['Tanggal Terbit', selected.tanggal_label],
+                            ['Status', selected.status],
+                            ['Judul', selected.judul],
+                            ['Catatan', selected.catatan || '-']
+                        ]" :key="row[0]">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <p class="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400" x-text="row[0]"></p>
+                                <p class="mt-2 break-words text-sm font-bold text-slate-800" x-text="row[1] || '-'"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </template>
+
+    {{-- Modal Edit --}}
+    <template x-teleport="body">
+        <div x-show="editOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-950/65 p-4" @click.self="editOpen = false">
+            <section class="my-auto flex w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-white shadow-2xl" style="max-height:90vh">
+                <header class="flex items-center justify-between border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-sky-50 px-5 py-4">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-600">Edit Data</p>
+                        <h3 class="mt-1 text-lg font-extrabold text-slate-950">Edit Sertifikat</h3>
+                    </div>
+                    <button type="button" @click="editOpen = false" class="grid h-9 w-9 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-rose-50 hover:text-rose-600">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
+                    </button>
+                </header>
+
+                <form :action="selected.update_url" method="POST" class="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+                    @csrf
+                    @method('PUT')
+
+                    <label class="block text-sm font-bold text-slate-700">
+                        Divisi
+                        <select name="divisi_id" x-model="selected.divisi_id" required class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 text-sm">
+                            @foreach ($divisiList as $divisi)
+                                <option value="{{ $divisi->id_divisi }}">{{ $divisi->nama_divisi }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <label class="block text-sm font-bold text-slate-700">
+                            Predikat
+                            <select name="predikat" x-model="selected.predikat" required class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 text-sm">
+                                @foreach ($predikatOptions as $predikat)
+                                    <option value="{{ $predikat }}">{{ $predikat }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <label class="block text-sm font-bold text-slate-700">
+                            Tanggal Terbit
+                            <input type="date" name="tanggal_terbit" x-model="selected.tanggal" required class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 text-sm">
+                        </label>
+                    </div>
+
+                    <label class="block text-sm font-bold text-slate-700">
+                        Judul
+                        <input type="text" name="judul" x-model="selected.judul" required class="mt-1.5 h-11 w-full rounded-xl border border-slate-200 text-sm">
+                    </label>
+
+                    <label class="block text-sm font-bold text-slate-700">
+                        Catatan
+                        <textarea name="catatan" x-model="selected.catatan" rows="3" class="mt-1.5 w-full rounded-xl border border-slate-200 text-sm"></textarea>
+                    </label>
+
+                    <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
+                        <button type="button" @click="editOpen = false" class="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 hover:bg-slate-50">Batal</button>
+                        <button type="submit" class="h-10 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white hover:bg-indigo-700">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </template>
 </div>
 @endsection

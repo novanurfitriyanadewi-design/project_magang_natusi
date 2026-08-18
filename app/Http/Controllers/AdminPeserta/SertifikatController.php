@@ -100,7 +100,7 @@ class SertifikatController extends Controller
             Notifikasi::create([
                 'user_id' => $peserta->user->id_user,
                 'judul' => 'Sertifikat Magang Terbit',
-                'pesan' => "Selamat! Sertifikat magang Anda (No. {$sertifikat->nomor_sertifikat}) sudah bisa dicetak di halaman Sertifikat Saya.",
+                'pesan' => "Selamat! Sertifikat magang Anda (No. {$sertifikat->nomor_sertifikat}) sudah bisa diunduh sebagai PDF di halaman Sertifikat Saya.",
                 'kategori' => 'sertifikat',
                 'tipe' => 'sukses',
                 'referensi_id' => $sertifikat->id_sertifikat,
@@ -112,21 +112,40 @@ class SertifikatController extends Controller
             ->with('success', "Sertifikat {$sertifikat->nomor_sertifikat} berhasil diterbitkan untuk {$peserta?->user?->nama}.");
     }
 
+    public function update(Request $request, Sertifikat $sertifikat): RedirectResponse
+    {
+        $validated = $request->validate([
+            'divisi_id' => ['required', 'exists:divisi,id_divisi'],
+            'predikat' => ['required', Rule::in(self::PREDIKAT_OPTIONS)],
+            'judul' => ['required', 'string', 'max:255'],
+            'tanggal_terbit' => ['required', 'date'],
+            'catatan' => ['nullable', 'string', 'max:1000'],
+        ]);
+        $sertifikat->update($validated);
+        return redirect()->route('admin-peserta.sertifikat.index')->with('success', 'Data sertifikat berhasil diperbarui.');
+    }
+
     public function cabut(Sertifikat $sertifikat): RedirectResponse
     {
         $sertifikat->update(['status' => 'dicabut']);
+        $sertifikat->loadMissing('peserta.user');
+
+        if ($sertifikat->peserta?->user) {
+            Notifikasi::create([
+                'user_id' => $sertifikat->peserta->user->id_user,
+                'judul' => 'Sertifikat Magang Dicabut',
+                'pesan' => "Sertifikat magang No. {$sertifikat->nomor_sertifikat} telah dicabut oleh Admin. Silakan hubungi Admin Peserta Magang bila membutuhkan penjelasan lebih lanjut.",
+                'kategori' => 'sertifikat',
+                'tipe' => 'peringatan',
+                'referensi_id' => $sertifikat->id_sertifikat,
+            ]);
+        }
 
         return redirect()
             ->route('admin-peserta.sertifikat.index')
-            ->with('success', "Sertifikat {$sertifikat->nomor_sertifikat} berhasil dicabut.");
+            ->with('success', "Sertifikat {$sertifikat->nomor_sertifikat} berhasil dicabut dan peserta telah dinotifikasi melalui portal/email.");
     }
 
-    public function cetak(Sertifikat $sertifikat): View
-    {
-        $sertifikat->load(['peserta.user', 'peserta.permintaan', 'peserta.jurusan', 'divisi']);
-
-        return view('sertifikat.cetak', ['sertifikat' => $sertifikat]);
-    }
 
     private function buatNomorSertifikat(): string
     {

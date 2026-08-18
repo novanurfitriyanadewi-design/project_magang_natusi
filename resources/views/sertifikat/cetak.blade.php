@@ -1,189 +1,176 @@
+@php
+    use Illuminate\Support\Str;
+
+    $education = Str::lower((string) ($sertifikat->peserta?->tingkat_pendidikan ?? ''));
+    $isSmk = Str::contains($education, 'smk');
+
+    $namaPeserta = $sertifikat->peserta?->user?->nama ?? 'Peserta Magang';
+    $nomorSertifikat = $sertifikat->nomor_sertifikat ?? '0001/SERT-MAGANG/CVN/' . now()->format('m/Y');
+    $divisiNama = $sertifikat->divisi?->nama_divisi ?? 'Software Development';
+    $predikat = Str::lower((string) ($sertifikat->predikat ?? 'Sangat Baik'));
+    $ttdName = $sertifikat->penandatangan_nama ?? 'Arif Rakhman Hadi, S.Kom';
+    $ttdJabatan = $sertifikat->penandatangan_jabatan ?? 'Direktur CV.Natusi';
+
+    if ($sertifikat->peserta?->tgl_mulai && $sertifikat->peserta?->tgl_selesai) {
+        $periode = $sertifikat->peserta->tgl_mulai->translatedFormat('d F Y') . ' s.d ' . $sertifikat->peserta->tgl_selesai->translatedFormat('d F Y');
+    } else {
+        $periode = '22 Juni s.d 21 Agustus 2026';
+    }
+
+    $theme = $isSmk
+        ? [
+            'primary' => '#14532d',
+            'secondary' => '#15803d',
+            'gold' => '#b48a2c',
+            'line' => '#d8f0df',
+            'toolbar' => 'from-green-700 to-emerald-500',
+            'dot' => '#bbf7d0',
+          ]
+        : [
+            'primary' => '#00082e',
+            'secondary' => '#182b86',
+            'gold' => '#b48a2c',
+            'line' => '#dce8fb',
+            'toolbar' => 'from-blue-900 to-blue-700',
+            'dot' => '#dbeafe',
+          ];
+
+    $qrText = route('peserta-magang.sertifikat.cetak', $sertifikat);
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sertifikat {{ $sertifikat->peserta?->user?->nama ?? 'Peserta' }}</title>
-    
-    <!-- Google Fonts & Tailwind CDN -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@700&family=Noto+Serif:ital,wght@0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <title>Sertifikat {{ $namaPeserta }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary': '#00082e',
-                        'secondary': '#775a19',
-                        'surface': '#f8f9fa',
-                        'outline-variant': '#c6c5d1',
-                    },
-                    fontFamily: {
-                        'serif-title': ['Noto Serif', 'serif'],
-                        'body-sans': ['Work Sans', 'sans-serif'],
-                        'label-caps': ['Hanken Grotesk', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    
     <style>
-        .cert-container {
-            aspect-ratio: 297 / 210;
-            max-width: 1100px;
-            margin: 0 auto;
+        body { font-family: 'Poppins', sans-serif; }
+        .font-bebas { font-family: 'Bebas Neue', sans-serif; }
+        .cert-container { aspect-ratio: 1.414; max-width: 1200px; margin: 0 auto; }
+        @media print {
+            body { background: white !important; padding: 0 !important; }
+            .print-hide { display: none !important; }
+            .cert-container { width: 100% !important; max-width: none !important; }
+            main { box-shadow: none !important; border-radius: 0 !important; }
         }
     </style>
 </head>
-<body class="bg-[#0f172a] min-h-screen flex flex-col items-center justify-center py-8 px-4 font-body-sans">
-
-    <!-- Top Toolbar -->
-    <div class="w-full max-w-[1100px] mb-6 flex justify-between items-center">
-        <a href="javascript:history.back()" class="px-5 py-2.5 bg-white text-slate-800 font-semibold rounded-xl shadow hover:bg-slate-100 transition duration-150 flex items-center gap-2 text-sm">
-            ← Kembali
-        </a>
-        <button onclick="window.print()" class="px-6 py-2.5 bg-gradient-to-r from-[#775a19] to-[#b38428] text-white font-semibold rounded-xl shadow-lg hover:opacity-90 transition duration-150 flex items-center gap-2 text-sm">
-            <span class="material-symbols-outlined text-base">print</span> Cetak / PDF
-        </button>
+<body class="min-h-screen bg-slate-950 px-4 py-8">
+    <div class="print-hide mx-auto mb-6 flex w-full max-w-[1200px] items-center justify-between">
+        <a href="javascript:history.back()" class="rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow hover:bg-slate-100">← Kembali</a>
+        <button onclick="window.print()" class="rounded-xl bg-gradient-to-r {{ $theme['toolbar'] }} px-6 py-2.5 text-sm font-bold text-white shadow-lg">Cetak / PDF</button>
     </div>
 
-    <!-- Certificate Canvas Layer -->
-    <main class="w-full cert-container bg-gradient-to-br from-white via-[#f8f9fa] to-[#edeeef] relative overflow-hidden shadow-2xl rounded-2xl border border-outline-variant/40 flex items-center justify-center">
+    <main class="cert-container relative flex w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-white shadow-2xl">
+        {{-- Ornamen dibuat kecil seperti frame: hanya di sudut, tidak masuk area konten. --}}
+        <svg class="pointer-events-none absolute inset-0 z-0 h-full w-full" fill="none" viewBox="0 0 1200 848" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M40 0H0V40" fill="none" stroke="{{ $theme['primary'] }}" stroke-width="0.5" opacity="0.025" />
+                </pattern>
+            </defs>
+            <rect width="1200" height="848" fill="url(#grid)" />
 
-        <!-- ================= ELEMEN DEKORASI (FLUID WAVE & GOLD ACCENTS) ================= -->
-        
-        <!-- Background Pattern Dot Overlay -->
-        <div class="absolute inset-0 z-0 pointer-events-none opacity-5 bg-[radial-gradient(#00082e_1px,transparent_1px)] [background-size:20px_20px]"></div>
+            {{-- Sudut kiri atas: referensi sekitar 300–350px, tidak lebih --}}
+            <path d="M0 0H300Q150 150 0 300Z" fill="{{ $theme['primary'] }}" opacity="0.94" />
+            <path d="M0 350C150 350 350 150 350 0" stroke="{{ $theme['gold'] }}" stroke-width="3" opacity="0.9" />
+            <path d="M0 320C120 320 320 120 320 0" stroke="{{ $theme['gold'] }}" stroke-width="1.6" opacity="0.65" />
+            <path d="M0 290C100 290 290 100 290 0" stroke="{{ $theme['secondary'] }}" stroke-width="1" opacity="0.28" />
 
-        <!-- Watermark Logo di Tengah -->
-        <img src="{{ asset('images/logo.jpeg') }}" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 opacity-[0.03] grayscale pointer-events-none z-0" alt="Watermark" />
+            {{-- Sudut kanan bawah: ukuran sama agar menjadi frame --}}
+            <path d="M1200 848H900Q1050 698 1200 548Z" fill="{{ $theme['primary'] }}" opacity="0.94" />
+            <path d="M1200 498C1050 498 850 698 850 848" stroke="{{ $theme['gold'] }}" stroke-width="3" opacity="0.9" />
+            <path d="M1200 528C1080 528 880 728 880 848" stroke="{{ $theme['gold'] }}" stroke-width="1.6" opacity="0.65" />
+            <path d="M1200 558C1100 558 910 748 910 848" stroke="{{ $theme['secondary'] }}" stroke-width="1" opacity="0.28" />
 
-        <!-- Fluid Wave Top Left (Sudut Kiri Atas) -->
-        <svg class="absolute top-0 left-0 w-full h-full pointer-events-none z-0" preserveAspectRatio="none" viewBox="0 0 1200 848" xmlns="http://www.w3.org/2000/svg" style="transform: translate(-3%, -3%);">
-            <!-- Navy Fill Multi Layer -->
-            <path d="M0 0 L 460 0 C 260 110, 110 260, 0 460 Z" fill="#00082e"></path>
-            <!-- Gold Lines & Dashed Accents -->
-            <path d="M0 0 L 490 0 C 280 130, 130 280, 0 490 Z" fill="none" stroke="#775a19" stroke-width="4"></path>
-            <path d="M0 0 L 530 0 C 300 150, 150 300, 0 530 Z" fill="none" stroke="#775a19" stroke-opacity="0.6" stroke-dasharray="8 5" stroke-width="2"></path>
-            <path d="M0 0 L 560 0 C 315 165, 165 315, 0 560 Z" fill="none" stroke="#00082e" stroke-opacity="0.15" stroke-width="1.5"></path>
+            {{-- Garis lembut hanya di pinggir kanan atas dan kiri bawah --}}
+            <g opacity="0.95">
+                <path d="M825 0C785 76 795 160 855 213C918 269 1034 261 1200 385" stroke="{{ $theme['line'] }}" stroke-width="3" />
+                <path d="M850 0C810 76 820 160 880 213C943 269 1059 261 1200 365" stroke="{{ $theme['line'] }}" stroke-width="3" />
+                <path d="M875 0C835 76 845 160 905 213C968 269 1084 261 1200 345" stroke="{{ $theme['line'] }}" stroke-width="3" />
+                <path d="M0 740C93 740 164 692 220 638C283 577 356 569 432 635" stroke="{{ $theme['line'] }}" stroke-width="3" />
+                <path d="M0 766C104 766 179 713 238 658C301 597 374 589 450 655" stroke="{{ $theme['line'] }}" stroke-width="3" />
+                <path d="M0 792C115 792 194 734 256 678C319 617 392 609 468 675" stroke="{{ $theme['line'] }}" stroke-width="3" />
+            </g>
+
+            {{-- side accent kecil --}}
+            <line x1="0" y1="424" x2="55" y2="424" stroke="{{ $theme['gold'] }}" stroke-width="1" opacity="0.55" />
+            <line x1="1145" y1="424" x2="1200" y2="424" stroke="{{ $theme['gold'] }}" stroke-width="1" opacity="0.55" />
         </svg>
 
-        <!-- Fluid Wave Bottom Right (Sudut Kanan Bawah) -->
-        <svg class="absolute bottom-0 right-0 w-full h-full pointer-events-none z-0" preserveAspectRatio="none" viewBox="0 0 1200 848" xmlns="http://www.w3.org/2000/svg" style="transform: translate(3%, 3%);">
-            <!-- Navy Fill Multi Layer -->
-            <path d="M1200 848 L 740 848 C 940 738, 1090 588, 1200 388 Z" fill="#00082e"></path>
-            <!-- Gold Lines & Dashed Accents -->
-            <path d="M1200 848 L 710 848 C 920 718, 1070 568, 1200 358 Z" fill="none" stroke="#775a19" stroke-width="4"></path>
-            <path d="M1200 848 L 670 848 C 900 698, 1050 548, 1200 318 Z" fill="none" stroke="#775a19" stroke-opacity="0.6" stroke-dasharray="8 5" stroke-width="2"></path>
-            <path d="M1200 848 L 640 848 C 880 680, 1030 530, 1200 290 Z" fill="none" stroke="#00082e" stroke-opacity="0.15" stroke-width="1.5"></path>
-        </svg>
+        @if ($isSmk)
+            {{-- Polkadot hanya di sisi/frame, tidak di tengah --}}
+            <div class="pointer-events-none absolute right-8 top-8 z-[1] grid grid-cols-5 gap-2 opacity-60">
+                @for ($i = 0; $i < 15; $i++)
+                    <span class="h-2 w-2 rounded-full" style="background-color: {{ $theme['dot'] }};"></span>
+                @endfor
+            </div>
+            <div class="pointer-events-none absolute bottom-8 left-8 z-[1] grid grid-cols-5 gap-2 opacity-55">
+                @for ($i = 0; $i < 15; $i++)
+                    <span class="h-2 w-2 rounded-full" style="background-color: {{ $theme['dot'] }};"></span>
+                @endfor
+            </div>
+        @endif
 
-        <!-- Frame Inner Border Emas -->
-        <div class="absolute inset-6 border border-[#775a19]/30 rounded-lg pointer-events-none z-10"></div>
-        <div class="absolute inset-[30px] border border-dashed border-[#00082e]/20 rounded-lg pointer-events-none z-10"></div>
-
-        <!-- Ornamen Sudut Emas (Corner Accent Lines) -->
-        <div class="absolute top-[38px] left-[38px] w-8 h-8 border-t-2 border-l-2 border-[#775a19] pointer-events-none z-10"></div>
-        <div class="absolute top-[38px] right-[38px] w-8 h-8 border-t-2 border-r-2 border-[#775a19] pointer-events-none z-10"></div>
-        <div class="absolute bottom-[38px] left-[38px] w-8 h-8 border-b-2 border-l-2 border-[#775a19] pointer-events-none z-10"></div>
-        <div class="absolute bottom-[38px] right-[38px] w-8 h-8 border-b-2 border-r-2 border-[#775a19] pointer-events-none z-10"></div>
-
-        <!-- ================= KONTEN UTAMA (DIPERKETAT DI TENGAH) ================= -->
-        <div class="relative z-20 w-full max-w-[650px] flex flex-col items-center text-center py-6 px-4 my-auto">
-            
-            <!-- Logo & Subtitle -->
-            <div class="flex flex-col items-center mb-3 w-full">
-                <img class="h-14 w-auto mb-2 object-contain" src="{{ asset('images/logo.jpeg') }}" alt="Logo CV Natusi">
-                <p class="font-body-sans text-[11px] md:text-xs text-[#00082e] font-medium tracking-tight max-w-[520px] leading-tight">
+        {{-- Area konten mengikuti referensi: max 900px dan selalu di tengah. --}}
+        <div class="relative z-10 flex w-full max-w-[900px] flex-col items-center px-8 py-10 text-center">
+            <div class="mb-5 flex w-full flex-col items-center">
+                <img class="mb-2 h-20 w-20 object-contain" src="{{ asset('images/logo.jpeg') }}" alt="Logo CV Natusi" />
+                <p class="text-[15px] font-medium" style="color: {{ $theme['primary'] }};">
                     Software House | Hardware Supplier | IT Consultant | Network Installation
                 </p>
-                <div class="w-2/3 h-[1px] bg-gradient-to-r from-transparent via-[#775a19]/60 to-transparent my-2"></div>
+                <div class="mt-2 h-px w-full bg-slate-300/80"></div>
             </div>
 
-            <!-- Title Section -->
-            <div class="flex flex-col items-center mb-2">
-                <h1 class="font-serif-title text-3xl md:text-4xl text-[#00082e] uppercase tracking-[0.2em] font-bold">
-                    SERTIFIKAT
-                </h1>
-                <p class="font-body-sans text-[11px] text-[#775a19] tracking-wider uppercase font-semibold mt-0.5">
-                    No. {{ $sertifikat->nomor_sertifikat ?? '0003/SERT-MAGANG/CVN/08/2026' }}
-                </p>
-                <p class="font-serif-title text-xs md:text-sm text-slate-600 italic mt-1.5">
-                    Diberikan kepada
-                </p>
+            <div class="mb-5 flex flex-col items-center">
+                <h1 class="font-bebas text-6xl font-bold uppercase tracking-[0.20em] md:text-[70px]" style="color: {{ $theme['primary'] }};">SERTIFIKAT</h1>
+                <p class="mt-1 text-lg font-medium" style="color: {{ $theme['primary'] }};">Diberikan kepada</p>
             </div>
 
-            <!-- Recipient Section -->
-            <div class="flex flex-col items-center mb-3 w-full">
-                <h2 class="font-serif-title text-2xl md:text-3xl text-[#00082e] uppercase tracking-widest font-bold mb-1">
-                    {{ $sertifikat->peserta?->user?->nama ?? 'RAFASYA' }}
-                </h2>
-                <div class="w-1/2 h-[2px] bg-gradient-to-r from-transparent via-[#00082e] to-transparent"></div>
+            <div class="mb-5 flex w-full flex-col items-center">
+                <h2 class="font-bebas mb-3 text-5xl font-bold uppercase tracking-[0.08em] md:text-[58px]" style="color: {{ $theme['primary'] }};">{{ $namaPeserta }}</h2>
+                <div class="h-px w-full bg-slate-300/90"></div>
             </div>
 
-            <!-- Body Text (Aman dari Ornamen Wave) -->
-            <div class="max-w-[540px] mx-auto mb-4">
-                <p class="font-body-sans text-xs text-[#00082e] leading-relaxed font-normal">
-                    Telah melaksanakan Program Magang / Praktik Kerja Lapangan / PRAKERIN di CV. Natusi pada divisi <strong class="font-semibold">{{ $sertifikat->divisi?->nama_divisi ?? 'Software Development' }}</strong> dengan <strong class="font-semibold">{{ $sertifikat->predikat ?? 'sangat baik' }}</strong>
-                    @if ($sertifikat->peserta?->tgl_mulai && $sertifikat->peserta?->tgl_selesai)
-                        selama periode <strong class="font-semibold">{{ $sertifikat->peserta->tgl_mulai->translatedFormat('d F Y') }}</strong> s.d <strong class="font-semibold">{{ $sertifikat->peserta->tgl_selesai->translatedFormat('d F Y') }}</strong>.
-                    @else
-                        selama periode <strong class="font-semibold">22 Juni s.d 21 Agustus 2026</strong>.
-                    @endif
+            <div class="mx-auto mb-7 max-w-3xl">
+                <p class="text-lg font-medium leading-[1.65]" style="color: {{ $theme['primary'] }};">
+                    Telah melaksanakan Program {{ $isSmk ? 'Magang / Praktik Kerja Lapangan / PRAKERIN' : 'Magang / Praktik Kerja Lapangan' }}
+                    di CV. Natusi pada divisi <strong>{{ $divisiNama }}</strong> dengan predikat
+                    <strong>{{ $predikat }}</strong> selama periode <strong>{{ $periode }}</strong>.
                 </p>
             </div>
 
-            <!-- Footer / Signature Area -->
-            <div class="w-full flex flex-col items-center mt-auto">
-                <div class="flex flex-col items-center gap-1.5">
-                    <div id="qr-ttd" 
-                         class="p-1 border border-[#775a19]/40 bg-white rounded-lg shadow-sm"
-                         data-qr-text="{{ implode("\n", array_filter([
-                            'Sertifikat Resmi CV Natusi',
-                            'No: '.($sertifikat->nomor_sertifikat ?? '0003/SERT-MAGANG/CVN/08/2026'),
-                            'Nama: '.($sertifikat->peserta?->user?->nama ?? 'RAFASYA'),
-                            'Divisi: '.($sertifikat->divisi?->nama_divisi ?? 'Software Development'),
-                            'Predikat: '.($sertifikat->predikat ?? 'Sangat Baik'),
-                            'Terbit: '.($sertifikat->tanggal_terbit ? $sertifikat->tanggal_terbit->translatedFormat('d F Y') : now()->translatedFormat('d F Y')),
-                        ])) }}">
-                    </div>
-                    <span class="font-label-caps text-[9px] text-[#775a19] uppercase font-bold tracking-widest">
-                        Verifikasi Digital
-                    </span>
-                    <div class="text-center mt-0.5">
-                        <p class="font-body-sans text-xs md:text-sm text-[#00082e] font-semibold">
-                            Arif Rakhman Hadi, S.Kom
-                        </p>
-                        <p class="font-label-caps text-[10px] text-[#775a19] uppercase font-bold">
-                            Direktur CV. Natusi
-                        </p>
+            <div class="mt-auto flex w-full flex-col items-center">
+                <div class="flex flex-col items-center gap-2">
+                    <div id="qr-ttd" data-qr-text="{{ $qrText }}" class="rounded-sm border border-slate-300 bg-white p-1 shadow-sm"></div>
+                    <div class="text-center">
+                        <p class="mb-1 text-lg font-medium" style="color: {{ $theme['primary'] }};">{{ $ttdName }}</p>
+                        <p class="text-sm font-bold uppercase tracking-[0.05em]" style="color: {{ $theme['primary'] }};">{{ $ttdJabatan }}</p>
                     </div>
                 </div>
             </div>
-
         </div>
+
+        <div class="absolute bottom-5 right-6 z-10 text-[9px] font-medium opacity-60" style="color: {{ $theme['primary'] }};">No. {{ $nomorSertifikat }}</div>
     </main>
 
-    <!-- Script QR Code Dynamic -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const el = document.getElementById('qr-ttd');
-            if (el) {
-                new QRCode(el, {
-                    text: el.dataset.qrText,
-                    width: 64,
-                    height: 64,
-                    colorDark: "#00082e",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.M
+            const qr = document.getElementById('qr-ttd');
+            if (qr && typeof QRCode !== 'undefined') {
+                new QRCode(qr, {
+                    text: qr.dataset.qrText,
+                    width: 70,
+                    height: 70,
+                    colorDark: @json($theme['primary']),
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M,
                 });
             }
         });
     </script>
-
 </body>
 </html>

@@ -95,15 +95,15 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[1260px] border-collapse text-left">
+            <table class="w-full min-w-[1740px] border-collapse text-left">
                 <thead>
                     <tr class="border-b border-slate-200 bg-sky-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
                         <th class="px-6 py-4">Nama</th>
                         <th class="px-5 py-4">Jenjang</th>
                         <th class="px-5 py-4 text-center">Minggu Ke</th>
-                        <th class="px-5 py-4">Nama Tugas</th>
+                        <th class="w-[420px] min-w-[420px] px-5 py-4">Nama Tugas</th>
                         <th class="px-5 py-4">Waktu Pengumpulan</th>
-                        <th class="px-5 py-4">Bukti Pengumpulan</th>
+                        <th class="w-[420px] min-w-[420px] px-5 py-4">Bukti Pengumpulan</th>
                         <th class="px-5 py-4 text-center">Status</th>
                         <th class="px-6 py-4 text-right">Aksi</th>
                     </tr>
@@ -131,8 +131,8 @@
                             <td class="px-5 py-4 text-center">
                                 <span class="inline-grid h-9 min-w-9 place-items-center rounded-xl bg-slate-100 px-2 text-sm font-extrabold text-slate-700">{{ $item->tugas?->minggu_ke ?? '-' }}</span>
                             </td>
-                            <td class="px-5 py-4">
-                                <p class="max-w-64 text-sm font-bold leading-5 text-slate-800">{{ $taskTitle($item) }}</p>
+                            <td class="w-[420px] min-w-[420px] px-5 py-4">
+                                <p class="text-sm font-bold leading-6 text-slate-800">{{ $taskTitle($item) }}</p>
                                 @if($item->tugas?->kode_tugas)
                                     <p class="mt-1 text-xs text-slate-400">{{ $item->tugas->kode_tugas }}</p>
                                 @endif
@@ -145,9 +145,9 @@
                                     <span class="text-sm italic text-slate-400">Waktu tidak tersedia</span>
                                 @endif
                             </td>
-                            <td class="px-5 py-4">
+                            <td class="w-[420px] min-w-[420px] px-5 py-4">
                                 @if($item->file_jawaban)
-                                    <a href="{{ route('admin-peserta.pengumpulan-tugas.file', $item) }}" target="_blank" class="inline-flex max-w-52 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-sky-700 shadow-sm transition hover:border-sky-200 hover:bg-sky-50">
+                                    <a href="{{ route('admin-peserta.pengumpulan-tugas.file', $item) }}" target="_blank" class="inline-flex w-full max-w-[390px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-sky-700 shadow-sm transition hover:border-sky-200 hover:bg-sky-50">
                                         <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                                         <span class="truncate">{{ basename($item->file_jawaban) }}</span>
                                     </a>
@@ -212,13 +212,13 @@
         </header>
 
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[980px] border-collapse text-left">
+            <table class="w-full min-w-[1280px] border-collapse text-left">
                 <thead>
                     <tr class="border-b border-slate-200 bg-amber-50/70 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
                         <th class="px-6 py-4">Nama</th>
                         <th class="px-5 py-4">Jenjang</th>
                         <th class="px-5 py-4 text-center">Minggu Ke</th>
-                        <th class="px-5 py-4">Tugas yang Belum Dikerjakan</th>
+                        <th class="w-[430px] min-w-[430px] px-5 py-4">Tugas yang Belum Dikerjakan</th>
                         <th class="px-5 py-4">Deadline</th>
                         <th class="px-6 py-4 text-right">Aksi</th>
                     </tr>
@@ -246,8 +246,8 @@
                             <td class="px-5 py-4 text-center">
                                 <span class="inline-grid h-9 min-w-9 place-items-center rounded-xl bg-slate-100 px-2 text-sm font-extrabold text-slate-700">{{ $item->tugas?->minggu_ke ?? '-' }}</span>
                             </td>
-                            <td class="px-5 py-4">
-                                <p class="max-w-80 text-sm font-bold leading-5 text-slate-800">{{ $taskTitle($item) }}</p>
+                            <td class="w-[430px] min-w-[430px] px-5 py-4">
+                                <p class="text-sm font-bold leading-6 text-slate-800">{{ $taskTitle($item) }}</p>
                                 @if($item->tugas?->kode_tugas)
                                     <p class="mt-1 text-xs text-slate-400">{{ $item->tugas->kode_tugas }}</p>
                                 @endif

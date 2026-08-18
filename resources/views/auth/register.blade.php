@@ -11,9 +11,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css'])
+    <style>[x-cloak]{display:none !important;}</style>
+    <script defer src="{{ asset('static/alpine.min.js') }}"></script>
 
-   @php
+    @php
         $registerRole = $registerRole ?? session('register_role', 'pelamar');
         $isEmployee = $registerRole === 'karyawan';
 
@@ -147,11 +149,23 @@
                         x-data="{
                             jenjang: '{{ old('jenjang', '') }}',
                             major: '{{ old('major', '') }}',
+                            tipePengajuan: '{{ old('tipe_pengajuan', 'individu') }}',
+                            jumlahAnggota: {{ (int) old('jumlah_anggota', 1) }},
+                            anggota: @js(array_values(old('anggota', []))),
                             jurusanAll: @js($jurusanList->map(fn ($j) => ['tingkat' => $j->tingkat, 'nama' => $j->nama_jurusan])),
                             get jurusanTersaring() {
                                 return this.jurusanAll.filter(j => j.tingkat === this.jenjang);
+                            },
+                            syncAnggota() {
+                                if (this.tipePengajuan === 'kelompok' && Number(this.jumlahAnggota || 0) < 2) this.jumlahAnggota = 2;
+                                const target = this.tipePengajuan === 'kelompok' ? Math.max(1, Number(this.jumlahAnggota || 2) - 1) : 0;
+                                while (this.anggota.length < target) {
+                                    this.anggota.push({ nama: '', email: '', no_induk: '', jurusan: '', no_hp: '', cv_name: '', surat_name: '' });
+                                }
+                                if (this.anggota.length > target) this.anggota.splice(target);
                             }
                         }"
+                        x-init="syncAnggota()"
                         class="mt-3.5 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 hover:[&::-webkit-scrollbar-thumb]:bg-slate-400"
                     >
                         @csrf
@@ -238,6 +252,41 @@
                             @error('jenjang')
                                 <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                             @enderror
+                        </div>
+                        @endunless
+
+                        @unless ($isEmployee)
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div>
+                                <label for="tipe_pengajuan" class="block text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-700">Jenis Pengajuan</label>
+                                <select id="tipe_pengajuan" name="tipe_pengajuan" x-model="tipePengajuan" @change="jumlahAnggota = tipePengajuan === 'kelompok' ? Math.max(2, Number(jumlahAnggota || 2)) : 1; syncAnggota()" required
+                                    class="mt-1.5 block h-[42px] w-full rounded-lg border border-slate-300 bg-[#f8faff] px-3 text-[13px] text-slate-700 focus:bg-white sm:text-sm">
+                                    <option value="individu">Individu</option>
+                                    <option value="kelompok">Kelompok</option>
+                                </select>
+                                @error('tipe_pengajuan')
+                                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="jumlah_anggota" class="block text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-700">Jumlah Peserta</label>
+                                <select id="jumlah_anggota" name="jumlah_anggota" x-model.number="jumlahAnggota" @change="syncAnggota()" :disabled="tipePengajuan !== 'kelompok'" required
+                                    class="mt-1.5 block h-[42px] w-full rounded-lg border border-slate-300 bg-[#f8faff] px-3 text-[13px] text-slate-700 disabled:opacity-60 focus:bg-white sm:text-sm">
+                                    <option value="2">2 orang</option>
+                                    <option value="3">3 orang</option>
+                                    <option value="4">4 orang</option>
+                                    <option value="5">5 orang</option>
+                                    <option value="6">6 orang</option>
+                                    <option value="7">7 orang</option>
+                                    <option value="8">8 orang</option>
+                                    <option value="9">9 orang</option>
+                                    <option value="10">10 orang</option>
+                                </select>
+                                <input x-show="tipePengajuan !== 'kelompok'" :disabled="tipePengajuan === 'kelompok'" type="hidden" name="jumlah_anggota" value="1">
+                                @error('jumlah_anggota')
+                                    <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
                         @endunless
 
@@ -368,6 +417,71 @@
                             @enderror
                         </div>
 
+                        @unless ($isEmployee)
+                        <div x-show="tipePengajuan === 'kelompok'" x-cloak class="rounded-xl border border-sky-200 bg-sky-50/60 p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-sky-800">Data Anggota Kelompok</p>
+                                    <p class="mt-1 text-xs leading-5 text-sky-700">Data utama di atas dihitung sebagai ketua/pemohon. Setiap anggota tambahan wajib mengisi data, CV, dan surat pengantar sekolah/kampus masing-masing.</p>
+                                </div>
+                                <span class="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-sky-700 ring-1 ring-sky-200" x-text="Math.max(0, jumlahAnggota - 1) + ' anggota tambahan'"></span>
+                            </div>
+
+                            <div class="mt-3 space-y-3">
+                                <template x-for="(member, index) in anggota" :key="index">
+                                    <div class="rounded-xl border border-sky-100 bg-white p-3">
+                                        <p class="mb-2 text-xs font-bold text-slate-700" x-text="'Anggota ' + (index + 2)"></p>
+                                        <div class="grid gap-2.5 sm:grid-cols-2">
+                                            <input type="text" :name="`anggota[${index}][nama]`" x-model="member.nama" placeholder="Nama lengkap" required class="h-10 rounded-lg border-slate-300 bg-slate-50 px-3 text-xs">
+                                            <input type="email" :name="`anggota[${index}][email]`" x-model="member.email" placeholder="Email aktif" required class="h-10 rounded-lg border-slate-300 bg-slate-50 px-3 text-xs">
+                                            <input type="text" :name="`anggota[${index}][no_induk]`" x-model="member.no_induk" placeholder="NIS / NIM" required class="h-10 rounded-lg border-slate-300 bg-slate-50 px-3 text-xs">
+                                            <select :name="`anggota[${index}][jurusan]`" x-model="member.jurusan" required class="h-10 rounded-lg border-slate-300 bg-slate-50 px-3 text-xs">
+                                                <option value="">Pilih jurusan</option>
+                                                <template x-for="j in jurusanTersaring" :key="j.nama">
+                                                    <option :value="j.nama" x-text="j.nama"></option>
+                                                </template>
+                                                <option value="Lainnya">Lainnya</option>
+                                            </select>
+                                            <input type="tel" :name="`anggota[${index}][no_hp]`" x-model="member.no_hp" placeholder="Nomor WhatsApp" required class="h-10 rounded-lg border-slate-300 bg-slate-50 px-3 text-xs sm:col-span-2">
+                                        </div>
+
+                                        <div class="mt-3 grid gap-2.5 border-t border-sky-100 pt-3 sm:grid-cols-2">
+                                            <div>
+                                                <label :for="`anggota-cv-${index}`" class="block text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">CV Anggota <span class="text-rose-500">*</span></label>
+                                                <input
+                                                    type="file"
+                                                    :id="`anggota-cv-${index}`"
+                                                    :name="`anggota[${index}][cv_magang]`"
+                                                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                    required
+                                                    @change="member.cv_name = $event.target.files?.[0]?.name || ''"
+                                                    class="mt-1 block w-full cursor-pointer text-[11px] text-slate-600 file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-sky-700 file:px-2.5 file:py-1.5 file:text-[11px] file:font-semibold file:text-white hover:file:bg-sky-800"
+                                                >
+                                                <p x-show="member.cv_name" x-text="member.cv_name" class="mt-1 truncate text-[10px] font-medium text-sky-700"></p>
+                                            </div>
+                                            <div>
+                                                <label :for="`anggota-surat-${index}`" class="block text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Surat Pengantar Sekolah/Kampus <span class="text-rose-500">*</span></label>
+                                                <input
+                                                    type="file"
+                                                    :id="`anggota-surat-${index}`"
+                                                    :name="`anggota[${index}][surat_pengajuan]`"
+                                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png"
+                                                    required
+                                                    @change="member.surat_name = $event.target.files?.[0]?.name || ''"
+                                                    class="mt-1 block w-full cursor-pointer text-[11px] text-slate-600 file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-sky-700 file:px-2.5 file:py-1.5 file:text-[11px] file:font-semibold file:text-white hover:file:bg-sky-800"
+                                                >
+                                                <p x-show="member.surat_name" x-text="member.surat_name" class="mt-1 truncate text-[10px] font-medium text-sky-700"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            @error('anggota')
+                                <p class="mt-2 text-xs text-rose-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        @endunless
+
                         {{-- Upload Berkas Lamaran (khusus Karyawan) --}}
                         @if ($isEmployee)
                             <div class="rounded-lg border border-slate-200 bg-slate-50/70 p-3.5">
@@ -429,6 +543,27 @@
                                     @endforeach
                                 </div>
                             </div>
+                        @else
+                            <div class="rounded-lg border border-sky-200 bg-sky-50/60 p-3.5">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-sky-800">Berkas Pengajuan Magang</p>
+                                <p class="mt-1 text-xs leading-5 text-sky-700">Berkas di bawah ini khusus ketua/pemohon. Jika pengajuan kelompok, setiap anggota juga wajib mengunggah CV dan surat pengantar masing-masing. Maksimal 5 MB per file.</p>
+                                <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                                    <div>
+                                        <label for="cv_magang" class="block text-xs font-semibold text-slate-700">CV Ketua / Pemohon <span class="text-rose-500">*</span></label>
+                                        <input id="cv_magang" name="cv_magang" type="file" accept=".pdf,.doc,.docx" required class="mt-1 block w-full text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-sky-700 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white">
+                                        @error('cv_magang')
+                                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label for="surat_pengajuan" class="block text-xs font-semibold text-slate-700">Surat Pengantar Ketua / Pemohon <span class="text-rose-500">*</span></label>
+                                        <input id="surat_pengajuan" name="surat_pengajuan" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required class="mt-1 block w-full text-xs text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-sky-700 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white">
+                                        @error('surat_pengajuan')
+                                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
                         @endif
 
                         {{-- Kata Sandi --}}
@@ -453,11 +588,11 @@
                                         class="min-w-0 flex-1 border-0 bg-transparent p-0 text-[13px] text-slate-700 placeholder:text-slate-400 focus:border-0 focus:ring-0 sm:text-sm"
                                     >
                                     <button type="button" class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100" @click="showPassword = !showPassword" :aria-label="showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'">
-                                        <svg x-show="!showPassword" class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <svg x-cloak x-show="!showPassword" class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                             <path d="M2.8 12s3.2-5.5 9.2-5.5 9.2 5.5 9.2 5.5-3.2 5.5-9.2 5.5S2.8 12 2.8 12Z" stroke="currentColor" stroke-width="1.8"/>
                                             <circle cx="12" cy="12" r="2.7" stroke="currentColor" stroke-width="1.8"/>
                                         </svg>
-                                        <svg x-show="showPassword" class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <svg x-cloak x-show="showPassword" class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                             <path d="m4 4 16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                             <path d="M10.2 6.7c.6-.1 1.2-.2 1.8-.2 6 0 9.2 5.5 9.2 5.5a15.6 15.6 0 0 1-2.4 3.1M6.2 8.1A15.6 15.6 0 0 0 2.8 12s3.2 5.5 9.2 5.5c1 0 2-.2 2.8-.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                         </svg>
@@ -488,11 +623,11 @@
                                         class="min-w-0 flex-1 border-0 bg-transparent p-0 text-[13px] text-slate-700 placeholder:text-slate-400 focus:border-0 focus:ring-0 sm:text-sm"
                                     >
                                     <button type="button" class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100" @click="showConfirm = !showConfirm" :aria-label="showConfirm ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'">
-                                        <svg x-show="!showConfirm" class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <svg x-cloak x-show="!showConfirm" class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                             <path d="M2.8 12s3.2-5.5 9.2-5.5 9.2 5.5 9.2 5.5-3.2 5.5-9.2 5.5S2.8 12 2.8 12Z" stroke="currentColor" stroke-width="1.8"/>
                                             <circle cx="12" cy="12" r="2.7" stroke="currentColor" stroke-width="1.8"/>
                                         </svg>
-                                        <svg x-show="showConfirm" class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <svg x-cloak x-show="showConfirm" class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                             <path d="m4 4 16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                             <path d="M10.2 6.7c.6-.1 1.2-.2 1.8-.2 6 0 9.2 5.5 9.2 5.5a15.6 15.6 0 0 1-2.4 3.1M6.2 8.1A15.6 15.6 0 0 0 2.8 12s3.2 5.5 9.2 5.5c1 0 2-.2 2.8-.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                         </svg>
@@ -508,7 +643,7 @@
                             @if ($isEmployee)
                                 Email dan kata sandi ini digunakan untuk masuk ke portal pendaftaran karyawan dan memantau pembaruan status seleksi berkas Anda.
                             @else
-                                Email dan kata sandi ini digunakan untuk masuk kembali dan memeriksa status pengajuan. Setelah diterima, akun peserta baru akan diberikan melalui notifikasi lonceng.
+                                Email dan kata sandi ini digunakan untuk memeriksa status pengajuan. Setiap perubahan status juga dikirim ke email. Setelah diterima, username dan password akun peserta akan dikirim ke email masing-masing anggota.
                             @endif
                         </p>
 

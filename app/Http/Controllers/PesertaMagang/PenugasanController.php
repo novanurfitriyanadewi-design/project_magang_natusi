@@ -3,87 +3,176 @@
 namespace App\Http\Controllers\PesertaMagang;
 
 use App\Http\Controllers\Controller;
-use App\Models\PesertaMagang;
-use App\Models\Tugas;
 use App\Models\PengumpulanTugas;
+use App\Models\PenugasanPeserta;
+use App\Models\PesertaMagang;
+use App\Services\PenugasanTemplateService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class PenugasanController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, PenugasanTemplateService $service)
     {
-        $userId = Auth::id();
-        $selectedMinggu = $request->get('minggu', 'all');
+        $peserta = $this->currentParticipant($request);
 
-        $query = Tugas::with(['pengumpulanTugas' => function ($q) use ($userId) {
-            $q->where('id_user', $userId);
-        }]);
+        // Pastikan jadwal terbaru sudah terbentuk dan status minggu dikunci
+        // secara berjenjang sebelum halaman ditampilkan.
+        $service->syncForParticipant($peserta);
+        $service->refreshStatuses($peserta);
 
-        if ($selectedMinggu !== 'all') {
-            $query->where('minggu_ke', $selectedMinggu);
-        }
+        $selectedMinggu = $request->query('minggu', 'all');
 
-        $semuaTugas = $query->orderBy('pengumpulan', 'desc')->get();
+        $assignments = PenugasanPeserta::query()
+            ->with(['tugas', 'templateLaporan'])
+            ->where('peserta_id', $peserta->id_peserta)
+            ->whereHas('tugas', function ($query) use ($selectedMinggu): void {
+                if ($selectedMinggu !== 'all') {
+                    $query->where('minggu_ke', (int) $selectedMinggu);
+                }
+            })
+            ->get()
+            ->filter(fn (PenugasanPeserta $assignment) => $assignment->tugas !== null)
+            ->sortBy(fn (PenugasanPeserta $assignment) => sprintf(
+                '%04d-%020d-%020d',
+                (int) ($assignment->tugas?->minggu_ke ?? 999),
+                (int) ($assignment->deadline?->timestamp ?? PHP_INT_MAX),
+                (int) $assignment->id_penugasan
+            ))
+            ->values();
 
-        $tugasAktif = $semuaTugas->reject(function ($tugas) {
-            $pengumpulan = $tugas->pengumpulanTugas->first();
-            return $pengumpulan && $pengumpulan->status_pengumpulan === 'dinilai';
-        });
+        $submissions = PengumpulanTugas::query()
+            ->where('peserta_id', $peserta->id_peserta)
+            ->whereIn('tugas_id', $assignments->pluck('tugas_id'))
+            ->get()
+            ->keyBy('tugas_id');
 
-        $riwayatTugas = $semuaTugas->filter(function ($tugas) {
-            $pengumpulan = $tugas->pengumpulanTugas->first();
-            return $pengumpulan && $pengumpulan->status_pengumpulan === 'dinilai';
-        });
+        $currentWeek = $service->currentSequentialWeek($peserta);
 
-        $selectedTugasId = $request->get('tugas_id', $tugasAktif->first()?->id_tugas);
-        $detailTugas = $semuaTugas->firstWhere('id_tugas', $selectedTugasId);
+        $selectedAssignmentId = (int) $request->query('penugasan_id', 0);
+        $detailAssignment = $assignments->firstWhere('id_penugasan', $selectedAssignmentId)
+            ?? $assignments->first(fn (PenugasanPeserta $assignment) => $assignment->status === 'aktif')
+            ?? $assignments->first();
 
-        // Memanggil blade 'peserta-magang.penugasan' sesuai gambar folder
+        $availableWeeks = PenugasanPeserta::query()
+            ->where('peserta_id', $peserta->id_peserta)
+            ->whereHas('tugas', fn ($query) => $query->whereNotNull('minggu_ke'))
+            ->join('tugas', 'tugas.id_tugas', '=', 'penugasan_peserta.tugas_id')
+            ->select('tugas.minggu_ke')
+            ->distinct()
+            ->orderBy('tugas.minggu_ke')
+            ->pluck('tugas.minggu_ke');
+
         return view('peserta-magang.penugasan', compact(
-            'tugasAktif',
-            'riwayatTugas',
-            'detailTugas',
-            'selectedMinggu'
+            'peserta',
+            'assignments',
+            'submissions',
+            'detailAssignment',
+            'selectedMinggu',
+            'currentWeek',
+            'availableWeeks'
         ));
     }
 
-    public function store(Request $request, $id_tugas)
-    {
-        $request->validate([
-            'file_pengumpulan' => 'nullable|file|mimes:pdf,zip,rar,docx,doc|max:25600',
-            'catatan'          => 'nullable|string',
-            'link_external'    => 'nullable|url',
-        ]);
+    public function store(
+        Request $request,
+        $id_tugas,
+        PenugasanTemplateService $service
+    ) {
+        $peserta = $this->currentParticipant($request);
 
-        $userId = Auth::id();
+        $assignment = PenugasanPeserta::query()
+            ->with('tugas')
+            ->where('peserta_id', $peserta->id_peserta)
+            ->where('tugas_id', (int) $id_tugas)
+            ->firstOrFail();
 
-        $pengumpulan = PengumpulanTugas::firstOrNew([
-            'id_tugas' => $id_tugas,
-            'id_user'  => $userId,
-        ]);
-
-        if ($request->hasFile('file_pengumpulan')) {
-            if ($pengumpulan->file_pengumpulan && Storage::disk('public')->exists($pengumpulan->file_pengumpulan)) {
-                Storage::disk('public')->delete($pengumpulan->file_pengumpulan);
-            }
-
-            $path = $request->file('file_pengumpulan')->store('pengumpulan-tugas', 'public');
-            $pengumpulan->file_pengumpulan = $path;
+        // Materi hanya untuk dibaca, bukan dikumpulkan.
+        if ($assignment->tugas?->kategori_tugas === 'materi') {
+            throw ValidationException::withMessages([
+                'file_jawaban' => 'Item ini adalah materi pembelajaran dan tidak memerlukan pengumpulan file.',
+            ]);
         }
 
-        $pengumpulan->catatan = $request->catatan;
-        $pengumpulan->link_external = $request->link_external;
-        $pengumpulan->tanggal_dikumpul = now();
-        $pengumpulan->status_pengumpulan = $request->input('action') === 'draft' ? 'draft' : 'dikumpul';
-        $pengumpulan->save();
+        // Keamanan backend: minggu yang masih terkunci tetap ditolak walaupun
+        // user mencoba mengirim form secara manual dari DevTools/URL.
+        if (!$service->canSubmit($peserta, $assignment)) {
+            $week = (int) ($assignment->tugas?->minggu_ke ?? 0);
+            $currentWeek = $service->currentSequentialWeek($peserta);
 
-        $pesan = $pengumpulan->status_pengumpulan === 'draft' 
-            ? 'Draft tugas berhasil disimpan.' 
-            : 'Tugas berhasil dikumpulkan!';
+            throw ValidationException::withMessages([
+                'file_jawaban' => $week > 0 && $currentWeek && $week > $currentWeek
+                    ? "Minggu {$week} masih terkunci. Selesaikan seluruh tugas Minggu {$currentWeek} terlebih dahulu."
+                    : 'Tugas atau laporan ini belum dapat dikumpulkan saat ini.',
+            ]);
+        }
 
-        return redirect()->route('peserta-magang.penugasan.index', ['tugas_id' => $id_tugas])
-            ->with('success', $pesan);
+        $request->validate([
+            'file_jawaban' => [
+                'required',
+                'file',
+                'mimes:pdf,doc,docx,xls,xlsx,zip,rar',
+                'max:25600',
+            ],
+        ]);
+
+        $existing = PengumpulanTugas::query()
+            ->where('tugas_id', $assignment->tugas_id)
+            ->where('peserta_id', $peserta->id_peserta)
+            ->first();
+
+        if ($existing) {
+            throw ValidationException::withMessages([
+                'file_jawaban' => 'Tugas ini sudah pernah dikumpulkan.',
+            ]);
+        }
+
+        $path = $request->file('file_jawaban')
+            ->store('jawaban-tugas', 'public');
+
+        $late = $assignment->deadline && now()->greaterThan($assignment->deadline);
+
+        try {
+            PengumpulanTugas::create([
+                'tugas_id' => $assignment->tugas_id,
+                'peserta_id' => $peserta->id_peserta,
+                'file_jawaban' => $path,
+                'dikumpulkan_pada' => now(),
+                'status' => $late ? 'telat' : 'terkumpul',
+            ]);
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete($path);
+            throw $exception;
+        }
+
+        $assignment->update(['status' => 'selesai']);
+
+        // Setelah tugas terakhir di minggu ini selesai, method ini otomatis
+        // membuka minggu berikutnya dan tetap mengunci minggu setelahnya.
+        $service->refreshStatuses($peserta);
+        $nextWeek = $service->currentSequentialWeek($peserta);
+        $finishedWeek = (int) ($assignment->tugas?->minggu_ke ?? 0);
+
+        $message = $late
+            ? 'Tugas berhasil dikumpulkan, tetapi melewati deadline.'
+            : 'Tugas berhasil dikumpulkan.';
+
+        if ($finishedWeek > 0 && $nextWeek && $nextWeek > $finishedWeek) {
+            $message .= " Seluruh tugas Minggu {$finishedWeek} selesai. Minggu {$nextWeek} sekarang terbuka.";
+        } elseif ($finishedWeek > 0 && $nextWeek === null) {
+            $message .= ' Seluruh tugas mingguan Anda sudah selesai.';
+        }
+
+        return redirect()
+            ->route('peserta-magang.penugasan.index')
+            ->with('success', $message);
+    }
+
+    private function currentParticipant(Request $request): PesertaMagang
+    {
+        return PesertaMagang::query()
+            ->where('user_id', $request->user()->id_user)
+            ->firstOrFail();
     }
 }

@@ -72,7 +72,7 @@
                 </aside>
 
                 <section class="flex min-h-0 items-center justify-center bg-white px-6 py-8 sm:px-9 sm:py-9 lg:px-9 lg:py-6">
-                    <div class="w-full max-w-[348px]" x-data="{ showPassword: false }">
+                    <div class="w-full max-w-[348px]">
                         <h2 class="text-[16px] font-semibold leading-snug tracking-[-0.02em] text-slate-950">
                             Portal Utama CV. Natusi
                         </h2>
@@ -146,7 +146,7 @@
 
                                     <input
                                         id="password"
-                                        :type="showPassword ? 'text' : 'password'"
+                                        type="password"
                                         name="password"
                                         placeholder="••••••••"
                                         autocomplete="current-password"
@@ -156,16 +156,16 @@
 
                                     <button
                                         type="button"
+                                        id="toggle-login-password"
                                         class="grid h-8 w-8 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-[#08678f]/10 hover:text-[#08678f] focus:outline-none focus:ring-2 focus:ring-[#08678f]/30"
-                                        @click="showPassword = !showPassword"
-                                        :aria-label="showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
-                                        :aria-pressed="showPassword"
+                                        aria-label="Tampilkan kata sandi"
+                                        aria-pressed="false"
                                     >
-                                        <svg x-show="!showPassword" class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <svg id="login-eye-open" class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                             <path d="M2.8 12s3.2-5.5 9.2-5.5 9.2 5.5 9.2 5.5-3.2 5.5-9.2 5.5S2.8 12 2.8 12Z" stroke="currentColor" stroke-width="1.8"/>
                                             <circle cx="12" cy="12" r="2.7" stroke="currentColor" stroke-width="1.8"/>
                                         </svg>
-                                        <svg x-show="showPassword" class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <svg id="login-eye-closed" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                             <path d="m4 4 16 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                             <path d="M10.2 6.7c.6-.1 1.2-.2 1.8-.2 6 0 9.2 5.5 9.2 5.5a15.6 15.6 0 0 1-2.4 3.1M6.2 8.1A15.6 15.6 0 0 0 2.8 12s3.2 5.5 9.2 5.5c1 0 2-.2 2.8-.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                         </svg>
@@ -238,5 +238,26 @@
             </nav>
         </footer>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('password');
+            const button = document.getElementById('toggle-login-password');
+            const eyeOpen = document.getElementById('login-eye-open');
+            const eyeClosed = document.getElementById('login-eye-closed');
+
+            if (!input || !button || !eyeOpen || !eyeClosed) return;
+
+            button.addEventListener('click', function () {
+                const willShow = input.type === 'password';
+                input.type = willShow ? 'text' : 'password';
+                eyeOpen.classList.toggle('hidden', willShow);
+                eyeClosed.classList.toggle('hidden', !willShow);
+                button.setAttribute('aria-pressed', willShow ? 'true' : 'false');
+                button.setAttribute('aria-label', willShow ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+            });
+        });
+    </script>
+
 </body>
 </html>

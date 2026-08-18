@@ -16,6 +16,8 @@ class PengumpulanTugas extends Model
         'tugas_id',
         'peserta_id',
         'file_jawaban',
+        'catatan',
+        'link_external',
         'dikumpulkan_pada',
         'status',
     ];
