@@ -141,11 +141,12 @@ class RegisteredUserController extends Controller
                 ->where($permintaanMasihAktif);
             $studentIdRules[] = Rule::unique('permintaan_magang', 'no_induk')
                 ->where($permintaanMasihAktif);
-        } else {
-            // Validasi unik NIK untuk karyawan
-            $studentIdRules[] = Rule::unique('permintaan_lamaran', 'nik')
-                ->where($permintaanMasihAktif);
         }
+        // FIX: rule unique lama mengarah ke kolom 'nik', padahal field
+        // 'student_id' pada form karyawan berisi "Posisi Yang Dilamar"
+        // (bukan NIK asli), jadi validasi unique ke kolom nik dihapus.
+        // Pencegahan pengajuan ganda untuk role karyawan sudah cukup
+        // ditangani oleh unique email di atas (Rule::unique('users','email')).
 
         // Pesan error dinamis menyesuaikan role pendaftar
         $messages = [
@@ -162,8 +163,8 @@ class RegisteredUserController extends Controller
 
         if ($roleSession === 'karyawan') {
             $messages['university.required'] = 'Pendidikan terakhir wajib diisi.';
-            $messages['student_id.required'] = 'NIK (Nomor Induk Kependudukan) wajib diisi.';
-            $messages['major.required']      = 'Posisi yang dilamar wajib diisi.';
+            $messages['student_id.required'] = 'Posisi yang dilamar wajib diisi.';
+            $messages['major.required']      = 'Bidang / keahlian utama wajib diisi.';
         } else {
             $messages['university.required'] = 'Asal sekolah / instansi wajib diisi.';
             $messages['student_id.required'] = 'Nomor induk (NIM/NISN) wajib diisi.';
@@ -236,7 +237,7 @@ if ($roleSession === 'karyawan') {
                     'akun_dibuat'  => false,
                 ]);
 
-                $this->kirimNotifikasiKeAdmin($permintaan->nama_pemohon, 'Pengajuan Magang Baru');
+                $this->kirimNotifikasiKeAdmin($permintaan->nama_pemohon, 'Pengajuan Magang Baru', ['admin', 'admin_peserta', 'superadmin'], $permintaan->id_permintaan);
 
                 Notifikasi::query()->create([
                     'user_id'      => $user->id_user,
@@ -271,8 +272,8 @@ if ($roleSession === 'karyawan') {
                 'email'                => $email,
                 'role'                 => 'pelamar',
                 'university'           => trim($validated['university']), // Disimpan sebagai Pendidikan Terakhir
-                'student_id'           => trim($validated['student_id']), // Disimpan sebagai NIK
-                'major'                => trim($validated['major']),      // Disimpan sebagai Posisi Dilamar
+                'student_id'           => trim($validated['student_id']), // Disimpan sebagai Posisi Dilamar
+                'major'                => trim($validated['major']),      // Disimpan sebagai Bidang/Keahlian
                 'phone'                => trim($validated['phone']),
                 'description'          => filled($validated['description'] ?? null) ? trim($validated['description']) : null,
                 'password'             => Hash::make($validated['password']),
@@ -288,13 +289,17 @@ foreach (['surat_lamaran', 'cv', 'ijazah', 'ktp', 'pas_foto', 'skck', 'portfolio
 }
             $permintaan = null;
             if (class_exists(PermintaanLamaran::class)) {
+                // FIX: mapping sebelumnya kebalik.
+                // Form label "Posisi Yang Dilamar" -> field student_id -> harus ke kolom 'posisi'
+                // Form label "Bidang / Keahlian Utama" -> field major -> harus ke kolom 'bidang_keahlian'
+                // Kolom 'nik' tidak diisi karena form karyawan tidak punya field NIK asli.
                 $permintaan = PermintaanLamaran::query()->create(array_merge([
     'user_id'             => $user->id_user,
     'nama_pemohon'        => trim($validated['full_name']),
     'email'               => $email,
-    'nik'                 => trim($validated['student_id']),
     'pendidikan_terakhir' => trim($validated['university']),
-    'posisi'              => trim($validated['major']),
+    'posisi'              => trim($validated['student_id']),
+    'bidang_keahlian'     => trim($validated['major']),
     'no_hp'               => trim($validated['phone']),
     'tanggal_lamar'       => now(),
     'pesan'               => filled($validated['description'] ?? null) ? trim($validated['description']) : null,
@@ -302,7 +307,7 @@ foreach (['surat_lamaran', 'cv', 'ijazah', 'ktp', 'pas_foto', 'skck', 'portfolio
     'akun_dibuat'         => false,
 ], $berkasPaths));
 
-                $this->kirimNotifikasiKeAdmin($permintaan->nama_pemohon, 'Pengajuan Lamaran Karyawan Baru');
+                $this->kirimNotifikasiKeAdmin($permintaan->nama_pemohon, 'Pengajuan Lamaran Karyawan Baru', ['admin', 'admin_karyawan', 'superadmin'], $permintaan->id_permintaan);
             }
 
             Notifikasi::query()->create([
@@ -328,20 +333,25 @@ foreach (['surat_lamaran', 'cv', 'ijazah', 'ktp', 'pas_foto', 'skck', 'portfolio
             ->with('success', 'Pengajuan lamaran karyawan berhasil dikirim. Silakan tunggu pemeriksaan oleh tim HRD/Admin.');
     }
 
-    private function kirimNotifikasiKeAdmin(string $namaPemohon, string $judul = 'Pengajuan Baru'): void
-    {
+    private function kirimNotifikasiKeAdmin(
+        string $namaPemohon,
+        string $judul = 'Pengajuan Baru',
+        array $roles = ['admin', 'admin_karyawan', 'admin_peserta', 'superadmin'],
+        ?int $referensiId = null
+    ): void {
         $adminIds = User::query()
-            ->where('role', 'admin')
+            ->whereIn('role', $roles)
             ->pluck('id_user');
 
         foreach ($adminIds as $adminId) {
             Notifikasi::query()->create([
-                'user_id'  => $adminId,
-                'judul'    => $judul,
-                'pesan'    => sprintf('%s telah mengirim pengajuan dan menunggu konfirmasi.', $namaPemohon),
-                'kategori' => 'pengajuan',
-                'tipe'     => 'info',
-                'dibaca'   => false,
+                'user_id'      => $adminId,
+                'judul'        => $judul,
+                'pesan'        => sprintf('%s telah mengirim pengajuan dan menunggu konfirmasi.', $namaPemohon),
+                'kategori'     => 'pengajuan',
+                'tipe'         => 'info',
+                'referensi_id' => $referensiId,
+                'dibaca'       => false,
             ]);
         }
     }
