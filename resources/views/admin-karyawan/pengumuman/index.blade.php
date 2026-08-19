@@ -1,5 +1,22 @@
 @extends('layouts.portal')
 
+@push('styles')
+<style>
+    .admin-announcement-create {
+        background-color: #05658f;
+        color: #ffffff;
+        cursor: pointer;
+        opacity: 1;
+        position: relative;
+        z-index: 1;
+    }
+
+    .admin-announcement-create:hover {
+        background-color: #045575;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="p-6">
 
@@ -15,9 +32,10 @@
 
         <a
             href="{{ route('admin-karyawan.pengumuman.create') }}"
-            class="rounded-xl bg-[#05658f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#045575]"
+            class="admin-announcement-create inline-flex items-center justify-center gap-2 rounded-xl bg-[#05658f] px-5 py-3 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#045575] hover:shadow-lg"
         >
-            + Tambah Pengumuman
+            <span class="material-symbols-outlined text-[20px]">add</span>
+            Tambah Pengumuman
         </a>
     </div>
 
@@ -221,8 +239,9 @@
 
             <a
                 href="{{ route('admin-karyawan.pengumuman.create') }}"
-                class="mt-5 inline-block rounded-xl bg-[#05658f] px-5 py-3 text-sm font-semibold text-white"
+                class="admin-announcement-create mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-[#05658f] px-5 py-3 text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#045575] hover:shadow-lg"
             >
+                <span class="material-symbols-outlined text-[20px]">add</span>
                 Tambah Pengumuman
             </a>
 
