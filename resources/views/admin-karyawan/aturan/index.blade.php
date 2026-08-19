@@ -1,4 +1,3 @@
-```blade
 @extends('layouts.portal')
 
 @section('title', 'Kelola Aturan Perusahaan')

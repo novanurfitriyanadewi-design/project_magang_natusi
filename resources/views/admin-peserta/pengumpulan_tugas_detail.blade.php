@@ -3,6 +3,22 @@
 @section('title', 'Detail Pengumpulan Tugas')
 
 @section('content')
+<style>
+    /* Tombol revisi dibuat dengan CSS lokal agar tetap terlihat tanpa rebuild Vite/Tailwind. */
+    .btn-revisi-admin {
+        background-color: #f97316 !important;
+        color: #ffffff !important;
+        border: 1px solid #f97316 !important;
+    }
+    .btn-revisi-admin:hover {
+        background-color: #ea580c !important;
+        border-color: #ea580c !important;
+    }
+    .btn-revisi-admin .material-symbols-outlined {
+        color: #ffffff !important;
+    }
+</style>
+
 @php
     $name = $pengumpulan->peserta?->user?->nama
         ?? $pengumpulan->peserta?->permintaan?->nama_pemohon
@@ -23,6 +39,10 @@
     };
 
     $isLate = $pengumpulan->status === 'telat';
+    $reviewStatus = (string) ($pengumpulan->status_review ?: 'disetujui');
+    $reviewPending = $reviewStatus === 'menunggu_review';
+    $needsRevision = $reviewStatus === 'perlu_revisi';
+    $approved = $reviewStatus === 'disetujui';
     $previewableImage = in_array($file['extension'] ?? '', ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
     $previewablePdf = ($file['extension'] ?? '') === 'pdf';
 @endphp
@@ -38,14 +58,26 @@
             <p class="mt-2 text-sm text-slate-500">Periksa data peserta, jadwal, status, dan bukti file yang dikumpulkan.</p>
         </div>
 
-        <span @class([
-            'inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-extrabold',
-            'border-rose-200 bg-rose-50 text-rose-700' => $isLate,
-            'border-emerald-200 bg-emerald-50 text-emerald-700' => !$isLate,
-        ])>
-            <span class="h-2 w-2 rounded-full {{ $isLate ? 'bg-rose-500' : 'bg-emerald-500' }}"></span>
-            {{ $isLate ? 'Terlambat' : 'Mengumpulkan' }}
-        </span>
+        <div class="flex flex-wrap items-center gap-2">
+            <span @class([
+                'inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold',
+                'border-rose-200 bg-rose-50 text-rose-700' => $isLate,
+                'border-sky-200 bg-sky-50 text-sky-700' => !$isLate,
+            ])>
+                <span class="h-2 w-2 rounded-full {{ $isLate ? 'bg-rose-500' : 'bg-sky-500' }}"></span>
+                {{ $isLate ? 'Terlambat' : 'Sudah Mengumpulkan' }}
+            </span>
+
+            <span @class([
+                'inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold',
+                'border-amber-200 bg-amber-50 text-amber-700' => $reviewPending,
+                'border-orange-200 bg-orange-50 text-orange-700' => $needsRevision,
+                'border-emerald-200 bg-emerald-50 text-emerald-700' => $approved,
+            ])>
+                <span class="material-symbols-outlined text-[18px]">{{ $reviewPending ? 'hourglass_top' : ($needsRevision ? 'edit_note' : 'verified') }}</span>
+                {{ $reviewPending ? 'Menunggu Koreksi' : ($needsRevision ? 'Perlu Revisi' : 'Disetujui') }}
+            </span>
+        </div>
     </section>
 
     <section class="grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.1fr]">
@@ -151,6 +183,71 @@
                 @endif
             </div>
         </article>
+    </section>
+
+    <section class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_46px_rgba(15,23,42,0.08)]">
+        <header class="border-b border-slate-100 bg-gradient-to-r from-amber-50 via-white to-white px-6 py-5">
+            <div class="flex items-center gap-3">
+                <div class="grid h-11 w-11 place-items-center rounded-2xl bg-amber-100 text-amber-700">
+                    <span class="material-symbols-outlined">fact_check</span>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-950">Koreksi Admin</h2>
+                    <p class="mt-1 text-sm text-slate-500">Setujui hasil tugas atau kirim catatan revisi kepada peserta.</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6">
+            @if($reviewPending)
+                <form method="POST" action="{{ route('admin-peserta.pengumpulan-tugas.review', $pengumpulan) }}" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label for="catatan_revisi" class="block text-sm font-semibold text-slate-700">Catatan Koreksi / Revisi</label>
+                        <p class="mt-1 text-xs leading-5 text-slate-500">Wajib diisi jika tugas perlu diperbaiki. Catatan ini akan diterima peserta melalui portal dan email.</p>
+                        <textarea id="catatan_revisi" name="catatan_revisi" rows="5" maxlength="2000" class="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-700 focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-100" placeholder="Contoh: Bagian flowchart belum sesuai. Perbaiki percabangan pada langkah ke-3 dan kirim ulang file.">{{ old('catatan_revisi', $pengumpulan->catatan_revisi) }}</textarea>
+                        @error('catatan_revisi')
+                            <p class="mt-2 text-xs font-semibold text-rose-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button type="submit" name="aksi" value="revisi" onclick="return document.getElementById('catatan_revisi').value.trim() !== '' || (alert('Isi catatan revisi terlebih dahulu.'), false)" class="btn-revisi-admin inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold shadow-sm transition">
+                            <span class="material-symbols-outlined text-[19px]">edit_note</span>
+                            Minta Revisi
+                        </button>
+                        <button type="submit" name="aksi" value="disetujui" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700">
+                            <span class="material-symbols-outlined text-[19px]">check_circle</span>
+                            Setujui Tugas
+                        </button>
+                    </div>
+                </form>
+            @elseif($needsRevision)
+                <div class="rounded-2xl border border-orange-200 bg-orange-50 p-5">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-orange-600">pending_actions</span>
+                        <div>
+                            <p class="font-bold text-orange-900">Menunggu peserta mengirim file revisi</p>
+                            <p class="mt-2 text-sm leading-6 text-orange-800">{{ $pengumpulan->catatan_revisi ?: 'Admin meminta perbaikan tugas.' }}</p>
+                            <p class="mt-3 text-xs text-orange-700">Setelah peserta mengirim ulang, status akan kembali menjadi <strong>Menunggu Koreksi</strong> dan tombol koreksi akan aktif lagi.</p>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-emerald-600">verified</span>
+                        <div>
+                            <p class="font-bold text-emerald-900">Tugas sudah disetujui</p>
+                            <p class="mt-1 text-sm text-emerald-700">Dikoreksi {{ $pengumpulan->reviewed_at?->translatedFormat('d F Y, H:i') ?? '-' }}. Tugas ini sudah dihitung selesai untuk progres mingguan peserta.</p>
+                            @if((int) $pengumpulan->revisi_ke > 0)
+                                <p class="mt-2 text-xs font-semibold text-emerald-700">Jumlah revisi: {{ $pengumpulan->revisi_ke }} kali.</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
     </section>
 </div>
 @endsection

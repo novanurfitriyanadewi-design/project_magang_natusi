@@ -9,6 +9,7 @@ use App\Models\RiwayatMetodePembayaran;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -204,6 +205,10 @@ class DataMetodePembayaranController extends Controller
                 'nama_pemilik',
             ]);
 
+            if ($bank->qris_image) {
+                Storage::disk('public')->delete($bank->qris_image);
+            }
+
             $bank->delete();
 
             $this->recordHistory(
@@ -218,6 +223,54 @@ class DataMetodePembayaranController extends Controller
         return redirect()
             ->route('admin-peserta.metode-pembayaran.index')
             ->with('success', "Rekening {$bankName} berhasil dihapus.");
+    }
+
+    /**
+     * Upload/ganti gambar QRIS untuk sebuah rekening — terpisah dari form data rekening.
+     */
+    public function storeQris(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'bank_id' => ['required', 'exists:bank,id_bank'],
+            'qris_image' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+        ], [
+            'bank_id.required' => 'Pilih rekening yang akan dipasangkan QRIS-nya.',
+            'qris_image.required' => 'Pilih gambar QRIS terlebih dahulu.',
+        ]);
+
+        $bank = Bank::query()->findOrFail($validated['bank_id']);
+
+        if ($bank->qris_image) {
+            Storage::disk('public')->delete($bank->qris_image);
+        }
+
+        $bank->update([
+            'qris_image' => $request->file('qris_image')->store('qris', 'public'),
+        ]);
+
+        $this->recordHistory(
+            action: 'ubah',
+            entity: 'rekening_bank',
+            description: "QRIS untuk rekening {$bank->nama_bank} ({$bank->no_rekening}) berhasil diunggah/diganti.",
+            oldData: null,
+            newData: $bank->only(['id_bank', 'nama_bank', 'no_rekening']),
+        );
+
+        return redirect()
+            ->route('admin-peserta.metode-pembayaran.index')
+            ->with('success', "QRIS untuk {$bank->nama_bank} — {$bank->no_rekening} berhasil disimpan.");
+    }
+
+    public function destroyQris(Bank $bank): RedirectResponse
+    {
+        if ($bank->qris_image) {
+            Storage::disk('public')->delete($bank->qris_image);
+            $bank->update(['qris_image' => null]);
+        }
+
+        return redirect()
+            ->route('admin-peserta.metode-pembayaran.index')
+            ->with('success', "QRIS untuk {$bank->nama_bank} berhasil dihapus.");
     }
 
     private function bankRules(Request $request, ?Bank $bank = null): array

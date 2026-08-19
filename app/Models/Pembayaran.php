@@ -19,6 +19,9 @@ class Pembayaran extends Model
         'nominal',
         'bukti_transfer',
         'tgl_bayar',
+        'periode_mulai',
+        'periode_selesai',
+        'jumlah_bulan',
         'status',
         'keterangan',
     ];
@@ -27,6 +30,9 @@ class Pembayaran extends Model
     {
         return [
             'tgl_bayar' => 'datetime',
+            'periode_mulai' => 'date',
+            'periode_selesai' => 'date',
+            'jumlah_bulan' => 'integer',
             'nominal' => 'integer',
         ];
     }

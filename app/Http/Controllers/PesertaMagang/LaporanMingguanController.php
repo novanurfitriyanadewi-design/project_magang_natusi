@@ -4,16 +4,26 @@ namespace App\Http\Controllers\PesertaMagang;
 
 use App\Http\Controllers\Controller;
 use App\Models\LaporanMingguan;
+use App\Models\TemplateLaporan;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LaporanMingguanController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Halaman ini khusus menampilkan template dan aturan laporan mingguan.
+     * Pengumpulan laporan dilakukan melalui menu Penugasan.
+     */
+    public function index(Request $request): View|RedirectResponse
     {
         $user = Auth::user();
-        $peserta = $user->pesertaMagang;
+        $peserta = $user?->pesertaMagang;
 
         if (! $peserta) {
             return redirect()
@@ -21,27 +31,49 @@ class LaporanMingguanController extends Controller
                 ->with('error', 'Data peserta magang Anda belum terdaftar di sistem. Hubungi admin.');
         }
 
-        $mingguSaatIni = $this->hitungMingguSaatIni($peserta);
-
-        $laporanMingguIni = LaporanMingguan::where('peserta_id', $peserta->id_peserta)
-            ->where('minggu_ke', $mingguSaatIni)
+        $templateLaporan = TemplateLaporan::query()
+            ->with('user')
+            ->where('is_active', true)
+            ->latest('id_template_laporan')
             ->first();
 
-        $riwayat = LaporanMingguan::where('peserta_id', $peserta->id_peserta)
-            ->orderByDesc('minggu_ke')
-            ->paginate(10);
-
-        return view('peserta-magang.laporan-mingguan', compact(
-            'mingguSaatIni',
-            'laporanMingguIni',
-            'riwayat'
-        ));
+        return view('peserta-magang.laporan-mingguan', compact('templateLaporan'));
     }
 
-    public function store(Request $request)
+    /**
+     * Download template melalui Laravel agar tidak bergantung pada /storage URL.
+     */
+    public function downloadTemplate(TemplateLaporan $templateLaporan): StreamedResponse
     {
         $user = Auth::user();
-        $peserta = $user->pesertaMagang;
+        abort_unless($user?->pesertaMagang, 403, 'Akses hanya untuk peserta magang.');
+
+        abort_unless(
+            $templateLaporan->is_active &&
+            $templateLaporan->file_word &&
+            Storage::disk('public')->exists($templateLaporan->file_word),
+            404,
+            'Template laporan tidak ditemukan atau sudah tidak aktif.'
+        );
+
+        $extension = pathinfo($templateLaporan->file_word, PATHINFO_EXTENSION) ?: 'docx';
+        $baseName = Str::slug($templateLaporan->judul ?: 'template-laporan-mingguan');
+        $downloadName = ($baseName !== '' ? $baseName : 'template-laporan-mingguan') . '.' . $extension;
+
+        return Storage::disk('public')->download(
+            $templateLaporan->file_word,
+            $downloadName
+        );
+    }
+
+    /**
+     * Dipertahankan untuk kompatibilitas route lama.
+     * UI baru tidak lagi melakukan upload dari halaman ini.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+        $peserta = $user?->pesertaMagang;
 
         if (! $peserta) {
             return redirect()
@@ -60,17 +92,17 @@ class LaporanMingguanController extends Controller
         LaporanMingguan::updateOrCreate(
             [
                 'peserta_id' => $peserta->id_peserta,
-                'minggu_ke'  => $mingguSaatIni,
+                'minggu_ke' => $mingguSaatIni,
             ],
             [
-                'laporan'          => $path,
+                'laporan' => $path,
                 'dikumpulkan_pada' => Carbon::now(),
             ]
         );
 
         return redirect()
-            ->route('peserta-magang.laporan.index')
-            ->with('success', "Laporan minggu ke-{$mingguSaatIni} berhasil dikirim.");
+            ->route('peserta-magang.penugasan.index')
+            ->with('success', 'Laporan berhasil dikirim. Pengumpulan selanjutnya dilakukan melalui menu Penugasan.');
     }
 
     private function hitungMingguSaatIni($peserta): int

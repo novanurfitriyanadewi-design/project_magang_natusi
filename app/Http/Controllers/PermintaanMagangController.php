@@ -1,378 +1,319 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\AdminPeserta;
 
+use App\Http\Controllers\Controller;
 use App\Models\Notifikasi;
 use App\Models\PermintaanMagang;
 use App\Models\PesertaMagang;
 use App\Models\User;
-use App\Support\JurusanKategori;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class PermintaanMagangController extends ApiCrudController
+class PermintaanMagangController extends Controller
 {
-    protected string $modelClass = PermintaanMagang::class;
-    protected array $with = [
-        'user',
-        'peserta.user',
-    ];
-    protected array $files = [];
-    protected array $searchable = [
-        'nama_sekolah',
-        'no_induk',
-        'jurusan',
-        'no_hp',
-        'status',
-    ];
-
-    protected function rules(?Model $model = null): array
+    public function index(Request $request)
     {
-        return [
-            'user_id' => [
-                'nullable',
-                'exists:users,id_user',
-            ],
+        $total_pendaftar = PermintaanMagang::query()->count();
+        $total_disetujui = PermintaanMagang::query()->where('status', 'disetujui')->count();
 
-            'nama_pemohon' => [
-                'required',
-                'string',
-                'max:255',
-            ],
+        $query = PermintaanMagang::query()
+            ->with(['peserta', 'anggota', 'riwayatBerkas']);
 
-            'email' => [
-                'nullable',
-                'email',
-                'max:255',
-            ],
+        $status = $request->string('status')->toString();
 
-            'nama_sekolah' => [
-                'required',
-                'string',
-                'max:255',
-            ],
+        if (in_array($status, ['menunggu', 'perlu_revisi', 'disetujui', 'ditolak'], true)) {
+            $query->where('status', $status);
+        }
 
-            'no_induk' => [
-                'required',
-                'string',
-                'max:100',
-            ],
+        if ($request->filled('search')) {
+            $search = trim($request->string('search')->toString());
 
-            'jurusan' => [
-                'required',
-                'string',
-                'max:255',
-            ],
+            $query->where(function ($subQuery) use ($search) {
+                $subQuery
+                    ->where('nama_pemohon', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('nama_sekolah', 'like', "%{$search}%")
+                    ->orWhere('no_induk', 'like', "%{$search}%")
+                    ->orWhere('jurusan', 'like', "%{$search}%")
+                    ->orWhere('no_hp', 'like', "%{$search}%")
+                    ->orWhereHas('anggota', function ($anggotaQuery) use ($search) {
+                        $anggotaQuery
+                            ->where('nama', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('no_induk', 'like', "%{$search}%");
+                    });
+            });
+        }
 
-            'no_hp' => [
-                'required',
-                'string',
-                'max:20',
-            ],
+        $permintaan_magang = $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id_permintaan')
+            ->paginate(10)
+            ->withQueryString();
 
-            'pesan' => [
-                'nullable',
-                'string',
-                'max:2000',
-            ],
-
-            'status' => [
-                'sometimes',
-                'in:menunggu,disetujui,ditolak',
-            ],
-        ];
+        return view('admin-peserta.permintaan-magang', compact(
+            'permintaan_magang',
+            'total_pendaftar',
+            'total_disetujui'
+        ));
     }
 
-    protected function prepareDataForStore(
-        array $data,
-        Request $request
-    ): array {
-        $data['status'] = 'menunggu';
-
-        return $data;
-    }
-
-    // accept
-    public function setujui(
-        Request $request,
-        int|string $id
-    ): JsonResponse {
-        $data = $request->validate([
-            'alamat' => [
-                'required',
-                'string',
-                'max:1000',
-            ],
-
-            'tingkat_pendidikan' => [
-                'required',
-                'string',
-                'max:100',
-            ],
-
-            'kelas' => [
-                'nullable',
-                'string',
-                'max:100',
-            ],
-
-            'tgl_mulai' => [
-                'required',
-                'date',
-            ],
-
-            'tgl_selesai' => [
-                'required',
-                'date',
-                'after_or_equal:tgl_mulai',
-            ],
-
-            'durasi_magang' => [
-                'nullable',
-                'string',
-                'max:100',
-            ],
-
-            'nama_guru' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'no_hpguru' => [
-                'nullable',
-                'string',
-                'max:20',
-            ],
+    public function action(Request $request, int $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'action' => ['required', 'in:approve,reject,revision,accept'],
+            'alasan_penolakan' => ['required_if:action,reject', 'nullable', 'string', 'max:2000'],
+            'catatan_revisi' => ['required_if:action,revision', 'nullable', 'string', 'max:2000'],
         ]);
 
-        $hasil = DB::transaction(function () use ($id, $data) {
-            // duplikat permintaan
-            $permintaanMagang = PermintaanMagang::query()
+        $result = DB::transaction(function () use ($validated, $id): array {
+            $permintaan = PermintaanMagang::query()
+                ->with(['user', 'anggota'])
+                ->whereKey($id)
                 ->lockForUpdate()
-                ->findOrFail($id);
-            if ($permintaanMagang->status === 'disetujui') {
-                abort(
-                    422,
-                    'Permintaan ini sudah pernah disetujui.'
+                ->first();
+
+            if (! $permintaan) {
+                return [
+                    'type' => 'error',
+                    'message' => 'Data pengajuan magang tidak ditemukan.',
+                ];
+            }
+
+            if (! in_array($permintaan->status, ['menunggu', 'perlu_revisi'], true)) {
+                return [
+                    'type' => 'error',
+                    'message' => 'Pengajuan magang ini sudah pernah diproses.',
+                ];
+            }
+
+            if ($validated['action'] === 'revision') {
+                $permintaan->update([
+                    'status' => 'perlu_revisi',
+                    'catatan_revisi' => $validated['catatan_revisi'],
+                ]);
+
+                $this->kirimNotifikasiHasil(
+                    $permintaan,
+                    'Pengajuan Magang Perlu Revisi',
+                    'Admin meminta revisi berkas: '.$validated['catatan_revisi'],
+                    'peringatan'
                 );
+
+                return ['type' => 'success', 'message' => "Catatan revisi untuk {$permintaan->nama_pemohon} berhasil dikirim melalui portal dan email."];
             }
-            if ($permintaanMagang->status === 'ditolak') {
-                abort(
-                    422,
-                    'Permintaan yang sudah ditolak tidak dapat langsung disetujui.'
+
+            $disetujui = in_array($validated['action'], ['approve', 'accept'], true);
+
+            if (! $disetujui) {
+                $permintaan->update([
+                    'status' => 'ditolak',
+                    'akun_dibuat' => false,
+                    'alasan_penolakan' => $validated['alasan_penolakan'],
+                ]);
+
+                $this->kirimNotifikasiHasil(
+                    $permintaan,
+                    'Pengajuan Magang Belum Disetujui',
+                    'Mohon maaf, pengajuan magang Anda belum dapat disetujui. Alasan: '.$validated['alasan_penolakan'],
+                    'peringatan'
                 );
+
+                return [
+                    'type' => 'success',
+                    'message' => "Pengajuan magang atas nama {$permintaan->nama_pemohon} berhasil ditolak dan hasilnya dikirim melalui email.",
+                ];
             }
 
-            $pesertaSudahAda = PesertaMagang::query()
-                ->where(
-                    'permintaan_id',
-                    $permintaanMagang->id_permintaan
-                )
-                ->exists();
-            if ($pesertaSudahAda) {
-                abort(
-                    422,
-                    'Data peserta dari permintaan ini sudah tersedia.'
-                );
+            $anggota = $permintaan->anggota;
+            if ($anggota->isEmpty()) {
+                $anggota = collect([
+                    (object) [
+                        'id_anggota' => null,
+                        'nama' => $permintaan->nama_pemohon,
+                        'email' => $permintaan->email,
+                        'no_induk' => $permintaan->no_induk,
+                        'jurusan' => $permintaan->jurusan,
+                        'no_hp' => $permintaan->no_hp,
+                        'is_ketua' => true,
+                        'user_id' => $permintaan->user_id,
+                    ],
+                ]);
             }
 
-            $bulanMagang = Carbon::parse($data['tgl_mulai'])
-                ->diffInMonths(Carbon::parse($data['tgl_selesai']));
-            $jurusan = JurusanKategori::cariByTeks($permintaanMagang->jurusan);
-            $pesanDurasi = JurusanKategori::validasiDurasi(
-                $jurusan,
-                $bulanMagang
-            );
-            if ($pesanDurasi !== null) {
-                abort(422, $pesanDurasi);
+            $ketua = $anggota->first(fn ($item) => (bool) $item->is_ketua) ?? $anggota->first();
+            $anggotaLain = $anggota->filter(fn ($item) => $item !== $ketua);
+
+            foreach ($anggotaLain as $anggotaItem) {
+                if (User::query()->where('email', strtolower((string) $anggotaItem->email))->exists()) {
+                    return [
+                        'type' => 'error',
+                        'message' => "Email {$anggotaItem->email} sudah digunakan akun lain. Perbarui data anggota sebelum menyetujui pengajuan.",
+                    ];
+                }
             }
 
-            $username = $this->buatUsername(
-                $permintaanMagang->nama_pemohon,
-                $permintaanMagang->no_induk
-            );
-            $passwordAwal = Str::random(10);
-            $email = $permintaanMagang->email;
+            $credentials = [];
+            $tingkatPendidikan = $this->tentukanTingkatPendidikan($permintaan);
 
-            if (
-                empty($email) ||
-                User::query()->where('email', $email)->exists()
-            ) {
-                $email = $username . '@natusi.local';
+            foreach ($anggota as $index => $anggotaItem) {
+                $isKetua = $anggotaItem === $ketua;
+                $username = $this->buatUsernamePeserta($anggotaItem->nama);
+                $passwordAwal = Str::lower(Str::random(10));
+
+                /*
+                 * PENTING: akun pendaftaran ketua/pemohon TIDAK boleh diubah
+                 * menjadi akun peserta. Akun pendaftaran tetap ber-role pelamar
+                 * agar halaman status/konfirmasi selalu bisa dibuka menggunakan
+                 * email + password yang dibuat saat mendaftar.
+                 *
+                 * Setelah disetujui, seluruh anggota (termasuk ketua) memperoleh
+                 * akun peserta BARU dengan username + password awal sendiri.
+                 * Untuk ketua, email akun peserta dibuat null karena email aslinya
+                 * tetap dipakai oleh akun pendaftaran dan kolom users.email unik.
+                 * Email ketua tetap tersimpan lengkap pada data anggota/pengajuan.
+                 */
+                $akunPeserta = User::query()->create([
+                    'nama' => $anggotaItem->nama,
+                    'email' => $isKetua ? null : strtolower((string) $anggotaItem->email),
+                    'username' => $username,
+                    'password' => Hash::make($passwordAwal),
+                    'role' => 'peserta',
+                    'university' => $permintaan->nama_sekolah,
+                    'student_id' => $anggotaItem->no_induk,
+                    'major' => $anggotaItem->jurusan,
+                    'phone' => $anggotaItem->no_hp,
+                    'description' => $permintaan->pesan,
+                    'wajib_ganti_password' => true,
+                ]);
+
+                // permintaan.user_id harus tetap menunjuk akun pendaftaran ketua.
+                // Jangan diganti ke akun peserta karena dipakai untuk akses halaman status.
+
+                $peserta = PesertaMagang::query()->create([
+                    'user_id' => $akunPeserta->id_user,
+                    'permintaan_id' => $permintaan->id_permintaan,
+                    'alamat' => 'Belum dilengkapi',
+                    'tingkat_pendidikan' => $tingkatPendidikan,
+                    'kelas' => null,
+                    'tgl_mulai' => null,
+                    'tgl_selesai' => null,
+                    'durasi_magang' => null,
+                    'nama_guru' => null,
+                    'no_hpguru' => null,
+                    'status' => 'aktif',
+                ]);
+
+                if (! empty($anggotaItem->id_anggota)) {
+                    $anggotaItem->update([
+                        'user_id' => $akunPeserta->id_user,
+                        'peserta_id' => $peserta->id_peserta,
+                        'username_peserta' => $username,
+                        'password_awal' => $passwordAwal,
+                    ]);
+                }
+
+                $credentials[] = [
+                    'nama' => $anggotaItem->nama,
+                    'email' => $anggotaItem->email,
+                    'username' => $username,
+                    'password' => $passwordAwal,
+                    'user_id' => $akunPeserta->id_user,
+                ];
+
+                Notifikasi::query()->create([
+                    'user_id' => $akunPeserta->id_user,
+                    'judul' => 'Selamat, Pengajuan Magang Diterima',
+                    'pesan' => "Pengajuan magang Anda diterima. Username: {$username} | Password awal: {$passwordAwal}. Simpan data ini dan segera ganti password setelah login.",
+                    'kategori' => 'akun',
+                    'tipe' => 'sukses',
+                    'referensi_id' => $permintaan->id_permintaan,
+                    'dibaca' => false,
+                ]);
             }
 
-            $userPeserta = User::create([
-                'nama' => $permintaanMagang->nama_pemohon,
-                'email' => $email,
-                'username' => $username,
-                'password' => Hash::make($passwordAwal),
-                'role' => 'peserta',
-            ]);
-
-            $peserta = PesertaMagang::create([
-                'user_id' => $userPeserta->id_user,
-
-                'permintaan_id' =>
-                    $permintaanMagang->id_permintaan,
-
-                'alamat' => $data['alamat'],
-
-                'tingkat_pendidikan' =>
-                    $data['tingkat_pendidikan'],
-
-                'kelas' => $data['kelas'] ?? null,
-
-                'tgl_mulai' => $data['tgl_mulai'],
-
-                'tgl_selesai' => $data['tgl_selesai'],
-
-                'durasi_magang' =>
-                    $data['durasi_magang'] ?? null,
-
-                'nama_guru' =>
-                    $data['nama_guru'] ?? null,
-
-                'no_hpguru' =>
-                    $data['no_hpguru'] ?? null,
-
-                'status' => 'aktif',
-            ]);
-
-            $permintaanMagang->update([
-                'user_id' => $userPeserta->id_user,
+            $leaderCredential = $credentials[0];
+            $permintaan->update([
                 'status' => 'disetujui',
-            ]);
-
-            Notifikasi::create([
-                'user_id' => $userPeserta->id_user,
-                'judul' => 'Pengajuan Magang Diterima',
-                'pesan' =>
-                    'Pengajuan magang Anda telah disetujui. '
-                    . "Username: {$username}. "
-                    . "Password awal: {$passwordAwal}. "
-                    . 'Silakan login dan segera mengganti password.',
-
-                'kategori' => 'akun',
-                'tipe' => 'sukses',
-                'referensi_id' =>
-                    $permintaanMagang->id_permintaan,
-
-                'dibaca' => false,
+                'username_peserta' => $leaderCredential['username'],
+                'password_awal' => $leaderCredential['password'],
+                'akun_dibuat' => true,
+                'alasan_penolakan' => null,
+                'catatan_revisi' => null,
             ]);
 
             return [
-                'permintaan' => $permintaanMagang->fresh(),
-                'peserta' => $peserta->load('user'),
-                'akun' => [
-                    'username' => $username,
-                    'password_awal' => $passwordAwal,
-                ],
+                'type' => 'success',
+                'message' => count($credentials) > 1
+                    ? 'Pengajuan kelompok berhasil disetujui. '.count($credentials).' akun peserta telah dibuat. Kredensial seluruh anggota tersedia di halaman status milik ketua/pemohon.'
+                    : "Pengajuan magang atas nama {$permintaan->nama_pemohon} berhasil disetujui. Akun peserta {$leaderCredential['username']} telah dibuat dan kredensial tersedia di halaman status pemohon.",
             ];
         });
 
-        return $this->successResponse(
-            message: 'Permintaan magang berhasil disetujui dan akun peserta berhasil dibuat.',
-            data: $hasil
-        );
+        return back()->with($result['type'], $result['message']);
     }
 
-    // admin tolak magang
-    public function tolak(
-        Request $request,
-        int|string $id
-    ): JsonResponse {
-        $data = $request->validate([
-            'alasan' => [
-                'required',
-                'string',
-                'max:1000',
-            ],
-        ]);
-
-        $permintaanMagang = PermintaanMagang::findOrFail($id);
-
-        if ($permintaanMagang->status === 'disetujui') {
-            return $this->errorResponse(
-                message: 'Permintaan yang sudah disetujui tidak dapat ditolak.',
-                status: 422
-            );
+    private function kirimNotifikasiHasil(
+        PermintaanMagang $permintaan,
+        string $judul,
+        string $pesan,
+        string $tipe
+    ): void {
+        if (! $permintaan->user_id) {
+            return;
         }
 
-        $permintaanMagang->update([
-            'status' => 'ditolak',
-            'pesan' => $data['alasan'],
+        Notifikasi::query()->create([
+            'user_id' => $permintaan->user_id,
+            'judul' => $judul,
+            'pesan' => $pesan,
+            'kategori' => $tipe === 'sukses' ? 'akun' : 'pengajuan',
+            'tipe' => $tipe,
+            'referensi_id' => $permintaan->id_permintaan,
+            'dibaca' => false,
         ]);
-
-        // notif
-        if ($permintaanMagang->user_id) {
-            Notifikasi::create([
-                'user_id' => $permintaanMagang->user_id,
-                'judul' => 'Pengajuan Magang Ditolak',
-                'pesan' =>
-                    'Pengajuan magang Anda ditolak. Alasan: '
-                    . $data['alasan'],
-                'kategori' => 'pengajuan',
-                'tipe' => 'peringatan',
-                'referensi_id' =>
-                    $permintaanMagang->id_permintaan,
-                'dibaca' => false,
-            ]);
-        }
-
-        return $this->successResponse(
-            message: 'Permintaan magang berhasil ditolak.',
-            data: $permintaanMagang->fresh()
-        );
     }
 
-    // create username peserta
-    private function buatUsername(
-        string $namaPemohon,
-        string $noInduk
-    ): string {
-        $nama = Str::slug($namaPemohon, '');
-        $nama = Str::limit(
-            strtolower($nama),
-            12,
-            ''
-        );
-        $nomorIndukBersih = preg_replace(
-            '/[^a-zA-Z0-9]/',
-            '',
-            $noInduk
-        );
+    private function buatUsernamePeserta(string $nama): string
+    {
+        $namaDepan = Str::of($nama)
+            ->trim()
+            ->before(' ')
+            ->ascii()
+            ->lower()
+            ->replaceMatches('/[^a-z0-9]/', '')
+            ->limit(24, '')
+            ->toString();
 
-        $nomorIndukBersih = strtolower(
-            (string) $nomorIndukBersih
-        );
-        $nomorIndukAkhir = substr(
-            $nomorIndukBersih,
-            -5
-        );
-
-        $usernameDasar = $nama . $nomorIndukAkhir;
-        if ($usernameDasar === '') {
-            $usernameDasar = 'peserta';
+        if ($namaDepan === '') {
+            $namaDepan = 'peserta';
         }
 
-        $username = $usernameDasar;
-        $nomor = 1;
-
-        while (
-            User::query()
-                ->where('username', $username)
-                ->exists()
-        ) {
-            $username = $usernameDasar . $nomor;
-            $nomor++;
-        }
+        do {
+            $username = $namaDepan.random_int(1000, 9999);
+        } while (User::query()->where('username', $username)->exists());
 
         return $username;
+    }
+
+    private function tentukanTingkatPendidikan(PermintaanMagang $permintaan): string
+    {
+        if ($permintaan->jenjang === 'smk') {
+            return 'SMK';
+        }
+
+        if ($permintaan->jenjang === 'kuliah') {
+            return 'Universitas';
+        }
+
+        $namaInstansi = Str::lower($permintaan->nama_sekolah);
+
+        return Str::contains($namaInstansi, ['smk', 'sma', 'ma ', 'sekolah'])
+            ? 'SMK'
+            : 'Universitas';
     }
 }

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 
 // Profile & Shared Controllers
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SertifikatAssetController;
 
 // Superadmin Controllers
 use App\Http\Controllers\Superadmin\AdminController as SuperadminAdminController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAtur
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
+use App\Http\Controllers\Superadmin\QrisPembayaranController as SuperadminQrisPembayaranController;
 use App\Http\Controllers\Superadmin\SuperadminDivisiController;
 
 // Admin Peserta Controllers
@@ -28,6 +30,7 @@ use App\Http\Controllers\AdminPeserta\DataAbsensiController as AdminDataAbsensiC
 use App\Http\Controllers\AdminPeserta\DataPembayaranController as AdminDataPembayaranController;
 use App\Http\Controllers\AdminPeserta\DataMetodePembayaranController as AdminDataMetodePembayaranController;
 use App\Http\Controllers\AdminPeserta\JurusanController as AdminJurusanController;
+use App\Http\Controllers\AdminPeserta\SertifikatController as AdminSertifikatController;
 use App\Http\Controllers\AdminPeserta\PengumpulanTugasController as AdminPengumpulanTugasController;
 use App\Http\Controllers\AdminPeserta\NotifikasiController as AdminNotifikasiController;
 
@@ -50,6 +53,7 @@ use App\Http\Controllers\PesertaMagang\AbsensiController as PesertaMagangAbsensi
 use App\Http\Controllers\PesertaMagang\PenugasanController as PesertaMagangPenugasanController;
 use App\Http\Controllers\PesertaMagang\AturanController as PesertaAturanController;
 use App\Http\Controllers\PesertaMagang\PembayaranController as PesertaMagangPembayaranController;
+use App\Http\Controllers\PesertaMagang\SertifikatController as PesertaMagangSertifikatController;
 use App\Http\Controllers\PesertaMagang\LaporanMingguanController as PesertaMagangLaporanMingguanController;
 use App\Http\Controllers\Peserta\TugasController as PesertaTugasController;
 
@@ -65,6 +69,9 @@ use App\Http\Controllers\Karyawan\AturanController;
 */
 
 Route::get('/', static fn () => redirect()->route('login'));
+
+Route::get('/verifikasi/sertifikat/ttd-direktur', [SertifikatAssetController::class, 'ttdDirektur'])
+    ->name('sertifikat.ttd-direktur');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/register/pelamar', function () {
@@ -125,6 +132,14 @@ Route::middleware('auth')->group(function (): void {
         ->name('profile.photo.show');
 
     // Notifikasi
+    Route::get('/notifikasi/ringkasan', function () {
+        return response()->json([
+            'unread_count' => auth()->user()->notifikasi()
+                ->where('dibaca', false)
+                ->count(),
+        ]);
+    })->name('notifikasi.summary');
+
     Route::patch('/notifikasi/baca-semua', [AdminNotifikasiController::class, 'tandaiSemuaDibacaWeb'])
         ->name('notifikasi.read-all');
 
@@ -179,12 +194,20 @@ Route::middleware(['auth', 'role:superadmin'])
             ->name('metode-pembayaran.index');
         Route::put('/metode-pembayaran/nominal', [SuperadminMetodePembayaranController::class, 'updateNominal'])
             ->name('metode-pembayaran.nominal.update');
-        Route::post('/metode-pembayaran/rekening', [SuperadminMetodePembayaranController::class, 'storeBank'])
-            ->name('metode-pembayaran.bank.store');
-        Route::put('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'updateBank'])
-            ->name('metode-pembayaran.bank.update');
-        Route::delete('/metode-pembayaran/rekening/{bank}', [SuperadminMetodePembayaranController::class, 'destroyBank'])
-            ->name('metode-pembayaran.bank.destroy');
+        Route::post('/metode-pembayaran/qris', [SuperadminMetodePembayaranController::class, 'storeQris'])
+            ->name('metode-pembayaran.qris.store');
+        Route::delete('/metode-pembayaran/qris', [SuperadminMetodePembayaranController::class, 'destroyQris'])
+            ->name('metode-pembayaran.qris.destroy');
+
+        /* QRIS Pembayaran (mandiri, tidak terikat rekening) */
+        Route::get('/qris-pembayaran', [SuperadminQrisPembayaranController::class, 'index'])
+            ->name('qris-pembayaran.index');
+        Route::post('/qris-pembayaran', [SuperadminQrisPembayaranController::class, 'store'])
+            ->name('qris-pembayaran.store');
+        Route::post('/qris-pembayaran/{qris}/toggle', [SuperadminQrisPembayaranController::class, 'toggle'])
+            ->name('qris-pembayaran.toggle');
+        Route::delete('/qris-pembayaran/{qris}', [SuperadminQrisPembayaranController::class, 'destroy'])
+            ->name('qris-pembayaran.destroy');
 
         /* Kelola Divisi */
         Route::get('/divisi', [SuperadminDivisiController::class, 'index'])->name('divisi.index');
@@ -306,6 +329,10 @@ Route::middleware('admin.peserta')
             ->whereNumber('pengumpulan')
             ->name('pengumpulan-tugas.file');
 
+        Route::post('/pengumpulan-tugas/{pengumpulan}/review', [AdminPengumpulanTugasController::class, 'review'])
+            ->whereNumber('pengumpulan')
+            ->name('pengumpulan-tugas.review');
+
         Route::get('/pengumpulan-tugas/{pengumpulan}', [AdminPengumpulanTugasController::class, 'show'])
             ->whereNumber('pengumpulan')
             ->name('pengumpulan-tugas.show');
@@ -352,6 +379,20 @@ Route::middleware('admin.peserta')
 
         Route::delete('/jurusan/{jurusan}', [AdminJurusanController::class, 'destroy'])
             ->name('jurusan.destroy');
+
+        /* Kelola Sertifikat */
+        Route::get('/sertifikat', [AdminSertifikatController::class, 'index'])
+            ->name('sertifikat.index');
+
+        Route::post('/sertifikat', [AdminSertifikatController::class, 'store'])
+            ->name('sertifikat.store');
+
+        Route::put('/sertifikat/{sertifikat}', [AdminSertifikatController::class, 'update'])
+            ->name('sertifikat.update');
+
+        Route::post('/sertifikat/{sertifikat}/cabut', [AdminSertifikatController::class, 'cabut'])
+            ->name('sertifikat.cabut');
+
 
         /* Notifikasi */
         Route::get('/notifikasi', [AdminNotifikasiController::class, 'index'])
@@ -468,6 +509,9 @@ Route::middleware(['auth', 'role:peserta'])
         Route::post('/absensi', [PesertaMagangAbsensiController::class, 'store'])->name('absensi.store');
 
         Route::get('/penugasan', [PesertaMagangPenugasanController::class, 'index'])->name('penugasan.index');
+        Route::get('/penugasan/pengumpulan/{pengumpulan}/file', [PesertaMagangPenugasanController::class, 'file'])
+            ->whereNumber('pengumpulan')
+            ->name('penugasan.pengumpulan.file');
         Route::post('/penugasan/{id_tugas}/kumpul', [PesertaMagangPenugasanController::class, 'store'])->name('penugasan.store');
 
         Route::get('/aturan', [PesertaAturanController::class, 'index'])->name('aturan.index');
@@ -481,7 +525,13 @@ Route::middleware(['auth', 'role:peserta'])
         Route::post('/pembayaran', [PesertaMagangPembayaranController::class, 'store'])->name('pembayaran.store');
 
         Route::get('/laporan-mingguan', [PesertaMagangLaporanMingguanController::class, 'index'])->name('laporan-mingguan.index');
+        Route::get('/laporan-mingguan/template/{templateLaporan}/download', [PesertaMagangLaporanMingguanController::class, 'downloadTemplate'])
+            ->whereNumber('templateLaporan')
+            ->name('laporan-mingguan.template.download');
         Route::post('/laporan-mingguan', [PesertaMagangLaporanMingguanController::class, 'store'])->name('laporan-mingguan.store');
+
+        Route::get('/sertifikat', [PesertaMagangSertifikatController::class, 'index'])->name('sertifikat.index');
+        Route::get('/sertifikat/{sertifikat}/unduh', [PesertaMagangSertifikatController::class, 'unduh'])->name('sertifikat.unduh');
     });
 
 /*

@@ -9,32 +9,34 @@ use App\Models\Pengumuman;
 use App\Models\PengumumanPenerima;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class PengumumanController extends Controller
 {
-    public function index()
-    {
-        $pengumuman = Pengumuman::with([
-            'penerima' => function ($query) {
-                $query->where('tipe_penerima', 'karyawan')
-                    ->with('karyawan');
-            }
-        ])
-        ->where(function ($query) {
-            $query->whereHas('penerima', function ($q) {
-                $q->where('tipe_penerima', 'karyawan');
-            })
-            ->orWhereDoesntHave('penerima');
+public function index()
+{
+    $pengumuman = Pengumuman::with([
+        'penerima' => function ($query) {
+            $query->where('tipe_penerima', 'karyawan')
+                  ->with('karyawan');
+        }
+    ])
+    ->where(function ($query) {
+        // Pengumuman untuk karyawan
+        $query->whereHas('penerima', function ($q) {
+            $q->where('tipe_penerima', 'karyawan');
         })
-        ->latest()
-        ->paginate(10);
 
-        return view(
-            'admin-karyawan.pengumuman.index',
-            compact('pengumuman')
-        );
-    }
+        // Pengumuman umum
+        ->orWhereDoesntHave('penerima');
+    })
+    ->latest()
+    ->paginate(10);
+
+    return view(
+        'admin-karyawan.pengumuman.index',
+        compact('pengumuman')
+    );
+}
 
 
     public function create()
@@ -50,133 +52,112 @@ class PengumumanController extends Controller
     }
 
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'judul' => 'required|string|max:255',
-            'kategori' => 'required|in:umum,penting,acara',
-            'target' => 'required|in:umum,individu',
-            'karyawan_id' => 'nullable|array',
-            'karyawan_id.*' => 'exists:karyawan,id_karyawan',
-            'isi' => 'required|string',
-            'aktif' => 'nullable|boolean',
-        ]);
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'judul' => 'required|string|max:255',
+        'kategori' => 'required|in:umum,penting,acara',
+        'target' => 'required|in:umum,individu',
+        'karyawan_id' => 'nullable|array',
+        'karyawan_id.*' => 'exists:karyawan,id_karyawan',
+        'isi' => 'required|string',
+        'aktif' => 'nullable|boolean',
+    ]);
 
-        if (
-            $validated['target'] === 'individu' &&
-            empty($validated['karyawan_id'])
-        ) {
-            return back()
-                ->withErrors([
-                    'karyawan_id' => 'Silakan pilih minimal satu karyawan.'
-                ])
-                ->withInput();
-        }
-
-        DB::transaction(function () use ($request, $validated) {
-
-            $pengumuman = Pengumuman::create([
-                'judul' => $validated['judul'],
-                'isi' => $validated['isi'],
-                'kategori' => $validated['kategori'],
-                'dibuat_oleh' => Auth::id(),
-                'aktif' => $request->boolean('aktif'),
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Tentukan penerima
-            |--------------------------------------------------------------------------
-            */
-
-            if ($validated['target'] === 'individu') {
-
-                $karyawan = Karyawan::whereIn(
-                    'id_karyawan',
-                    $validated['karyawan_id']
-                )->get();
-
-            } else {
-
-                $karyawan = Karyawan::where('status', 'aktif')
-                    ->get();
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Simpan penerima + buat notifikasi
-            |--------------------------------------------------------------------------
-            */
-
-            foreach ($karyawan as $item) {
-
-                // Kalau individu, simpan penerima
-                // Kalau umum, tidak wajib menyimpan penerima
-                if ($validated['target'] === 'individu') {
-                    PengumumanPenerima::create([
-                        'id_pengumuman' => $pengumuman->id_pengumuman,
-                        'tipe_penerima' => 'karyawan',
-                        'id_penerima' => $item->id_karyawan,
-                    ]);
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Buat notifikasi untuk user pemilik karyawan
-                |--------------------------------------------------------------------------
-                */
-
-                if ($item->user_id) {
-
-                    Notifikasi::create([
-                        'user_id' => $item->user_id,
-                        'judul' => 'Pengumuman Baru',
-                        'pesan' => $pengumuman->judul,
-                        'kategori' => 'pengumuman',
-                        'tipe' => $pengumuman->kategori === 'penting'
-                            ? 'peringatan'
-                            : 'info',
-                        'referensi_id' => $pengumuman->id_pengumuman,
-                        'dibaca' => false,
-                    ]);
-                }
-            }
-        });
-
-        return redirect()
-            ->route('admin-karyawan.pengumuman.index')
-            ->with('success', 'Pengumuman berhasil dibuat.');
+    // Jika memilih individu, wajib pilih minimal 1 karyawan
+    if (
+        $validated['target'] === 'individu' &&
+        empty($validated['karyawan_id'])
+    ) {
+        return back()
+            ->withErrors([
+                'karyawan_id' => 'Silakan pilih minimal satu karyawan.'
+            ])
+            ->withInput();
     }
 
+    // Buat pengumuman
+    $pengumuman = Pengumuman::create([
+        'judul' => $validated['judul'],
+        'isi' => $validated['isi'],
+        'kategori' => $validated['kategori'],
+        'dibuat_oleh' => Auth::id(),
+        'aktif' => $request->has('aktif') ? $request->boolean('aktif') : true, // Default true jika tidak ada input
+    ]);
 
-    public function edit(Pengumuman $pengumuman)
-    {
-        $karyawan = Karyawan::where('status', 'aktif')
-            ->orderBy('nama_karyawan', 'asc')
+    // Ambil daftar karyawan penerima
+    $penerimaBanyak = [];
+    
+    if ($validated['target'] === 'individu') {
+        // Target individu: gunakan karyawan yang dipilih
+        $penerimaBanyak = Karyawan::whereIn('id_karyawan', $validated['karyawan_id'])
             ->get();
 
-        $selectedKaryawan = $pengumuman->penerima()
-            ->where('tipe_penerima', 'karyawan')
-            ->pluck('id_penerima')
-            ->map(fn ($id) => (int) $id)
-            ->toArray();
-
-        $target = count($selectedKaryawan) > 0
-            ? 'individu'
-            : 'umum';
-
-        return view(
-            'admin-karyawan.pengumuman.edit',
-            compact(
-                'pengumuman',
-                'karyawan',
-                'selectedKaryawan',
-                'target'
-            )
-        );
+        foreach ($validated['karyawan_id'] as $karyawanId) {
+            PengumumanPenerima::create([
+                'id_pengumuman' => $pengumuman->id_pengumuman,
+                'tipe_penerima' => 'karyawan',
+                'id_penerima' => $karyawanId,
+            ]);
+        }
+    } else {
+        // Target umum: gunakan semua karyawan aktif
+        $penerimaBanyak = Karyawan::where('status', 'aktif')->get();
     }
+
+    // Buat notifikasi untuk setiap penerima
+    foreach ($penerimaBanyak as $karyawan) {
+        if ($karyawan->user) {
+            Notifikasi::create([
+                'user_id' => $karyawan->user->id_user,
+                'judul' => $pengumuman->judul,
+                'pesan' => 'Pengumuman baru: ' . $pengumuman->judul,
+                // `tipe` menentukan tampilan notifikasi dan hanya menerima
+                // info, peringatan, atau sukses. Pengumuman dibedakan lewat
+                // kategori agar record-nya tersimpan dan dibaca oleh lonceng.
+                'kategori' => 'pengumuman',
+                'tipe' => 'info',
+                'referensi_id' => $pengumuman->id_pengumuman,
+                'dibaca' => false,
+            ]);
+        }
+    }
+
+    return redirect()
+        ->route('admin-karyawan.pengumuman.index')
+        ->with('success', 'Pengumuman berhasil dibuat.');
+}
+
+
+public function edit(Pengumuman $pengumuman)
+{
+    $karyawan = Karyawan::where('status', 'aktif')
+        ->orderBy('nama_karyawan', 'asc')
+        ->get();
+
+    // Ambil semua karyawan yang sudah menjadi penerima
+    $selectedKaryawan = $pengumuman->penerima()
+        ->where('tipe_penerima', 'karyawan')
+        ->pluck('id_penerima')
+        ->map(fn ($id) => (int) $id)
+        ->toArray();
+
+    // Kalau ada penerima berarti individu,
+    // kalau tidak ada berarti semua karyawan
+    $target = count($selectedKaryawan) > 0
+        ? 'individu'
+        : 'umum';
+
+    return view(
+        'admin-karyawan.pengumuman.edit',
+        compact(
+            'pengumuman',
+            'karyawan',
+            'selectedKaryawan',
+            'target'
+        )
+    );
+}
 
 
     public function update(Request $request, Pengumuman $pengumuman)
@@ -186,10 +167,17 @@ class PengumumanController extends Controller
             'isi' => 'required|string',
             'kategori' => 'required|in:umum,penting,acara',
             'target' => 'required|in:umum,individu',
+
             'karyawan_id' => 'nullable|array',
             'karyawan_id.*' => 'exists:karyawan,id_karyawan',
-            'aktif' => 'nullable|boolean',
         ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Target individu wajib memilih karyawan
+        |--------------------------------------------------------------------------
+        */
 
         if (
             $validated['target'] === 'individu' &&
@@ -202,96 +190,73 @@ class PengumumanController extends Controller
                 ->withInput();
         }
 
-        DB::transaction(function () use ($request, $validated, $pengumuman) {
 
-            /*
-            |--------------------------------------------------------------------------
-            | Update pengumuman
-            |--------------------------------------------------------------------------
-            */
+        /*
+        |--------------------------------------------------------------------------
+        | Update pengumuman
+        |--------------------------------------------------------------------------
+        */
 
-            $pengumuman->update([
-                'judul' => $validated['judul'],
-                'isi' => $validated['isi'],
-                'kategori' => $validated['kategori'],
-                'aktif' => $request->boolean('aktif'),
-            ]);
+        $pengumuman->update([
+            'judul' => $validated['judul'],
+            'isi' => $validated['isi'],
+            'kategori' => $validated['kategori'],
+        ]);
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Hapus penerima lama
-            |--------------------------------------------------------------------------
-            */
+        /*
+        |--------------------------------------------------------------------------
+        | Hapus penerima lama dan notifikasi lama
+        |--------------------------------------------------------------------------
+        */
 
-            $pengumuman->penerima()->delete();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Hapus notifikasi lama dari pengumuman ini
-            |--------------------------------------------------------------------------
-            */
-
-            Notifikasi::where('kategori', 'pengumuman')
-                ->where('referensi_id', $pengumuman->id_pengumuman)
-                ->delete();
+        $pengumuman->penerima()->delete();
+        // Hapus notifikasi lama
+        Notifikasi::where('referensi_id', $pengumuman->id_pengumuman)
+            ->where('kategori', 'pengumuman')
+            ->delete();
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Tentukan penerima baru
-            |--------------------------------------------------------------------------
-            */
+        /*
+        |--------------------------------------------------------------------------
+        | Tambahkan penerima baru dan buat notifikasi baru
+        |--------------------------------------------------------------------------
+        */
 
-            if ($validated['target'] === 'individu') {
+        $penerimaBanyak = [];
 
-                $karyawan = Karyawan::whereIn(
-                    'id_karyawan',
-                    $validated['karyawan_id']
-                )->get();
+        if ($validated['target'] === 'umum') {
+            // Target umum: gunakan semua karyawan aktif
+            $penerimaBanyak = Karyawan::where('status', 'aktif')->get();
+        } else {
+            // Target individu: gunakan karyawan yang dipilih
+            $penerimaBanyak = Karyawan::whereIn('id_karyawan', $validated['karyawan_id'])
+                ->get();
 
-            } else {
-
-                $karyawan = Karyawan::where('status', 'aktif')
-                    ->get();
+            foreach ($validated['karyawan_id'] as $karyawanId) {
+                PengumumanPenerima::create([
+                    'id_pengumuman' => $pengumuman->id_pengumuman,
+                    'tipe_penerima' => 'karyawan',
+                    'id_penerima' => $karyawanId,
+                ]);
             }
+        }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Simpan penerima dan buat notifikasi
-            |--------------------------------------------------------------------------
-            */
-
-            foreach ($karyawan as $item) {
-
-                if ($validated['target'] === 'individu') {
-
-                    PengumumanPenerima::create([
-                        'id_pengumuman' => $pengumuman->id_pengumuman,
-                        'tipe_penerima' => 'karyawan',
-                        'id_penerima' => $item->id_karyawan,
-                    ]);
-                }
-
-
-                if ($item->user_id) {
-
-                    Notifikasi::create([
-                        'user_id' => $item->user_id,
-                        'judul' => 'Pengumuman Diperbarui',
-                        'pesan' => $pengumuman->judul,
-                        'kategori' => 'pengumuman',
-                        'tipe' => $pengumuman->kategori === 'penting'
-                            ? 'peringatan'
-                            : 'info',
-                        'referensi_id' => $pengumuman->id_pengumuman,
-                        'dibaca' => false,
-                    ]);
-                }
+        // Buat notifikasi untuk setiap penerima
+        foreach ($penerimaBanyak as $karyawan) {
+            if ($karyawan->user) {
+                Notifikasi::create([
+                    'user_id' => $karyawan->user->id_user,
+                    'judul' => $pengumuman->judul,
+                    'pesan' => 'Pengumuman diperbarui: ' . $pengumuman->judul,
+                    'kategori' => 'pengumuman',
+                    'tipe' => 'info',
+                    'referensi_id' => $pengumuman->id_pengumuman,
+                    'dibaca' => false,
+                ]);
             }
-        });
+        }
+
 
         return redirect()
             ->route('admin-karyawan.pengumuman.index')
@@ -301,14 +266,7 @@ class PengumumanController extends Controller
 
     public function destroy(Pengumuman $pengumuman)
     {
-        DB::transaction(function () use ($pengumuman) {
-
-            Notifikasi::where('kategori', 'pengumuman')
-                ->where('referensi_id', $pengumuman->id_pengumuman)
-                ->delete();
-
-            $pengumuman->delete();
-        });
+        $pengumuman->delete();
 
         return redirect()
             ->route('admin-karyawan.pengumuman.index')

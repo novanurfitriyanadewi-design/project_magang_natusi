@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Karyawan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cuti;
+use App\Models\Notifikasi;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -45,7 +47,7 @@ class CutiController extends Controller
             $path = $request->file('bukti_pendukung')->store('bukti-cuti', 'public');
         }
 
-        Cuti::create([
+        $cuti = Cuti::create([
             'karyawan_id' => $karyawan->id_karyawan, 
             'jenis_cuti' => $validated['jenis_cuti'],
             'tanggal_mulai' => $validated['tanggal_mulai'],
@@ -54,6 +56,30 @@ class CutiController extends Controller
             'bukti_pendukung' => $path,
             'status' => 'pending',
         ]);
+
+        // Notifikasi di header dihitung dari tabel notifikasi. Buat satu data
+        // untuk setiap admin yang dapat memproses pengajuan cuti agar lencana
+        // pada lonceng langsung muncul saat ada pengajuan baru.
+        User::query()
+            ->whereIn('role', ['admin', 'admin_karyawan'])
+            ->pluck('id_user')
+            ->each(function ($adminId) use ($cuti, $karyawan): void {
+                Notifikasi::query()->create([
+                    'user_id' => $adminId,
+                    'judul' => 'Pengajuan Cuti Baru',
+                    'pesan' => sprintf(
+                        '%s mengajukan %s untuk periode %s sampai %s.',
+                        $karyawan->nama_karyawan,
+                        $cuti->jenis_label,
+                        $cuti->tanggal_mulai->translatedFormat('d M Y'),
+                        $cuti->tanggal_selesai->translatedFormat('d M Y'),
+                    ),
+                    'kategori' => 'cuti',
+                    'tipe' => 'info',
+                    'referensi_id' => $cuti->getKey(),
+                    'dibaca' => false,
+                ]);
+            });
 
         return back()->with('success', 'Pengajuan cuti berhasil dikirim dan menunggu persetujuan HRD.');
     }

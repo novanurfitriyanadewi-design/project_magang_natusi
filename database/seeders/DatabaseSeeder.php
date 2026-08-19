@@ -23,5 +23,7 @@ class DatabaseSeeder extends Seeder
                 'wajib_ganti_password' => false,
             ]
         );
+
+        $this->call(AturanPerusahaanSeeder::class);
     }
 }

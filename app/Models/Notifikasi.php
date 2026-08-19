@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Services\EmailNotificationService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Notifikasi extends Model
 {
@@ -25,6 +27,16 @@ class Notifikasi extends Model
     protected $casts = [
         'dibaca' => 'boolean',
     ];
+
+
+    protected static function booted(): void
+    {
+        static::created(function (Notifikasi $notifikasi): void {
+            DB::afterCommit(function () use ($notifikasi): void {
+                app(EmailNotificationService::class)->send($notifikasi);
+            });
+        });
+    }
 
     public function user()
     {

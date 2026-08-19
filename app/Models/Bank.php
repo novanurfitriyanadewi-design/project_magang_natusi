@@ -16,6 +16,7 @@ class Bank extends Model
         'nama_bank',
         'nama_pemilik',
         'no_rekening',
+        'qris_image',
     ];
 
     public function pembayaran()

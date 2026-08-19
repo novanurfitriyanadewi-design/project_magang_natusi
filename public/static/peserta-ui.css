@@ -1,0 +1,320 @@
+/* =========================================================
+   CV NATUSI — PESERTA MAGANG UI
+   Scoped hanya untuk body.peserta-ui agar halaman admin tidak berubah.
+   ========================================================= */
+
+.peserta-ui {
+    --natusi-navy: #063551;
+    --natusi-blue: #0284c7;
+    --natusi-blue-dark: #0369a1;
+    --natusi-sky: #0ea5e9;
+    --natusi-soft: #f6fbff;
+    --natusi-soft-2: #eef8ff;
+    --natusi-border: #d8e8f5;
+    --natusi-text: #0f172a;
+    --natusi-muted: #64748b;
+}
+
+.peserta-ui main {
+    background:
+        radial-gradient(circle at 100% 0%, rgba(14,165,233,.06), transparent 27rem),
+        linear-gradient(180deg, #f8fbff 0%, #f5f9fc 100%) !important;
+}
+
+/* Page heading — sama ritme dengan Admin Peserta */
+.peserta-ui main h1 {
+    font-family: 'Manrope', 'Inter', sans-serif;
+    letter-spacing: -0.025em;
+    color: #020617;
+}
+
+.peserta-ui main > section:first-child h1,
+.peserta-ui main > div:first-child > header h1,
+.peserta-ui main > header h1 {
+    font-weight: 800 !important;
+}
+
+.peserta-ui main > section:first-child p,
+.peserta-ui main > div:first-child > header p,
+.peserta-ui main > header p {
+    color: #64748b !important;
+}
+
+/* =========================================================
+   CARDS / PANELS
+   ========================================================= */
+.peserta-ui main .rounded-2xl.bg-white,
+.peserta-ui main .rounded-3xl.bg-white,
+.peserta-ui main section.bg-white.rounded-2xl,
+.peserta-ui main article.bg-white.rounded-2xl {
+    border-color: var(--natusi-border) !important;
+    box-shadow: 0 14px 36px rgba(15, 52, 94, .075) !important;
+}
+
+.peserta-ui main .rounded-2xl.bg-white:hover,
+.peserta-ui main article.rounded-2xl.bg-white:hover {
+    border-color: #c4e3f7 !important;
+}
+
+/* Panel header lembut seperti Admin Peserta */
+.peserta-ui main .border-b.border-slate-100.bg-slate-50,
+.peserta-ui main .border-b.border-slate-200.bg-slate-50,
+.peserta-ui main thead.bg-slate-50,
+.peserta-ui main tr.bg-slate-50 {
+    background: linear-gradient(90deg, #f0f8ff 0%, #ecfeff 100%) !important;
+    border-color: #dcecf8 !important;
+}
+
+.peserta-ui main .bg-slate-50.rounded-xl,
+.peserta-ui main .bg-slate-50.rounded-2xl,
+.peserta-ui main .rounded-xl.bg-slate-50,
+.peserta-ui main .rounded-2xl.bg-slate-50 {
+    background-color: #f8fbfe !important;
+    border-color: #e1ebf4 !important;
+}
+
+/* =========================================================
+   DASHBOARD STAT CARDS — warna sama keluarga Admin Peserta
+   ========================================================= */
+.peserta-ui .from-slate-500.to-slate-600 {
+    --tw-gradient-from: #06b6d4 var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgb(6 182 212 / 0) var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), #0891b2 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+.peserta-ui .from-blue-500.to-blue-600 {
+    --tw-gradient-from: #6366f1 var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: #4f46e5 var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.peserta-ui .from-emerald-500.to-emerald-600 {
+    --tw-gradient-from: #10b981 var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: #059669 var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.peserta-ui .from-rose-500.to-rose-600 {
+    --tw-gradient-from: #1d4ed8 var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: #1e40af var(--tw-gradient-to-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.peserta-ui main [class*="shadow-blue-200"],
+.peserta-ui main [class*="shadow-slate-200"],
+.peserta-ui main [class*="shadow-rose-200"],
+.peserta-ui main [class*="shadow-emerald-200"] {
+    box-shadow: 0 14px 34px rgba(15, 52, 94, .13) !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+.peserta-ui main button,
+.peserta-ui main a[class*="rounded-"] {
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.peserta-ui main button.bg-blue-600,
+.peserta-ui main a.bg-blue-600,
+.peserta-ui main button.bg-sky-600,
+.peserta-ui main a.bg-sky-600 {
+    background: #0284c7 !important;
+    border-color: #0284c7 !important;
+    box-shadow: 0 8px 20px rgba(2,132,199,.20) !important;
+}
+
+.peserta-ui main button.bg-blue-600:hover,
+.peserta-ui main a.bg-blue-600:hover,
+.peserta-ui main button.bg-sky-600:hover,
+.peserta-ui main a.bg-sky-600:hover {
+    background: #0369a1 !important;
+    transform: translateY(-1px);
+}
+
+.peserta-ui main button[class*="rounded-xl"],
+.peserta-ui main a[class*="rounded-xl"] {
+    border-radius: 12px !important;
+}
+
+/* =========================================================
+   FORM INPUTS
+   ========================================================= */
+.peserta-ui main input:not([type="radio"]):not([type="checkbox"]),
+.peserta-ui main select,
+.peserta-ui main textarea {
+    border-color: #cbdbea !important;
+    background-color: #fff !important;
+    color: #1e293b !important;
+    border-radius: 12px !important;
+    box-shadow: none;
+}
+
+.peserta-ui main input:not([type="radio"]):not([type="checkbox"]):focus,
+.peserta-ui main select:focus,
+.peserta-ui main textarea:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 3px rgba(56,189,248,.13) !important;
+    outline: none !important;
+}
+
+.peserta-ui main label {
+    color: #334155;
+}
+
+.peserta-ui main [class*="border-dashed"] {
+    border-color: #b9d9ee !important;
+    background: #f8fcff !important;
+}
+
+.peserta-ui main [class*="border-dashed"]:hover {
+    border-color: #38bdf8 !important;
+    background: #f0f9ff !important;
+}
+
+/* =========================================================
+   TABLES
+   ========================================================= */
+.peserta-ui main table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.peserta-ui main thead th {
+    background: linear-gradient(90deg, #f0f8ff 0%, #ecfeff 100%) !important;
+    color: #64748b !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: .11em !important;
+    text-transform: uppercase;
+    border-color: #dcecf8 !important;
+}
+
+.peserta-ui main tbody tr {
+    background: #fff;
+}
+
+.peserta-ui main tbody tr:hover {
+    background: #f8fcff !important;
+}
+
+.peserta-ui main tbody td {
+    border-color: #edf2f7 !important;
+}
+
+/* =========================================================
+   PENUGASAN
+   ========================================================= */
+.peserta-ui .penugasan-layout {
+    gap: 24px !important;
+}
+
+.peserta-ui .penugasan-list-panel,
+.peserta-ui .penugasan-detail-panel {
+    min-width: 0;
+}
+
+.peserta-ui .penugasan-list-panel > div > a,
+.peserta-ui .penugasan-list-panel > a {
+    border-color: #d9e6f2 !important;
+    box-shadow: 0 8px 22px rgba(15,52,94,.05) !important;
+}
+
+.peserta-ui .penugasan-list-panel > div > a:hover,
+.peserta-ui .penugasan-list-panel > a:hover {
+    border-color: #7dd3fc !important;
+    background: #fbfdff !important;
+}
+
+.peserta-ui .penugasan-detail-panel > div {
+    border-color: #cfe5f4 !important;
+    box-shadow: 0 16px 38px rgba(15,52,94,.08) !important;
+}
+
+/* =========================================================
+   ABSENSI / PEMBAYARAN / LAPORAN
+   ========================================================= */
+.peserta-ui main [x-data] .peer-checked\:bg-blue-50:has(input:checked),
+.peserta-ui main .peer:checked + div {
+    box-shadow: 0 0 0 2px rgba(14,165,233,.10);
+}
+
+.peserta-ui main .bg-blue-50 {
+    border-color: #c9e7f7;
+}
+
+/* =========================================================
+   SERTIFIKAT
+   ========================================================= */
+.peserta-ui main article[class*="overflow-hidden"][class*="rounded-2xl"] {
+    border-color: #d7e6f3 !important;
+    box-shadow: 0 12px 28px rgba(15,52,94,.08) !important;
+}
+
+.peserta-ui main article[class*="overflow-hidden"][class*="rounded-2xl"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 36px rgba(15,52,94,.12) !important;
+}
+
+/* =========================================================
+   MODAL / OVERLAY
+   ========================================================= */
+.peserta-ui .fixed.inset-0[class*="bg-slate-950"],
+.peserta-ui .fixed.inset-0[class*="bg-black"] {
+    background: rgba(2, 20, 34, .58) !important;
+    backdrop-filter: blur(1px);
+}
+
+.peserta-ui [role="dialog"],
+.peserta-ui .fixed.inset-0 .bg-white.rounded-2xl,
+.peserta-ui .fixed.inset-0 .bg-white.rounded-3xl {
+    box-shadow: 0 28px 70px rgba(2, 20, 34, .28) !important;
+}
+
+/* =========================================================
+   BADGES
+   ========================================================= */
+.peserta-ui main [class*="rounded-full"] {
+    font-weight: 700;
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+.peserta-ui main * {
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 transparent;
+}
+
+.peserta-ui main *::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+.peserta-ui main *::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.peserta-ui main *::-webkit-scrollbar-thumb {
+    background: #a8bac8;
+    border-radius: 999px;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 768px) {
+    .peserta-ui main {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    .peserta-ui main h1 {
+        font-size: 1.55rem !important;
+    }
+
+    .peserta-ui main .rounded-2xl.bg-white,
+    .peserta-ui main .rounded-3xl.bg-white {
+        border-radius: 18px !important;
+    }
+}

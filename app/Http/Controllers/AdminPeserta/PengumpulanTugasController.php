@@ -17,11 +17,6 @@ use Illuminate\View\View;
 
 class PengumpulanTugasController extends Controller
 {
-    /**
-     * Menampilkan dua kelompok data yang terpisah:
-     * 1. Peserta yang sudah mengumpulkan, termasuk yang terlambat.
-     * 2. Peserta yang belum mengumpulkan tugas yang sudah aktif/tersedia.
-     */
     public function index(
         Request $request,
         PenugasanTemplateService $penugasanService
@@ -146,8 +141,6 @@ class PengumpulanTugasController extends Controller
             ->orderBy('judul')
             ->get(['id_tugas', 'judul', 'minggu_ke']);
 
-        // Daftar penugasan mingguan hasil import template Excel,
-        // dikelompokkan per jurusan (dipindah dari halaman Tugas Mingguan).
         $templateTarget = $request->string('template_target', '')->toString();
         $templateTargetValid = in_array(
             $templateTarget,
@@ -191,11 +184,6 @@ class PengumpulanTugasController extends Controller
         ));
     }
 
-    /**
-     * Membuat jadwal bagi peserta aktif yang belum mempunyai satu pun baris
-     * penugasan. Ini membuat tabel "belum mengumpulkan" tetap terisi setelah
-     * fitur penugasan per peserta pertama kali dipasang.
-     */
     private function ensureParticipantAssignments(
         PenugasanTemplateService $penugasanService
     ): void {
@@ -248,7 +236,6 @@ class PengumpulanTugasController extends Controller
         ));
     }
 
-    /** Membuka bukti pengumpulan melalui route admin. */
     public function file(PengumpulanTugas $pengumpulan)
     {
         abort_unless(
@@ -262,6 +249,109 @@ class PengumpulanTugasController extends Controller
             $pengumpulan->file_jawaban,
             basename($pengumpulan->file_jawaban)
         );
+    }
+
+    public function review(
+        Request $request,
+        PengumpulanTugas $pengumpulan,
+        PenugasanTemplateService $penugasanService
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'aksi' => ['required', 'in:revisi,disetujui'],
+            'catatan_revisi' => ['nullable', 'string', 'max:2000', 'required_if:aksi,revisi'],
+        ]);
+
+        $pengumpulan->load(['peserta.user', 'tugas']);
+
+        $participant = $pengumpulan->peserta;
+        $user = $participant?->user;
+        $task = $pengumpulan->tugas;
+
+        abort_unless($participant && $task, 404, 'Data peserta atau tugas tidak lengkap.');
+
+        $assignment = PenugasanPeserta::query()
+            ->where('tugas_id', $pengumpulan->tugas_id)
+            ->where('peserta_id', $pengumpulan->peserta_id)
+            ->first();
+
+        if ($validated['aksi'] === 'revisi') {
+            $note = trim((string) $validated['catatan_revisi']);
+
+            $pengumpulan->update([
+                'status_review' => 'perlu_revisi',
+                'catatan_revisi' => $note,
+                'reviewed_at' => now(),
+                'reviewed_by' => auth()->id(),
+            ]);
+
+            if ($assignment) {
+                $assignment->update(['status' => 'aktif']);
+            }
+
+            $penugasanService->refreshStatuses($participant);
+
+            if ($user) {
+                Notifikasi::create([
+                    'user_id' => $user->id_user,
+                    'judul' => 'Revisi Tugas Diperlukan',
+                    'pesan' => sprintf(
+                        'Tugas "%s" perlu diperbaiki. Catatan Admin: %s. Silakan buka menu Penugasan dan kirim file revisi.',
+                        $task->judul,
+                        $note
+                    ),
+                    'kategori' => 'penugasan',
+                    'tipe' => 'peringatan',
+                    'referensi_id' => $pengumpulan->id_pengumpulan,
+                    'dibaca' => false,
+                ]);
+            }
+
+            return redirect()
+                ->route('admin-peserta.pengumpulan-tugas.show', $pengumpulan)
+                ->with('success', 'Permintaan revisi berhasil dikirim kepada peserta melalui portal/email.');
+        }
+
+        $pengumpulan->update([
+            'status_review' => 'disetujui',
+            'reviewed_at' => now(),
+            'reviewed_by' => auth()->id(),
+            'status' => 'dinilai',
+        ]);
+
+        if ($assignment) {
+            $assignment->update(['status' => 'selesai']);
+        }
+
+        $finishedWeek = (int) ($task->minggu_ke ?? 0);
+        $penugasanService->refreshStatuses($participant);
+        $nextWeek = $penugasanService->currentSequentialWeek($participant);
+
+        if ($user) {
+            $message = sprintf(
+                'Tugas "%s" sudah dikoreksi dan disetujui Admin.',
+                $task->judul
+            );
+
+            if ($finishedWeek > 0 && $nextWeek && $nextWeek > $finishedWeek) {
+                $message .= " Seluruh tugas Minggu {$finishedWeek} selesai. Minggu {$nextWeek} sekarang terbuka.";
+            } elseif ($finishedWeek > 0 && $nextWeek === null) {
+                $message .= ' Seluruh tugas mingguan Anda sudah selesai.';
+            }
+
+            Notifikasi::create([
+                'user_id' => $user->id_user,
+                'judul' => 'Tugas Disetujui Admin',
+                'pesan' => $message,
+                'kategori' => 'penugasan',
+                'tipe' => 'sukses',
+                'referensi_id' => $pengumpulan->id_pengumpulan,
+                'dibaca' => false,
+            ]);
+        }
+
+        return redirect()
+            ->route('admin-peserta.pengumpulan-tugas.show', $pengumpulan)
+            ->with('success', 'Tugas berhasil disetujui. Progres minggu peserta sudah diperbarui.');
     }
 
     /** Mengirim notifikasi peringatan kepada peserta. */

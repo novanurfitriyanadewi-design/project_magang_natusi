@@ -259,7 +259,24 @@
 
             @if ($showNotification)
                 <div
-                    x-data="{ notificationOpen: false }"
+                    x-data="{
+                        notificationOpen: false,
+                        unreadCount: {{ $unreadNotificationCount }},
+                        async refreshNotificationCount() {
+                            try {
+                                const response = await fetch('{{ route('notifikasi.summary') }}', {
+                                    headers: { Accept: 'application/json' },
+                                });
+
+                                if (response.ok) {
+                                    this.unreadCount = (await response.json()).unread_count;
+                                }
+                            } catch (_) {
+                                // Biarkan jumlah terakhir tetap tampil jika koneksi sedang terputus.
+                            }
+                        },
+                    }"
+                    x-init="refreshNotificationCount(); setInterval(() => refreshNotificationCount(), 30000)"
                     class="relative"
                 >
                     <div
@@ -304,13 +321,13 @@
                                 />
                             </svg>
 
-                            @if($unreadNotificationCount > 0)
-                                <span
+                            <span
+                                x-cloak
+                                x-show="unreadCount > 0"
                                     class="absolute -right-1 -top-1 inline-grid min-h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[9px] font-black text-white ring-2 ring-white"
                                 >
-                                    {{ $unreadNotificationCount > 99 ? '99+' : $unreadNotificationCount }}
-                                </span>
-                            @endif
+                                <span x-text="unreadCount > 99 ? '99+' : unreadCount"></span>
+                            </span>
                         </button>
                     </div>
 
@@ -325,7 +342,7 @@
                         <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3.5">
                             <div>
                                 <p class="text-sm font-extrabold text-slate-900">Notifikasi</p>
-                                <p class="mt-0.5 text-[11px] text-slate-500">{{ $unreadNotificationCount }} belum dibaca</p>
+                                <p class="mt-0.5 text-[11px] text-slate-500"><span x-text="unreadCount"></span> belum dibaca</p>
                             </div>
 
                             @if($unreadNotificationCount > 0 && Route::has('notifikasi.read-all'))

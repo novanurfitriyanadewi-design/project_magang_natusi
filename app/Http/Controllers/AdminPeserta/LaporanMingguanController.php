@@ -91,13 +91,19 @@ class LaporanMingguanController extends Controller
     ): RedirectResponse {
         $validated = $request->validate([
             'judul_template' => ['required', 'string', 'max:255'],
-            'instansi_laporan' => ['required', Rule::in(['universitas', 'sekolah', 'semua'])],
             'file_word' => ['required', 'file', 'mimes:doc,docx', 'max:10240'],
             'ketentuan_laporan' => ['required', 'string', 'max:20000'],
+        ], [
+            'judul_template.required' => 'Judul template wajib diisi.',
+            'file_word.required' => 'File template laporan wajib diunggah.',
+            'file_word.mimes' => 'File harus berformat .doc atau .docx.',
+            'file_word.max' => 'Ukuran file maksimal 10 MB.',
+            'ketentuan_laporan.required' => 'Ketentuan laporan wajib diisi.',
+            'ketentuan_laporan.max' => 'Ketentuan laporan maksimal 20.000 karakter.',
         ]);
 
+        // Nonaktifkan template aktif sebelumnya
         TemplateLaporan::query()
-            ->where('instansi', $validated['instansi_laporan'])
             ->where('is_active', true)
             ->update(['is_active' => false]);
 
@@ -106,13 +112,13 @@ class LaporanMingguanController extends Controller
 
         $template = TemplateLaporan::create([
             'user_id' => auth()->id(),
-            'instansi' => $validated['instansi_laporan'],
             'judul' => $validated['judul_template'],
             'file_word' => $path,
             'ketentuan' => $validated['ketentuan_laporan'],
             'is_active' => true,
         ]);
 
+        // Refresh template pada penugasan laporan yang aktif
         $updatedAssignments = $service->refreshReportTemplate($template);
 
         return redirect()

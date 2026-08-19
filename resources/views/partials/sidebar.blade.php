@@ -72,7 +72,6 @@
             ['label' => 'Data Peserta Magang', 'route' => 'admin-peserta.peserta.index', 'match' => 'admin-peserta.peserta.*', 'icon' => 'users', 'tour' => 'internship-participants'],
             ['label' => 'Absensi Peserta', 'route' => 'admin-peserta.absensi.index', 'match' => 'admin-peserta.absensi.*', 'icon' => 'attendance-user', 'tour' => 'attendance-data'],
             ['label' => 'Pembayaran Sumbangan', 'route' => 'admin-peserta.pembayaran.index', 'match' => 'admin-peserta.pembayaran.*', 'icon' => 'payment', 'tour' => 'pembayaran-peserta'],
-            ['label' => 'Kelola Jurusan', 'route' => 'admin-peserta.jurusan.index', 'match' => 'admin-peserta.jurusan.*', 'icon' => 'rules', 'tour' => 'manage-jurusan'],
             [
                 'label' => 'Kelola Tugas',
                 'icon' => 'tasks',
@@ -84,6 +83,8 @@
                     ['label' => 'Data Penugasan', 'route' => 'admin-peserta.pengumpulan-tugas.index', 'match' => 'admin-peserta.pengumpulan-tugas.*', 'tour' => 'task-submissions'],
                 ],
             ],
+            ['label' => 'Kelola Jurusan', 'route' => 'admin-peserta.jurusan.index', 'match' => 'admin-peserta.jurusan.*', 'icon' => 'rules', 'tour' => 'manage-jurusan'],
+            ['label' => 'Kelola Sertifikat', 'route' => 'admin-peserta.sertifikat.index', 'match' => 'admin-peserta.sertifikat.*', 'icon' => 'report', 'tour' => 'manage-sertifikat'],
             [
                 'label' => 'Laporan',
                 'icon' => 'rules',
@@ -139,8 +140,9 @@
             ['label' => 'Dashboard', 'route' => 'peserta-magang.dashboard', 'match' => 'peserta-magang.dashboard', 'icon' => 'dashboard'],
             ['label' => 'Absensi', 'route' => 'peserta-magang.absensi.index', 'match' => 'peserta-magang.absensi.*', 'icon' => 'attendance-user'],
             ['label' => 'Penugasan', 'route' => 'peserta-magang.penugasan.index', 'match' => 'peserta-magang.penugasan.*', 'icon' => 'assignment'],
-            ['label' => 'Laporan Mingguan', 'route' => 'peserta-magang.laporan-mingguan.index', 'match' => 'peserta-magang.laporan-mingguan.*', 'icon' => 'report'],
+            ['label' => 'Aturan Laporan Mingguan', 'route' => 'peserta-magang.laporan-mingguan.index', 'match' => 'peserta-magang.laporan-mingguan.*', 'icon' => 'report'],
             ['label' => 'Pembayaran', 'route' => 'peserta-magang.pembayaran.index', 'match' => 'peserta-magang.pembayaran.*', 'icon' => 'payment'],
+            ['label' => 'Sertifikat Saya', 'route' => 'peserta-magang.sertifikat.index', 'match' => 'peserta-magang.sertifikat.*', 'icon' => 'report'],
             ['label' => 'Aturan Perusahaan', 'route' => 'peserta-magang.aturan.index', 'match' => 'peserta-magang.aturan.*', 'icon' => 'rules'],
         ],
     };
@@ -199,8 +201,9 @@
 </style>
 
 <aside
-    class="fixed inset-y-0 left-0 z-50 flex w-[245px] -translate-x-full flex-col overflow-hidden border-r border-white/[0.06] bg-gradient-to-b from-[#063551] via-[#075177] to-[#052b45] px-3 py-5 shadow-[12px_0_40px_rgba(4,47,78,0.25)] transition-transform duration-300 lg:translate-x-0"
+    class="fixed inset-y-0 left-0 z-50 flex w-[245px] -translate-x-full flex-col overflow-hidden border-r border-white/[0.06] px-3 py-5 shadow-[12px_0_40px_rgba(4,47,78,0.25)] transition-transform duration-300 lg:translate-x-0"
     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+    style="background-color:#063551; background-image:linear-gradient(180deg,#063551 0%,#075177 52%,#052b45 100%);"
     aria-label="Navigasi portal"
 >
     <!-- Decorative background elements -->
@@ -246,7 +249,7 @@
                         <button
                             type="button"
                             data-tour="{{ $menu['tour'] ?? '' }}"
-                            @click="openGroup = (openGroup === {{ $i }} ? null : {{ $i }})"
+                            @click.stop="openGroup = (openGroup === {{ $i }} ? null : {{ $i }})"
                             @class([
                                 'group flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200',
                                 'bg-white font-semibold text-[#05658f] sidebar-active-glow' => $groupActive,
@@ -274,7 +277,13 @@
 
                         <div
                             x-show="openGroup === {{ $i }}"
-                            x-collapse
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 -translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 -translate-y-1"
                             class="mt-1 space-y-1 pl-[18px]"
                         >
                             <div class="ml-[17px] space-y-1 border-l border-white/10 pl-3">

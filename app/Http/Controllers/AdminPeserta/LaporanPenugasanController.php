@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\AdminPeserta;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tugas;             // SESUAIKAN: pastikan nama model & namespace ini benar
 use App\Models\PengumpulanTugas;
+use App\Models\Tugas;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -12,83 +12,44 @@ class LaporanPenugasanController extends Controller
 {
     public function index(Request $request): View
     {
-        $search        = $request->get('search');
-        $jenisTugas    = $request->get('jenis_tugas');
-        $statusFilter  = $request->get('status_filter'); // SESUAIKAN dengan nilai enum status di tabel `tugas`
+        $search = trim((string) $request->get('search', ''));
+        $jenisTugas = (string) $request->get('jenis_tugas', '');
+        $statusFilter = (string) $request->get('status_filter', '');
 
-        // Relasi 'pengumpulanTugas' sudah ada di model Tugas (hasMany ke PengumpulanTugas)
-        $query = Tugas::query()->withCount([
-            'pengumpulanTugas as total_submitted' => fn ($q) => $q->whereNotNull('dikumpulkan_pada'),
-        ]);
+        $query = Tugas::query()
+            ->withCount([
+                'penugasanPeserta as total_ditugaskan',
+                'pengumpulanTugas as total_submitted' => fn ($q) => $q->whereNotNull('dikumpulkan_pada'),
+                'pengumpulanTugas as total_terlambat' => fn ($q) => $q->where('status', 'telat'),
+            ])
+            ->when($search !== '', fn ($q) => $q->where('judul', 'like', "%{$search}%"))
+            ->when($jenisTugas !== '', fn ($q) => $q->where('jenis_tugas', $jenisTugas))
+            ->when($statusFilter !== '', fn ($q) => $q->where('status', $statusFilter));
 
-        if ($search) {
-            $query->where('judul', 'like', "%{$search}%");
-        }
+        $tugasList = $query
+            ->orderByDesc('created_at')
+            ->paginate(10)
+            ->withQueryString();
 
-        if ($jenisTugas) {
-            $query->where('jenis_tugas', $jenisTugas); // SESUAIKAN: cek kolom ini beneran ada di tabel tugas
-        }
-
-        if ($statusFilter) {
-            $query->where('status', $statusFilter); // SESUAIKAN: cek kolom ini beneran ada di tabel tugas
-        }
-
-        $tugasList = $query->latest()->paginate(10)->withQueryString();
-
-        // Tambah data agregat per tugas (submission & keterlambatan)
-        $tugasList->getCollection()->transform(function ($tugas) {
-            $pengumpulan = $tugas->pengumpulanTugas;
-
-            $tugas->total_peserta = $pengumpulan->count();
-            $tugas->overdue_count = $pengumpulan->where('status', 'terlambat')->count();
-
-            return $tugas;
-        });
-
-        // ==== Statistik ringkasan ====
-        // CATATAN: statistik nilai/rata-rata dihapus karena tabel pengumpulan_tugas
-        // belum punya kolom 'nilai'. Kalau kamu mau fitur ini, tambahkan kolom nilai
-        // dulu lewat migration, nanti aku sambungin lagi ke sini.
-        $totalTugas      = Tugas::count();
-        $totalSubmission = PengumpulanTugas::whereNotNull('dikumpulkan_pada')->count();
-        $totalOverdue    = PengumpulanTugas::where('status', 'terlambat')->count();
-        $totalDiharapkan = max(1, PengumpulanTugas::count());
-        $completionRate  = round(($totalSubmission / $totalDiharapkan) * 100, 1);
+        $totalTugas = Tugas::query()->count();
+        $totalSubmission = PengumpulanTugas::query()->whereNotNull('dikumpulkan_pada')->count();
+        $totalOverdue = PengumpulanTugas::query()->where('status', 'telat')->count();
+        $totalAssigned = Tugas::query()->withCount('penugasanPeserta')->get()->sum('penugasan_peserta_count');
 
         $stats = [
-            'completion_rate' => $completionRate,
-            'total_tugas'     => $totalTugas,
+            'completion_rate' => $totalAssigned > 0 ? round(($totalSubmission / $totalAssigned) * 100, 1) : 0,
+            'total_tugas' => $totalTugas,
             'total_submitted' => $totalSubmission,
-            'total_overdue'   => $totalOverdue,
-            // Belum ada kolom 'nilai' di tabel pengumpulan_tugas, jadi:
-            // - avg_score ditampilkan '-' (belum bisa dihitung)
-            // - pending_review dianggap = semua yang sudah submit (karena belum ada mekanisme penilaian)
-            'avg_score'       => '-',
-            'pending_review'  => $totalSubmission,
+            'total_overdue' => $totalOverdue,
+            'avg_score' => '-',
+            'pending_review' => max(0, $totalSubmission),
         ];
 
-        // ==== Tren bulanan: dikumpulkan vs terlambat ====
-        $submittedRows = PengumpulanTugas::selectRaw('MONTH(dikumpulkan_pada) as bulan, COUNT(*) as total')
-            ->whereNotNull('dikumpulkan_pada')
-            ->whereYear('dikumpulkan_pada', now()->year)
-            ->groupBy('bulan')
-            ->pluck('total', 'bulan');
-
-        $overdueRows = PengumpulanTugas::selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
-            ->where('status', 'terlambat')
-            ->whereYear('created_at', now()->year)
-            ->groupBy('bulan')
-            ->pluck('total', 'bulan');
-
-        $monthlySubmitted = [];
-        $monthlyOverdue   = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $monthlySubmitted[$m] = (int) ($submittedRows[$m] ?? 0);
-            $monthlyOverdue[$m]   = (int) ($overdueRows[$m] ?? 0);
-        }
-        $chartMax = max(1, max(array_merge($monthlySubmitted, $monthlyOverdue)));
-
-        $jenisTugasList = Tugas::select('jenis_tugas')->distinct()->pluck('jenis_tugas'); // SESUAIKAN: cek kolom ini ada
+        $jenisTugasList = Tugas::query()
+            ->whereNotNull('jenis_tugas')
+            ->distinct()
+            ->orderBy('jenis_tugas')
+            ->pluck('jenis_tugas');
 
         return view('admin-peserta.laporan.penugasan', compact(
             'tugasList',
@@ -96,9 +57,6 @@ class LaporanPenugasanController extends Controller
             'search',
             'jenisTugas',
             'statusFilter',
-            'monthlySubmitted',
-            'monthlyOverdue',
-            'chartMax',
             'jenisTugasList'
         ));
     }
