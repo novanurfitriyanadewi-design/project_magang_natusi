@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\PengumpulanTugas;
+use App\Models\Notifikasi;
 use App\Models\PenugasanPeserta;
 use App\Models\PesertaMagang;
 use App\Models\TemplateLaporan;
@@ -141,10 +142,13 @@ class PenugasanTemplateService
                 $taskCounts[$target] = $groupTasks->count();
             }
 
+            // Peserta aktif tetap mendapat penugasan meskipun tanggal mulai
+            // belum dilengkapi. Peserta hasil approval memang dibuat dengan
+            // tgl_mulai = null, jadi menunggu kolom ini membuat tugas hasil
+            // import tidak pernah muncul di portal peserta baru.
             $participants = PesertaMagang::query()
                 ->with(['user', 'permintaan'])
                 ->where('status', 'aktif')
-                ->whereNotNull('tgl_mulai')
                 ->get();
 
             $assignmentCount = 0;
@@ -182,46 +186,73 @@ class PenugasanTemplateService
         PesertaMagang $participant,
         ?Collection $tasks = null
     ): int {
-        if (!$participant->tgl_mulai || $participant->status !== 'aktif') {
+        if ($participant->status !== 'aktif') {
             return 0;
         }
 
         $participant->loadMissing(['user', 'permintaan']);
         $target = $this->participantTarget($participant);
-        if ($target === null) {
-            return 0;
-        }
-
         $institution = $this->participantInstitution($participant);
 
         $tasks ??= Tugas::query()
             ->where('status', 'aktif')
             ->where(function ($query) use ($target, $institution): void {
-                $query
-                    ->where('target_peserta', $target)
-                    ->orWhere(function ($fallback) use ($institution): void {
-                        $fallback
-                            ->where(function ($scope) use ($institution): void {
-                                $scope->where('instansi', $institution)
-                                    ->orWhere('instansi', 'semua');
-                            })
-                            ->where(function ($scope): void {
-                                $scope->whereNull('target_peserta')
-                                    ->orWhere('target_peserta', 'semua');
-                            });
-                    });
+                // Jika jurusan peserta dikenali, ambil tugas target jurusannya.
+                if ($target !== null) {
+                    $query->where('target_peserta', $target)
+                        ->orWhere(function ($fallback) use ($institution): void {
+                            $fallback
+                                ->where(function ($scope) use ($institution): void {
+                                    $scope->where('instansi', $institution)
+                                        ->orWhere('instansi', 'semua');
+                                })
+                                ->where(function ($scope): void {
+                                    $scope->whereNull('target_peserta')
+                                        ->orWhere('target_peserta', 'semua');
+                                });
+                        });
+                    return;
+                }
+
+                // Data lama yang jurusannya belum terpetakan tetap boleh
+                // menerima tugas umum untuk sekolah/universitas.
+                $query->where(function ($scope) use ($institution): void {
+                    $scope->where('instansi', $institution)
+                        ->orWhere('instansi', 'semua');
+                })->where(function ($scope): void {
+                    $scope->whereNull('target_peserta')
+                        ->orWhere('target_peserta', 'semua');
+                });
             })
             ->orderBy('minggu_ke')
             ->orderBy('rilis_hari_ke')
             ->get();
 
-        $start = Carbon::parse($participant->tgl_mulai)->startOfDay();
+        // Peserta baru dari approval belum selalu punya tgl_mulai. Supaya
+        // Minggu 1 langsung tersedia, pakai tanggal pembuatan data peserta
+        // sebagai acuan sementara. Saat tgl_mulai diisi, sync berikutnya akan
+        // menggunakan tanggal mulai resmi.
+        $startSource = $participant->tgl_mulai
+            ?? $participant->created_at
+            ?? now();
+        $start = Carbon::parse($startSource)->startOfDay();
         $count = 0;
 
         foreach ($tasks as $task) {
             if ($task->status !== 'aktif'
                 || !$this->taskMatchesParticipant($task, $target, $institution)) {
                 continue;
+            }
+
+            // Perbaiki data hasil import lama yang dulu seluruh baris non-laporan
+            // terlanjur disimpan sebagai kategori "tugas". Hanya task dari
+            // template Excel yang dinormalisasi agar task manual admin tidak berubah.
+            if (filled($task->template_batch)) {
+                $normalizedCategory = $this->templateCategoryFromMaterial((string) $task->materi);
+                if ($task->kategori_tugas !== $normalizedCategory) {
+                    $task->kategori_tugas = $normalizedCategory;
+                    $task->save();
+                }
             }
 
             [$availableAt, $deadline, $isSkipped, $scheduleNote] =
@@ -247,6 +278,7 @@ class PenugasanTemplateService
                 'tugas_id' => $task->id_tugas,
                 'peserta_id' => $participant->id_peserta,
             ]);
+            $isNewAssignment = ! $assignment->exists;
 
             // Tugas yang sudah dikumpulkan tidak dihitung ulang agar riwayat
             // deadline saat pengerjaan tetap konsisten.
@@ -269,8 +301,30 @@ class PenugasanTemplateService
             }
 
             $assignment->save();
+
+            if ($isNewAssignment && $status !== 'dilewati') {
+                $participant->loadMissing('user');
+                if ($participant->user) {
+                    $deadlineText = $deadline ? $deadline->translatedFormat('d F Y H:i') : 'mengikuti jadwal di portal';
+                    Notifikasi::query()->create([
+                        'user_id' => $participant->user->id_user,
+                        'judul' => 'Penugasan Magang Baru',
+                        'pesan' => 'Tugas "'.$task->judul.'" telah dijadwalkan untuk Anda. Deadline: '.$deadlineText.'.',
+                        'kategori' => 'penugasan',
+                        'tipe' => 'info',
+                        'referensi_id' => $task->id_tugas,
+                        'dibaca' => false,
+                    ]);
+                }
+            }
+
             $count++;
         }
+
+        // Setelah semua assignment tersinkron, tegakkan kembali urutan minggu.
+        // Ini penting saat sync dipanggil dari observer/import sebelum peserta
+        // membuka halaman Penugasan.
+        $this->refreshStatuses($participant);
 
         return $count;
     }
@@ -302,14 +356,206 @@ class PenugasanTemplateService
         return $updated;
     }
 
+    /**
+     * Menyegarkan status tugas peserta dengan aturan progres berjenjang.
+     *
+     * Untuk tugas mingguan, peserta hanya boleh mengerjakan satu minggu pada
+     * satu waktu. Minggu berikutnya baru aktif setelah SEMUA tugas pada minggu
+     * sebelumnya sudah memiliki pengumpulan. Aturan ini berlaku di backend,
+     * sehingga URL/form minggu berikutnya juga tidak dapat dipaksa secara manual.
+     */
     public function refreshStatuses(PesertaMagang $participant): void
     {
-        PenugasanPeserta::query()
+        $assignments = PenugasanPeserta::query()
+            ->with('tugas')
             ->where('peserta_id', $participant->id_peserta)
-            ->where('status', 'terjadwal')
-            ->whereNotNull('tersedia_pada')
-            ->where('tersedia_pada', '<=', now())
-            ->update(['status' => 'aktif']);
+            ->get();
+
+        if ($assignments->isEmpty()) {
+            return;
+        }
+
+        // Hanya pengumpulan yang SUDAH DISETUJUI admin yang dianggap selesai.
+        // Upload pertama / file revisi masih menunggu koreksi sehingga minggu
+        // berikutnya belum boleh terbuka.
+        $approvedTaskIds = PengumpulanTugas::query()
+            ->where('peserta_id', $participant->id_peserta)
+            ->where(function ($query): void {
+                $query->where('status_review', 'disetujui')
+                    // Kompatibilitas bila ada record lama sebelum migration.
+                    ->orWhereNull('status_review');
+            })
+            ->pluck('tugas_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        foreach ($assignments as $assignment) {
+            if (!$assignment->tugas
+                || !in_array($assignment->tugas->kategori_tugas, ['tugas', 'laporan'], true)) {
+                continue;
+            }
+
+            $approved = in_array((int) $assignment->tugas_id, $approvedTaskIds, true);
+
+            if ($approved && $assignment->status !== 'selesai') {
+                $assignment->status = 'selesai';
+                $assignment->save();
+                continue;
+            }
+
+            // Jika admin meminta revisi atas tugas yang sebelumnya sempat
+            // berstatus selesai, kembalikan statusnya agar progres terkunci lagi.
+            if (!$approved && $assignment->status === 'selesai') {
+                $assignment->status = 'terjadwal';
+                $assignment->save();
+            }
+        }
+
+        // Hanya item yang memang WAJIB DIKUMPULKAN yang menentukan progres
+        // minggu. Materi tidak boleh membuat Minggu berikutnya terkunci selamanya.
+        $weeklyCollectables = $assignments
+            ->filter(fn (PenugasanPeserta $assignment) =>
+                $assignment->tugas
+                && $assignment->tugas->jenis_tugas === 'mingguan'
+                && in_array($assignment->tugas->kategori_tugas, ['tugas', 'laporan'], true)
+                && (int) $assignment->tugas->minggu_ke >= 1
+                && $assignment->status !== 'dilewati'
+            )
+            ->groupBy(fn (PenugasanPeserta $assignment) => (int) $assignment->tugas->minggu_ke)
+            ->sortKeys();
+
+        $currentWeek = null;
+
+        foreach ($weeklyCollectables as $week => $weekAssignments) {
+            $weekCompleted = $weekAssignments->every(
+                fn (PenugasanPeserta $assignment) =>
+                    $assignment->status === 'selesai'
+                    || in_array((int) $assignment->tugas_id, $approvedTaskIds, true)
+            );
+
+            if ($weekCompleted) {
+                continue;
+            }
+
+            $currentWeek = (int) $week;
+            break;
+        }
+
+        // Terapkan status ke SEMUA item mingguan, termasuk materi.
+        // Materi pada minggu yang sudah/current boleh dibaca, tetapi tidak pernah
+        // menjadi item yang harus dikumpulkan.
+        $allWeekly = $assignments
+            ->filter(fn (PenugasanPeserta $assignment) =>
+                $assignment->tugas
+                && $assignment->tugas->jenis_tugas === 'mingguan'
+                && (int) $assignment->tugas->minggu_ke >= 1
+                && $assignment->status !== 'dilewati'
+            );
+
+        foreach ($allWeekly as $assignment) {
+            $task = $assignment->tugas;
+            $week = (int) $task->minggu_ke;
+            $isMaterial = $task->kategori_tugas === 'materi';
+
+            if (!$isMaterial && $assignment->status === 'selesai') {
+                continue;
+            }
+
+            if ($isMaterial) {
+                // Materi hanya untuk dibaca. Materi minggu sekarang dan minggu
+                // yang sudah lewat tetap terbuka; materi minggu depan tetap terkunci.
+                $assignment->status = $currentWeek === null || $week <= $currentWeek
+                    ? 'aktif'
+                    : 'terjadwal';
+                $assignment->save();
+                continue;
+            }
+
+            if ($currentWeek === null) {
+                // Semua tugas/laporan yang wajib dikumpulkan telah selesai.
+                if ($assignment->status !== 'selesai') {
+                    $assignment->status = 'terjadwal';
+                    $assignment->save();
+                }
+                continue;
+            }
+
+            $assignment->status = $week === $currentWeek ? 'aktif' : 'terjadwal';
+            $assignment->save();
+        }
+
+        // Tugas non-mingguan tetap mengikuti tanggal tersedia seperti sebelumnya.
+        foreach ($assignments as $assignment) {
+            if (!$assignment->tugas
+                || $assignment->tugas->jenis_tugas === 'mingguan'
+                || in_array($assignment->status, ['selesai', 'dilewati'], true)) {
+                continue;
+            }
+
+            $assignment->status = (!$assignment->tersedia_pada
+                || now()->greaterThanOrEqualTo($assignment->tersedia_pada))
+                ? 'aktif'
+                : 'terjadwal';
+            $assignment->save();
+        }
+    }
+
+    /**
+     * Memastikan tugas tertentu benar-benar boleh dikerjakan peserta.
+     * Method ini dipakai oleh controller saat submit agar penguncian tidak hanya
+     * bergantung pada tampilan.
+     */
+    public function canSubmit(PesertaMagang $participant, PenugasanPeserta $assignment): bool
+    {
+        $this->refreshStatuses($participant);
+        $assignment->refresh();
+        $assignment->loadMissing('tugas');
+
+        // Materi adalah bacaan, bukan pengumpulan. Yang boleh dikirim hanya
+        // Tugas Materi dan Laporan Mingguan.
+        if (!$assignment->tugas
+            || !in_array($assignment->tugas->kategori_tugas, ['tugas', 'laporan'], true)) {
+            return false;
+        }
+
+        return $assignment->status === 'aktif';
+    }
+
+    /**
+     * Minggu mingguan paling awal yang belum selesai. Null berarti seluruh tugas
+     * mingguan peserta sudah selesai.
+     */
+    public function currentSequentialWeek(PesertaMagang $participant): ?int
+    {
+        $this->refreshStatuses($participant);
+
+        return PenugasanPeserta::query()
+            ->where('penugasan_peserta.peserta_id', $participant->id_peserta)
+            ->where('penugasan_peserta.status', 'aktif')
+            ->whereHas('tugas', fn ($query) => $query
+                ->where('jenis_tugas', 'mingguan')
+                ->whereIn('kategori_tugas', ['tugas', 'laporan'])
+                ->whereNotNull('minggu_ke'))
+            ->join('tugas', 'tugas.id_tugas', '=', 'penugasan_peserta.tugas_id')
+            ->min('tugas.minggu_ke');
+    }
+
+    /**
+     * Menentukan jenis item dari label kolom "Materi / Laporan" template.
+     */
+    private function templateCategoryFromMaterial(string $material): string
+    {
+        $label = Str::lower(trim($material));
+
+        if (Str::contains($label, 'laporan')) {
+            return 'laporan';
+        }
+
+        if (Str::startsWith($label, 'tugas') || Str::contains($label, 'tugas materi')) {
+            return 'tugas';
+        }
+
+        return 'materi';
     }
 
     public function participantInstitution(PesertaMagang $participant): string
@@ -374,12 +620,12 @@ class PenugasanTemplateService
 
     private function taskMatchesParticipant(
         Tugas $task,
-        string $target,
+        ?string $target,
         string $institution
     ): bool {
         if (filled($task->target_peserta)
             && $task->target_peserta !== 'semua') {
-            return $task->target_peserta === $target;
+            return $target !== null && $task->target_peserta === $target;
         }
 
         return in_array(
@@ -423,16 +669,14 @@ class PenugasanTemplateService
             }
 
             if ($week === 1 && $deadline->lessThan($start)) {
-                return [
-                    null,
-                    null,
-                    true,
-                    sprintf(
-                        'Dilewati karena deadline %s pukul %s sudah lewat sebelum tanggal mulai magang.',
-                        ucfirst((string) $task->hari_deadline),
-                        $deadline->format('H:i')
-                    ),
-                ];
+                // Peserta baru tidak boleh kehilangan Minggu 1 hanya karena hari
+                // masuknya berada setelah deadline template. Tugas tetap dimulai
+                // pada tanggal masuk dan deadline digeser ke hari deadline
+                // terdekat setelah tanggal mulai.
+                $release = $start->copy();
+                $deadline = $start->copy()
+                    ->next($deadlineWeekday)
+                    ->setTimeFromTimeString($this->normalizeTime((string) ($task->jam_deadline ?: '17:00:00')));
             }
 
             $availableAt = $release->lessThan($start)
@@ -638,9 +882,11 @@ class PenugasanTemplateService
             $relativeDeadline += 7;
         }
 
-        $category = Str::contains(Str::lower($material), 'laporan')
-            ? 'laporan'
-            : 'tugas';
+        // Bedakan baris template dengan tegas:
+        // - "Materi 1"        => materi, hanya dibaca (tidak dikumpulkan)
+        // - "Tugas Materi 1"  => tugas, wajib dikumpulkan
+        // - "Laporan Mingguan"=> laporan, wajib dikumpulkan
+        $category = $this->templateCategoryFromMaterial($material);
 
         return [
             'kode_tugas' => sprintf(

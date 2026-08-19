@@ -34,29 +34,11 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('profile.edit')->with('warning', 'Demi keamanan, silakan ganti password awal Anda sebelum melanjutkan.');
         }
 
-        // 1. Cek apakah pengguna adalah Karyawan / Peserta yang BARU DISETUJUI
-        // Agar mereka diarahkan ke halaman status pendaftaran dulu untuk melihat username & password baru
-        $permintaanLamaran = null;
-        if (class_exists('\App\Models\PermintaanLamaran')) {
-            $permintaanLamaran = \App\Models\PermintaanLamaran::where('email', $user->email)
-                ->latest()
-                ->first();
-        }
-
-        $permintaanMagang = \App\Models\PermintaanMagang::where('email', $user->email)
-            ->latest()
-            ->first();
-
-        // Jika statusnya baru disetujui (APPROVED) dan belum dikonfirmasi masuk ke dashboard
-        $isNewlyApprovedKaryawan = $permintaanLamaran && in_array($permintaanLamaran->status, ['APPROVED', 'disetujui']);
-        $isNewlyApprovedMagang   = $permintaanMagang && in_array($permintaanMagang->status, ['APPROVED', 'disetujui']);
-
-        if (($user->role === 'karyawan' && $isNewlyApprovedKaryawan) || ($user->role === 'peserta' && $isNewlyApprovedMagang)) {
-            // Jika dipaksa ingin melihat status pengajuan dulu
-            if (!$request->session()->has('has_seen_credentials')) {
-                return redirect()->route('pengajuan.status');
-            }
-        }
+        /*
+         * Halaman status pengajuan hanya milik akun pendaftaran/pengaju.
+         * Akun peserta (termasuk akun peserta milik ketua setelah diterima)
+         * langsung masuk ke portal peserta dan tidak diarahkan ke halaman status.
+         */
 
         // 2. Redirect Berdasarkan Role Pengguna
         return match ($user->role) {

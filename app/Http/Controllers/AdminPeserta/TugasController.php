@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\AdminPeserta;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notifikasi;
+use App\Models\PesertaMagang;
+use App\Models\PenugasanPeserta;
 use App\Models\Tugas;
 use App\Services\PenugasanTemplateService;
 use Illuminate\Http\Request;
@@ -31,21 +34,40 @@ class TugasController extends Controller
 
         $tugas = Tugas::create($validated);
 
-        // Auto-assign ke semua peserta magang yang aktif
-        $pesertaAktifIds = \App\Models\PesertaMagang::where('status', 'aktif')->pluck('id_peserta');
+        // Auto-assign ke semua peserta magang yang aktif.
+        $pesertaAktif = PesertaMagang::query()
+            ->with('user')
+            ->where('status', 'aktif')
+            ->get();
 
-        $rows = $pesertaAktifIds->map(fn ($pesertaId) => [
+        $rows = $pesertaAktif->map(fn ($peserta) => [
             'tugas_id'   => $tugas->id_tugas,
-            'peserta_id' => $pesertaId,
+            'peserta_id' => $peserta->id_peserta,
             'created_at' => now(),
             'updated_at' => now(),
         ])->all();
 
-        \App\Models\PenugasanPeserta::insert($rows);
+        PenugasanPeserta::insert($rows);
+
+        foreach ($pesertaAktif as $peserta) {
+            if (! $peserta->user) {
+                continue;
+            }
+
+            Notifikasi::query()->create([
+                'user_id' => $peserta->user->id_user,
+                'judul' => 'Penugasan Magang Baru',
+                'pesan' => 'Tugas baru "'.$tugas->judul.'" telah diberikan kepada Anda. Silakan buka menu Penugasan untuk melihat detail dan deadline.',
+                'kategori' => 'penugasan',
+                'tipe' => 'info',
+                'referensi_id' => $tugas->id_tugas,
+                'dibaca' => false,
+            ]);
+        }
 
         return redirect()
             ->route('admin-peserta.tugas.index')
-            ->with('success', 'Tugas baru berhasil ditambahkan dan diberikan ke ' . count($rows) . ' peserta aktif.');
+            ->with('success', 'Tugas baru berhasil ditambahkan, diberikan, dan dinotifikasikan melalui portal/email ke ' . count($rows) . ' peserta aktif.');
     }
 
     public function update(Request $request, Tugas $tugas)
@@ -64,9 +86,31 @@ class TugasController extends Controller
         $validated['instansi'] = strtolower($validated['instansi']);
         $tugas->update($validated);
 
+        $pesertaDitugaskan = PenugasanPeserta::query()
+            ->with('peserta.user')
+            ->where('tugas_id', $tugas->id_tugas)
+            ->get();
+
+        foreach ($pesertaDitugaskan as $penugasan) {
+            $user = $penugasan->peserta?->user;
+            if (! $user) {
+                continue;
+            }
+
+            Notifikasi::query()->create([
+                'user_id' => $user->id_user,
+                'judul' => 'Penugasan Magang Diperbarui',
+                'pesan' => 'Detail tugas "'.$tugas->judul.'" telah diperbarui oleh Admin. Silakan cek kembali materi, instruksi, dan deadline di menu Penugasan.',
+                'kategori' => 'penugasan',
+                'tipe' => 'info',
+                'referensi_id' => $tugas->id_tugas,
+                'dibaca' => false,
+            ]);
+        }
+
         return redirect()
             ->route('admin-peserta.tugas.index')
-            ->with('success', 'Tugas berhasil diperbarui.');
+            ->with('success', 'Tugas berhasil diperbarui dan perubahan telah dikirim melalui portal/email kepada peserta yang ditugaskan.');
     }
 
     public function destroy(Tugas $tugas)
@@ -115,13 +159,10 @@ class TugasController extends Controller
 
     public function downloadTemplate()
     {
-       $file = public_path('template/template_tugas_mingguan.xlsx');
-
-        if (!file_exists($file)) {
-            abort(404);
-        }
-
-        return response()->download($file);
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\TemplateTugasMingguanExport(),
+            'template_tugas_mingguan.xlsx'
+        );
     }
 
 

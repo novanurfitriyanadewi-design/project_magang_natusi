@@ -293,7 +293,7 @@
 
     {{-- Modal detail --}}
     <template x-teleport="body">
-        <div x-show="detailOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-md" @click.self="closeDetail()">
+        <div x-show="detailOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center overflow-y-auto bg-slate-950/60 p-4" @click.self="closeDetail()">
             <section x-show="detailOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="my-auto w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_rgba(15,23,42,0.30)]">
                 <header class="flex items-start justify-between gap-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5">
                     <div>
@@ -342,7 +342,7 @@
 
     {{-- Modal map --}}
     <template x-teleport="body">
-        <div x-show="mapOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-md" @click.self="closeMap()">
+        <div x-show="mapOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[9999] flex h-screen w-screen items-center justify-center overflow-y-auto bg-slate-950/60 p-4" @click.self="closeMap()">
             <section x-show="mapOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="my-auto w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-[0_30px_80px_rgba(15,23,42,0.30)]">
                 <header class="flex items-start justify-between gap-4 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 via-blue-50 to-cyan-50 px-6 py-5">
                     <div>

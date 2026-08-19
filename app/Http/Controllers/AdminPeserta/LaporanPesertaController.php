@@ -19,7 +19,7 @@ class LaporanPesertaController extends Controller
     {
         $search       = $request->get('search');
         $statusFilter = $request->get('status_filter', 'overall'); // overall | active | non-active
-        $year         = (int) $request->get('year', now()->year);
+        $year         = (int) $request->get('year', 0);
 
         $query = PesertaMagang::with(['user', 'permintaan']);
 
@@ -42,7 +42,7 @@ class LaporanPesertaController extends Controller
             $query->whereIn('status', ['selesai', 'dibatalkan']);
         }
 
-        if ($year) {
+        if ($year > 0) {
             $query->whereYear('tgl_mulai', $year);
         }
 
@@ -52,14 +52,16 @@ class LaporanPesertaController extends Controller
             ->withQueryString();
 
         // Statistik (mengikuti filter tahun yang dipilih)
+        $statsBase = PesertaMagang::query()->when($year > 0, fn ($q) => $q->whereYear('tgl_mulai', $year));
         $stats = [
-            'total'    => PesertaMagang::whereYear('tgl_mulai', $year)->count(),
-            'aktif'    => PesertaMagang::whereYear('tgl_mulai', $year)->where('status', 'aktif')->count(),
-            'nonaktif' => PesertaMagang::whereYear('tgl_mulai', $year)->whereIn('status', ['selesai', 'dibatalkan'])->count(),
+            'total'    => (clone $statsBase)->count(),
+            'aktif'    => (clone $statsBase)->where('status', 'aktif')->count(),
+            'nonaktif' => (clone $statsBase)->whereIn('status', ['selesai', 'dibatalkan'])->count(),
         ];
 
         // Data grafik tren bulanan (Universitas vs SMK)
-        [$universitas, $smk] = $this->getTrendData($year);
+        $chartYear = $year > 0 ? $year : now()->year;
+        [$universitas, $smk] = $this->getTrendData($chartYear);
         $chartMax = max(1, max(array_merge($universitas, $smk)));
 
         $pointsUniversitas = $this->buildPoints($universitas, $chartMax);
@@ -169,7 +171,7 @@ class LaporanPesertaController extends Controller
         PesertaMagang::create($validated);
 
         return redirect()
-            ->route('admin-peserta.laporan-peserta')
+            ->route('admin-peserta.laporan-peserta.index')
             ->with('success', 'Peserta magang berhasil ditambahkan.');
     }
 
@@ -195,7 +197,7 @@ class LaporanPesertaController extends Controller
         $pesertaMagang->update($validated);
 
         return redirect()
-            ->route('admin-peserta.laporan.peserta')
+            ->route('admin-peserta.laporan-peserta.index')
             ->with('success', 'Data peserta berhasil diperbarui.');
     }
 
@@ -207,7 +209,7 @@ class LaporanPesertaController extends Controller
         $pesertaMagang->delete();
 
         return redirect()
-            ->route('admin-peserta.laporan.peserta')
+            ->route('admin-peserta.laporan-peserta.index')
             ->with('success', 'Peserta berhasil dihapus.');
     }
 }

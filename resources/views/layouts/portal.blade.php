@@ -16,7 +16,10 @@
     <!-- Material Symbols -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- Asset portal dibuat statis agar Alpine tidak mati saat Vite/manifest berubah --}}
+    <link rel="stylesheet" href="{{ asset('static/portal-app.css') }}">
+    <link rel="stylesheet" href="{{ asset('static/peserta-ui.css') }}">
+    <script defer src="{{ asset('static/alpine.min.js') }}"></script>
 
     @stack('styles')
 
@@ -60,7 +63,7 @@
 
 </head>
 
-<body class="bg-slate-50">
+<body class="{{ auth()->check() && auth()->user()->role === 'peserta' ? 'peserta-ui ' : '' }}bg-slate-50">
 
 <div
     x-data="{
