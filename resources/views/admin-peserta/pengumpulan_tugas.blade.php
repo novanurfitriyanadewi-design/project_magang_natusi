@@ -156,14 +156,25 @@
                                 @endif
                             </td>
                             <td class="px-5 py-4 text-center">
-                                <span @class([
-                                    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-extrabold',
-                                    'border-rose-200 bg-rose-50 text-rose-700' => $isLate,
-                                    'border-emerald-200 bg-emerald-50 text-emerald-700' => !$isLate,
-                                ])>
-                                    <span @class(['h-1.5 w-1.5 rounded-full', 'bg-rose-500' => $isLate, 'bg-emerald-500' => !$isLate])></span>
-                                    {{ $isLate ? 'Terlambat' : 'Mengumpulkan' }}
-                                </span>
+                                @php
+                                    $reviewStatus = (string) ($item->status_review ?: 'disetujui');
+                                @endphp
+                                <div class="flex flex-col items-center gap-1.5">
+                                    <span @class([
+                                        'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold',
+                                        'border-amber-200 bg-amber-50 text-amber-700' => $reviewStatus === 'menunggu_review',
+                                        'border-orange-200 bg-orange-50 text-orange-700' => $reviewStatus === 'perlu_revisi',
+                                        'border-emerald-200 bg-emerald-50 text-emerald-700' => $reviewStatus === 'disetujui',
+                                    ])>
+                                        <span class="material-symbols-outlined text-[14px]">{{ $reviewStatus === 'menunggu_review' ? 'hourglass_top' : ($reviewStatus === 'perlu_revisi' ? 'edit_note' : 'verified') }}</span>
+                                        {{ $reviewStatus === 'menunggu_review' ? 'Menunggu Koreksi' : ($reviewStatus === 'perlu_revisi' ? 'Perlu Revisi' : 'Disetujui') }}
+                                    </span>
+                                    @if($isLate)
+                                        <span class="text-[10px] font-semibold text-rose-600">Terlambat</span>
+                                    @elseif((int) $item->revisi_ke > 0)
+                                        <span class="text-[10px] font-semibold text-slate-400">Revisi ke-{{ $item->revisi_ke }}</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <a href="{{ route('admin-peserta.pengumpulan-tugas.show', $item) }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-[0_8px_18px_rgba(14,165,233,0.22)] transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-sky-100">

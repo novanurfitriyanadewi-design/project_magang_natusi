@@ -375,17 +375,38 @@ class PenugasanTemplateService
             return;
         }
 
-        $submittedTaskIds = PengumpulanTugas::query()
+        // Hanya pengumpulan yang SUDAH DISETUJUI admin yang dianggap selesai.
+        // Upload pertama / file revisi masih menunggu koreksi sehingga minggu
+        // berikutnya belum boleh terbuka.
+        $approvedTaskIds = PengumpulanTugas::query()
             ->where('peserta_id', $participant->id_peserta)
+            ->where(function ($query): void {
+                $query->where('status_review', 'disetujui')
+                    // Kompatibilitas bila ada record lama sebelum migration.
+                    ->orWhereNull('status_review');
+            })
             ->pluck('tugas_id')
             ->map(fn ($id) => (int) $id)
             ->all();
 
-        // Pengumpulan adalah sumber kebenaran utama bahwa tugas sudah selesai.
         foreach ($assignments as $assignment) {
-            if (in_array((int) $assignment->tugas_id, $submittedTaskIds, true)
-                && $assignment->status !== 'selesai') {
+            if (!$assignment->tugas
+                || !in_array($assignment->tugas->kategori_tugas, ['tugas', 'laporan'], true)) {
+                continue;
+            }
+
+            $approved = in_array((int) $assignment->tugas_id, $approvedTaskIds, true);
+
+            if ($approved && $assignment->status !== 'selesai') {
                 $assignment->status = 'selesai';
+                $assignment->save();
+                continue;
+            }
+
+            // Jika admin meminta revisi atas tugas yang sebelumnya sempat
+            // berstatus selesai, kembalikan statusnya agar progres terkunci lagi.
+            if (!$approved && $assignment->status === 'selesai') {
+                $assignment->status = 'terjadwal';
                 $assignment->save();
             }
         }
@@ -409,7 +430,7 @@ class PenugasanTemplateService
             $weekCompleted = $weekAssignments->every(
                 fn (PenugasanPeserta $assignment) =>
                     $assignment->status === 'selesai'
-                    || in_array((int) $assignment->tugas_id, $submittedTaskIds, true)
+                    || in_array((int) $assignment->tugas_id, $approvedTaskIds, true)
             );
 
             if ($weekCompleted) {

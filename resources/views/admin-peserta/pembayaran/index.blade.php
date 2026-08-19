@@ -3,6 +3,45 @@
 @section('title', 'Data Pembayaran')
 
 @section('content')
+<style>
+    .payment-detail-modal {
+        width: min(1180px, calc(100vw - 40px));
+        max-width: 1180px;
+    }
+    .payment-detail-grid {
+        display: grid;
+        grid-template-columns: minmax(440px, 0.92fr) minmax(560px, 1.18fr);
+    }
+    .payment-detail-info {
+        border-right: 1px solid #e2e8f0;
+    }
+    .payment-detail-modal dd,
+    .payment-detail-value {
+        font-weight: 400 !important;
+    }
+    .payment-detail-modal h2,
+    .payment-detail-modal h3 {
+        font-weight: 600 !important;
+    }
+    .payment-detail-modal dt {
+        font-weight: 600 !important;
+    }
+    .payment-detail-modal .payment-status-badge {
+        font-weight: 500 !important;
+    }
+    @media (max-width: 980px) {
+        .payment-detail-modal {
+            width: min(760px, calc(100vw - 28px));
+        }
+        .payment-detail-grid {
+            grid-template-columns: 1fr;
+        }
+        .payment-detail-info {
+            border-right: 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+    }
+</style>
 <div class="space-y-6" x-data="{
     detailOpen: false,
     detail: {},
@@ -93,13 +132,14 @@
 
         {{-- Tabel --}}
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[1280px] border-collapse text-left">
+            <table class="w-full min-w-[1420px] border-collapse text-left">
                 <thead>
                     <tr class="border-b border-slate-200 bg-slate-50/80 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
                         <th class="px-6 py-4">Nama</th>
                         <th class="px-5 py-4">Jenjang Pendidikan</th>
                         <th class="px-5 py-4">No. Telepon</th>
                         <th class="px-5 py-4">Tanggal Pengiriman</th>
+                        <th class="px-5 py-4">Periode</th>
                         <th class="px-5 py-4">Bukti Pembayaran</th>
                         <th class="px-5 py-4 text-center">Status</th>
                         <th class="px-6 py-4 text-right">Aksi</th>
@@ -114,7 +154,8 @@
                             $rawJenjang = mb_strtolower((string)($peserta?->tingkat_pendidikan ?? $peserta?->jenjang_pendidikan ?? $peserta?->permintaan?->jenjang_pendidikan ?? $peserta?->instansi ?? ''));
                             $jenjang = str_contains($rawJenjang, 'universitas') || str_contains($rawJenjang, 'mahasiswa') || str_contains($rawJenjang, 'kampus') ? 'Universitas' : 'SMK';
                             $tanggalKirim = $pembayaran->tgl_bayar ?? $pembayaran->created_at;
-                            $buktiUrl = $pembayaran->bukti_transfer ? \Illuminate\Support\Facades\Storage::disk('public')->url($pembayaran->bukti_transfer) : null;
+                            $buktiUrl = $pembayaran->bukti_transfer ? route('admin-peserta.pembayaran.bukti', $pembayaran) : null;
+                            $buktiDownloadUrl = $pembayaran->bukti_transfer ? route('admin-peserta.pembayaran.bukti.download', $pembayaran) : null;
                             $buktiNama = $pembayaran->bukti_transfer ? basename($pembayaran->bukti_transfer) : 'Tidak ada bukti';
                             $isPdf = $pembayaran->bukti_transfer && mb_strtolower(pathinfo($pembayaran->bukti_transfer, PATHINFO_EXTENSION)) === 'pdf';
                             $isAccepted = $pembayaran->status === 'lunas';
@@ -125,6 +166,14 @@
                             $tolakAction = route('admin-peserta.pembayaran.tolak', $pembayaran);
                             $tanggalText = $tanggalKirim?->translatedFormat('d M Y, H:i') ?? '-';
                             $nominalFormatted = 'Rp ' . number_format($pembayaran->nominal ?? 0, 0, ',', '.');
+                            $periodeMulai = $pembayaran->periode_mulai?->copy()->startOfMonth() ?? $tanggalKirim?->copy()->startOfMonth();
+                            $periodeSelesai = $pembayaran->periode_selesai?->copy()->endOfMonth() ?? $periodeMulai?->copy()->endOfMonth();
+                            $jumlahBulan = max(1, (int) ($pembayaran->jumlah_bulan ?? 1));
+                            $periodeText = $periodeMulai
+                                ? ($periodeMulai->format('Y-m') === $periodeSelesai?->format('Y-m')
+                                    ? $periodeMulai->translatedFormat('F Y')
+                                    : $periodeMulai->translatedFormat('F Y') . ' – ' . $periodeSelesai->translatedFormat('F Y'))
+                                : '-';
                             $idPembayaran = $pembayaran->id_pembayaran;
                             $payId = 'PAY-' . str_pad((string) $idPembayaran, 5, '0', STR_PAD_LEFT);
                             $detailPayload = [
@@ -134,9 +183,12 @@
                                 'telepon' => $telepon,
                                 'tanggal' => $tanggalText . ' WIB',
                                 'nominal' => $nominalFormatted,
+                                'periode' => $periodeText,
+                                'jumlahBulan' => $jumlahBulan,
                                 'status' => $statusLabel,
                                 'buktiUrl' => $buktiUrl ?? '',
                                 'buktiNama' => $buktiNama,
+                                'buktiDownloadUrl' => $buktiDownloadUrl ?? '',
                                 'isPdf' => (bool) $isPdf,
                                 'acceptAction' => $acceptAction,
                                 'tolakAction' => $tolakAction,
@@ -176,6 +228,12 @@
                                 @else
                                     <span class="text-sm italic text-slate-400">Tanggal tidak tersedia</span>
                                 @endif
+                            </td>
+
+                            {{-- Periode --}}
+                            <td class="px-5 py-4">
+                                <p class="text-sm font-normal text-slate-700">{{ $periodeText }}</p>
+                                <p class="mt-0.5 text-xs text-slate-400">{{ $jumlahBulan }} bulan</p>
                             </td>
 
                             {{-- Bukti --}}
@@ -241,12 +299,12 @@
     <template x-teleport="body">
         <div x-cloak x-show="detailOpen" x-transition.opacity class="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/65 px-4 py-6" @click.self="closeDetail()">
             <div class="flex min-h-full items-center justify-center">
-                <article x-show="detailOpen" x-transition.scale.origin.center role="dialog" aria-modal="true" aria-labelledby="detail-pembayaran-title" class="w-full max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl" style="width:min(820px,calc(100vw - 32px))">
+                <article x-show="detailOpen" x-transition.scale.origin.center role="dialog" aria-modal="true" aria-labelledby="detail-pembayaran-title" class="payment-detail-modal w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
                     {{-- Header putih --}}
                     <header class="flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5">
                         <div>
-                            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">Verifikasi pembayaran</p>
-                            <h2 id="detail-pembayaran-title" class="mt-1 text-xl font-extrabold text-slate-900">Detail Pembayaran Peserta</h2>
+                            <p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Verifikasi pembayaran</p>
+                            <h2 id="detail-pembayaran-title" class="mt-1 text-xl font-semibold text-slate-900">Detail Pembayaran Peserta</h2>
                             <p class="mt-0.5 text-sm text-slate-500">Periksa identitas dan bukti pembayaran sebelum menerima transaksi.</p>
                         </div>
                         <button type="button" @click="closeDetail()" class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600" aria-label="Tutup detail">
@@ -255,64 +313,91 @@
                     </header>
 
                     {{-- Body grid --}}
-                    <div class="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
+                    <div class="payment-detail-grid">
                         {{-- Informasi --}}
-                        <section class="border-b border-slate-200 p-6 lg:border-b-0 lg:border-r">
-                            <h3 class="text-sm font-extrabold text-slate-900">Informasi Pembayaran</h3>
+                        <section class="payment-detail-info p-7">
+                            <h3 class="text-sm font-semibold text-slate-900">Informasi Pembayaran</h3>
                             <dl class="mt-5 space-y-4">
                                 <div class="rounded-2xl bg-slate-50 p-4">
-                                    <dt class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">Nama Peserta</dt>
-                                    <dd class="mt-1 text-sm font-bold text-slate-800" x-text="detail.nama"></dd>
+                                    <dt class="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Nama Peserta</dt>
+                                    <dd class="mt-1 text-sm font-normal text-slate-800" x-text="detail.nama"></dd>
                                 </div>
                                 <div class="grid gap-3 sm:grid-cols-2">
                                     <div class="rounded-2xl bg-slate-50 p-4">
-                                        <dt class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">Jenjang</dt>
-                                        <dd class="mt-1 text-sm font-bold text-slate-800" x-text="detail.jenjang"></dd>
+                                        <dt class="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Jenjang</dt>
+                                        <dd class="mt-1 text-sm font-normal text-slate-800" x-text="detail.jenjang"></dd>
                                     </div>
                                     <div class="rounded-2xl bg-slate-50 p-4">
-                                        <dt class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">No. Telepon</dt>
-                                        <dd class="mt-1 text-sm font-bold text-slate-800" x-text="detail.telepon"></dd>
+                                        <dt class="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">No. Telepon</dt>
+                                        <dd class="mt-1 text-sm font-normal text-slate-800" x-text="detail.telepon"></dd>
                                     </div>
                                 </div>
                                 <div class="grid gap-3 sm:grid-cols-2">
                                     <div class="rounded-2xl bg-slate-50 p-4">
-                                        <dt class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">Tanggal Pengiriman</dt>
-                                        <dd class="mt-1 text-sm font-bold text-slate-800" x-text="detail.tanggal"></dd>
+                                        <dt class="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Tanggal Pengiriman</dt>
+                                        <dd class="mt-1 text-sm font-normal text-slate-800" x-text="detail.tanggal"></dd>
                                     </div>
                                     <div class="rounded-2xl bg-slate-50 p-4">
-                                        <dt class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">Nominal</dt>
-                                        <dd class="mt-1 text-sm font-bold text-slate-800" x-text="detail.nominal"></dd>
+                                        <dt class="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Nominal</dt>
+                                        <dd class="mt-1 text-sm font-normal text-slate-800" x-text="detail.nominal"></dd>
                                     </div>
+                                </div>
+                                <div class="rounded-2xl bg-sky-50 p-4 ring-1 ring-sky-100">
+                                    <dt class="text-[10px] font-semibold uppercase tracking-[0.12em] text-sky-600">Periode Pembayaran</dt>
+                                    <dd class="mt-1 text-sm font-normal text-slate-800"><span x-text="detail.periode"></span> <span class="text-xs text-slate-500" x-text="'(' + detail.jumlahBulan + ' bulan)'"></span></dd>
                                 </div>
                                 <div class="rounded-2xl bg-slate-50 p-4">
-                                    <dt class="text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400">Status</dt>
+                                    <dt class="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Status</dt>
                                     <dd class="mt-1">
-                                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-bold" :class="detail.status === 'Diterima' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'" x-text="detail.status"></span>
+                                        <span class="inline-flex rounded-full px-3 py-1 payment-status-badge text-xs font-medium" :class="detail.status === 'Diterima' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'" x-text="detail.status"></span>
                                     </dd>
                                 </div>
                             </dl>
                         </section>
 
                         {{-- Bukti --}}
-                        <section class="p-6">
-                            <h3 class="text-sm font-extrabold text-slate-900">Bukti Pembayaran</h3>
-                            <div class="mt-4 flex min-h-[300px] flex-col items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <section class="p-7">
+                            <h3 class="text-sm font-semibold text-slate-900">Bukti Pembayaran</h3>
+                            <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
                                 <template x-if="detail.buktiUrl">
-                                    <div class="w-full text-center">
-                                        <template x-if="!detail.isPdf">
-                                            <img :src="detail.buktiUrl" :alt="detail.buktiNama" class="mx-auto max-h-[350px] rounded-lg object-contain shadow-sm">
-                                        </template>
-                                        <template x-if="detail.isPdf">
-                                            <iframe :src="detail.buktiUrl" class="h-[350px] w-full rounded-lg border border-slate-200"></iframe>
-                                        </template>
-                                        <a :href="detail.buktiUrl" target="_blank" download class="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sky-600 hover:underline">
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                            Unduh Bukti Pembayaran
-                                        </a>
+                                    <div class="w-full">
+                                        <div class="flex min-h-[320px] items-center justify-center bg-slate-100/70 p-4">
+                                            <template x-if="!detail.isPdf">
+                                                <a :href="detail.buktiUrl" target="_blank" class="block w-full" title="Klik untuk melihat ukuran penuh">
+                                                    <img
+                                                        :src="detail.buktiUrl"
+                                                        :alt="detail.buktiNama"
+                                                        class="mx-auto max-h-[420px] max-w-full rounded-xl bg-white object-contain shadow-sm ring-1 ring-slate-200"
+                                                    >
+                                                </a>
+                                            </template>
+                                            <template x-if="detail.isPdf">
+                                                <iframe :src="detail.buktiUrl" title="Preview bukti pembayaran" class="h-[420px] w-full rounded-xl border border-slate-200 bg-white"></iframe>
+                                            </template>
+                                        </div>
+
+                                        <div class="flex flex-col gap-3 border-t border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                                            <div class="min-w-0 text-left">
+                                                <p class="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">File bukti</p>
+                                                <p class="mt-0.5 truncate text-xs font-normal text-slate-700" x-text="detail.buktiNama"></p>
+                                            </div>
+                                            <div class="flex shrink-0 items-center gap-2">
+                                                <a :href="detail.buktiUrl" target="_blank" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 text-xs font-bold text-sky-700 transition hover:bg-sky-100">
+                                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+                                                    Lihat Penuh
+                                                </a>
+                                                <a :href="detail.buktiDownloadUrl" class="inline-flex h-9 items-center gap-1.5 rounded-xl bg-sky-600 px-3 text-xs font-bold text-white transition hover:bg-sky-700">
+                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4-4 4m0 0-4-4m4 4V4"/></svg>
+                                                    Unduh
+                                                </a>
+                                            </div>
+                                        </div>
                                     </div>
                                 </template>
                                 <template x-if="!detail.buktiUrl">
-                                    <p class="text-xs text-slate-400">Tidak ada lampiran bukti pembayaran.</p>
+                                    <div class="flex min-h-[320px] items-center justify-center p-6">
+                                        <p class="text-xs text-slate-400">Tidak ada lampiran bukti pembayaran.</p>
+                                    </div>
                                 </template>
                             </div>
                         </section>
@@ -321,7 +406,7 @@
                     {{-- Footer modal dengan tombol aksi --}}
                     <div class="border-t border-slate-200 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div class="text-xs text-slate-500">
-                            <span class="font-bold">ID Pembayaran:</span>
+                            <span class="font-medium">ID Pembayaran:</span>
                             <span x-text="detail.id || '#'"></span>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
@@ -363,7 +448,7 @@
                     <header class="flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5">
                         <div>
                             <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">Tolak pembayaran</p>
-                            <h2 id="tolak-pembayaran-title" class="mt-1 text-xl font-extrabold text-slate-900">Konfirmasi Penolakan</h2>
+                            <h2 id="tolak-pembayaran-title" class="mt-1 text-xl font-semibold text-slate-900">Konfirmasi Penolakan</h2>
                             <p class="mt-0.5 text-sm text-slate-500">Berikan alasan penolakan agar peserta dapat memperbaiki.</p>
                         </div>
                         <button type="button" @click="closeTolak()" class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600" aria-label="Tutup modal">

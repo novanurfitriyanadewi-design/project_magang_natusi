@@ -20,12 +20,19 @@ class PengumpulanTugas extends Model
         'link_external',
         'dikumpulkan_pada',
         'status',
+        'status_review',
+        'catatan_revisi',
+        'revisi_ke',
+        'reviewed_at',
+        'reviewed_by',
     ];
 
     protected function casts(): array
     {
         return [
             'dikumpulkan_pada' => 'datetime',
+            'reviewed_at' => 'datetime',
+            'revisi_ke' => 'integer',
         ];
     }
     public function tugas(): BelongsTo

@@ -5,8 +5,11 @@ namespace App\Http\Controllers\AdminPeserta;
 use App\Http\Controllers\Controller;
 use App\Models\Notifikasi;
 use App\Models\Pembayaran;
+use App\Services\PembayaranPeriodService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Validation\ValidationException;
 
 class DataPembayaranController extends Controller
@@ -67,7 +70,37 @@ class DataPembayaranController extends Controller
         ));
     }
 
-    public function terima(Pembayaran $pembayaran): RedirectResponse
+    public function bukti(Pembayaran $pembayaran): BinaryFileResponse
+    {
+        abort_unless($pembayaran->bukti_transfer, 404, 'Bukti pembayaran tidak tersedia.');
+
+        $disk = Storage::disk('public');
+        abort_unless($disk->exists($pembayaran->bukti_transfer), 404, 'File bukti pembayaran tidak ditemukan.');
+
+        $path = $disk->path($pembayaran->bukti_transfer);
+        $mime = $disk->mimeType($pembayaran->bukti_transfer) ?: 'application/octet-stream';
+
+        return response()->file($path, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="' . basename($pembayaran->bukti_transfer) . '"',
+            'Cache-Control' => 'private, max-age=300',
+        ]);
+    }
+
+    public function downloadBukti(Pembayaran $pembayaran): BinaryFileResponse
+    {
+        abort_unless($pembayaran->bukti_transfer, 404, 'Bukti pembayaran tidak tersedia.');
+
+        $disk = Storage::disk('public');
+        abort_unless($disk->exists($pembayaran->bukti_transfer), 404, 'File bukti pembayaran tidak ditemukan.');
+
+        return response()->download(
+            $disk->path($pembayaran->bukti_transfer),
+            basename($pembayaran->bukti_transfer)
+        );
+    }
+
+    public function terima(Pembayaran $pembayaran, PembayaranPeriodService $periodService): RedirectResponse
     {
         $pembayaran->load('peserta.user');
 
@@ -78,9 +111,9 @@ class DataPembayaranController extends Controller
                 'user_id' => $pembayaran->peserta->user->id_user,
                 'judul' => 'Pembayaran Diterima',
                 'pesan' => sprintf(
-                    'Pembayaran Anda sebesar Rp %s tanggal %s telah diverifikasi dan diterima oleh admin. Terima kasih!',
+                    'Pembayaran Anda sebesar Rp %s untuk periode %s telah diverifikasi dan diterima oleh admin. Status pembayaran periode tersebut sekarang lunas.',
                     number_format($pembayaran->nominal, 0, ',', '.'),
-                    optional($pembayaran->tgl_bayar)->translatedFormat('d F Y') ?? '-'
+                    $periodService->labelFor($pembayaran)
                 ),
                 'kategori' => 'pembayaran',
                 'tipe' => 'sukses',
@@ -90,7 +123,7 @@ class DataPembayaranController extends Controller
 
         return redirect()
             ->route('admin-peserta.pembayaran.index')
-            ->with('success', 'Pembayaran berhasil diterima dan ditandai lunas.');
+            ->with('success', 'Pembayaran berhasil diterima. Periode pembayaran terkait sudah ditandai lunas.');
     }
 
     public function tolak(Request $request, Pembayaran $pembayaran): RedirectResponse

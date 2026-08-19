@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PengumpulanTugas;
 use App\Models\PenugasanPeserta;
 use App\Models\PesertaMagang;
+use App\Services\AdminMagangNotificationService;
 use App\Services\PenugasanTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -17,8 +18,6 @@ class PenugasanController extends Controller
     {
         $peserta = $this->currentParticipant($request);
 
-        // Pastikan jadwal terbaru sudah terbentuk dan status minggu dikunci
-        // secara berjenjang sebelum halaman ditampilkan.
         $service->syncForParticipant($peserta);
         $service->refreshStatuses($peserta);
 
@@ -88,15 +87,12 @@ class PenugasanController extends Controller
             ->where('tugas_id', (int) $id_tugas)
             ->firstOrFail();
 
-        // Materi hanya untuk dibaca, bukan dikumpulkan.
         if ($assignment->tugas?->kategori_tugas === 'materi') {
             throw ValidationException::withMessages([
                 'file_jawaban' => 'Item ini adalah materi pembelajaran dan tidak memerlukan pengumpulan file.',
             ]);
         }
 
-        // Keamanan backend: minggu yang masih terkunci tetap ditolak walaupun
-        // user mencoba mengirim form secara manual dari DevTools/URL.
         if (!$service->canSubmit($peserta, $assignment)) {
             $week = (int) ($assignment->tugas?->minggu_ke ?? 0);
             $currentWeek = $service->currentSequentialWeek($peserta);
@@ -122,56 +118,101 @@ class PenugasanController extends Controller
             ->where('peserta_id', $peserta->id_peserta)
             ->first();
 
-        if ($existing) {
+        // Pengumpulan ulang hanya boleh jika admin memang meminta revisi.
+        if ($existing && $existing->status_review !== 'perlu_revisi') {
             throw ValidationException::withMessages([
-                'file_jawaban' => 'Tugas ini sudah pernah dikumpulkan.',
+                'file_jawaban' => $existing->status_review === 'menunggu_review'
+                    ? 'File sudah dikirim dan sedang menunggu koreksi Admin.'
+                    : 'Tugas ini sudah disetujui Admin dan tidak perlu dikumpulkan ulang.',
             ]);
         }
 
-        $path = $request->file('file_jawaban')
-            ->store('jawaban-tugas', 'public');
-
+        $path = $request->file('file_jawaban')->store('jawaban-tugas', 'public');
         $late = $assignment->deadline && now()->greaterThan($assignment->deadline);
 
         try {
-            PengumpulanTugas::create([
-                'tugas_id' => $assignment->tugas_id,
-                'peserta_id' => $peserta->id_peserta,
-                'file_jawaban' => $path,
-                'dikumpulkan_pada' => now(),
-                'status' => $late ? 'telat' : 'terkumpul',
-            ]);
+            if ($existing) {
+                $oldPath = $existing->file_jawaban;
+
+                $existing->update([
+                    'file_jawaban' => $path,
+                    'dikumpulkan_pada' => now(),
+                    'status_review' => 'menunggu_review',
+                    'reviewed_at' => null,
+                    'reviewed_by' => null,
+                    'revisi_ke' => ((int) $existing->revisi_ke) + 1,
+                ]);
+
+                if ($oldPath && $oldPath !== $path) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            } else {
+                PengumpulanTugas::create([
+                    'tugas_id' => $assignment->tugas_id,
+                    'peserta_id' => $peserta->id_peserta,
+                    'file_jawaban' => $path,
+                    'dikumpulkan_pada' => now(),
+                    'status' => $late ? 'telat' : 'terkumpul',
+                    'status_review' => 'menunggu_review',
+                    'revisi_ke' => 0,
+                ]);
+            }
         } catch (\Throwable $exception) {
             Storage::disk('public')->delete($path);
             throw $exception;
         }
 
-        $assignment->update(['status' => 'selesai']);
-
-        // Setelah tugas terakhir di minggu ini selesai, method ini otomatis
-        // membuka minggu berikutnya dan tetap mengunci minggu setelahnya.
+        // Belum dianggap selesai sebelum admin menyetujui.
+        $assignment->update(['status' => 'aktif']);
         $service->refreshStatuses($peserta);
-        $nextWeek = $service->currentSequentialWeek($peserta);
-        $finishedWeek = (int) ($assignment->tugas?->minggu_ke ?? 0);
 
-        $message = $late
-            ? 'Tugas berhasil dikumpulkan, tetapi melewati deadline.'
-            : 'Tugas berhasil dikumpulkan.';
-
-        if ($finishedWeek > 0 && $nextWeek && $nextWeek > $finishedWeek) {
-            $message .= " Seluruh tugas Minggu {$finishedWeek} selesai. Minggu {$nextWeek} sekarang terbuka.";
-        } elseif ($finishedWeek > 0 && $nextWeek === null) {
-            $message .= ' Seluruh tugas mingguan Anda sudah selesai.';
-        }
+        $isRevision = (bool) $existing;
+        app(AdminMagangNotificationService::class)->notify(
+            $isRevision ? 'File Revisi Tugas Dikirim' : 'Pengumpulan Tugas Baru',
+            sprintf(
+                '%s mengirim %s untuk tugas "%s". Silakan buka Data Pengumpulan Tugas untuk melakukan koreksi.',
+                $peserta->user?->nama ?? 'Peserta magang',
+                $isRevision ? 'file revisi' : 'file tugas',
+                $assignment->tugas?->judul ?? 'Penugasan'
+            ),
+            'penugasan',
+            $assignment->id_penugasan,
+            'info'
+        );
 
         return redirect()
-            ->route('peserta-magang.penugasan.index')
-            ->with('success', $message);
+            ->route('peserta-magang.penugasan.index', ['penugasan_id' => $assignment->id_penugasan])
+            ->with(
+                'success',
+                $isRevision
+                    ? 'File revisi berhasil dikirim. Tunggu koreksi Admin sebelum minggu berikutnya terbuka.'
+                    : 'Tugas berhasil dikumpulkan dan sedang menunggu koreksi Admin.'
+            );
+    }
+
+    /** Membuka file pengumpulan milik peserta sendiri. */
+    public function file(Request $request, PengumpulanTugas $pengumpulan)
+    {
+        $peserta = $this->currentParticipant($request);
+
+        abort_unless((int) $pengumpulan->peserta_id === (int) $peserta->id_peserta, 403);
+        abort_unless(
+            filled($pengumpulan->file_jawaban)
+                && Storage::disk('public')->exists($pengumpulan->file_jawaban),
+            404,
+            'File pengumpulan tidak ditemukan.'
+        );
+
+        return Storage::disk('public')->response(
+            $pengumpulan->file_jawaban,
+            basename($pengumpulan->file_jawaban)
+        );
     }
 
     private function currentParticipant(Request $request): PesertaMagang
     {
         return PesertaMagang::query()
+            ->with('user')
             ->where('user_id', $request->user()->id_user)
             ->firstOrFail();
     }

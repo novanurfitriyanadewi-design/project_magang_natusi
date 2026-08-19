@@ -24,7 +24,7 @@
                         Anda sudah melakukan presensi untuk hari ini. Sampai jumpa besok!
                     </div>
                 @else
-                    <form method="POST" action="{{ route('peserta-magang.absensi.store') }}" enctype="multipart/form-data" class="space-y-6" x-data="{ status: 'hadir', lat: null, lng: null, locating: false }">
+                    <form method="POST" action="{{ route('peserta-magang.absensi.store') }}" enctype="multipart/form-data" class="space-y-6" x-data="{ status: 'hadir' }" id="form-absensi-peserta">
                         @csrf
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <label class="relative group cursor-pointer">
@@ -74,36 +74,33 @@
                         </div>
 
                         <div x-show="status === 'hadir'" x-cloak class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                            <div class="flex items-center justify-between mb-2">
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
                                 <div class="flex items-center gap-2">
                                     <span class="material-symbols-outlined text-blue-600 text-xl">location_on</span>
-                                    <span class="font-semibold text-sm">Lokasi Saat Ini</span>
+                                    <div>
+                                        <span class="font-semibold text-sm text-slate-900">Lokasi Saat Ini</span>
+                                        <p class="text-xs text-slate-500">Aktifkan izin lokasi/GPS lalu tekan tombol deteksi.</p>
+                                    </div>
                                 </div>
-                                <button type="button" @click="
-                                    locating = true;
-                                    navigator.geolocation.getCurrentPosition(
-                                        (pos) => { lat = pos.coords.latitude; lng = pos.coords.longitude; locating = false; },
-                                        () => { locating = false; }
-                                    )
-                                " class="text-blue-600 text-xs font-semibold hover:underline flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-sm">refresh</span>
-                                    <span x-text="locating ? 'Mendeteksi...' : 'Perbarui'"></span>
+                                <button type="button" id="btn-detect-location"
+                                    class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100">
+                                    <span class="material-symbols-outlined text-sm">my_location</span>
+                                    <span id="location-button-text">Deteksi Lokasi</span>
                                 </button>
                             </div>
 
-                            <div class="aspect-video w-full rounded-lg bg-blue-50 border border-slate-200 flex flex-col items-center justify-center">
-                                <span class="material-symbols-outlined text-4xl text-blue-600 mb-2">my_location</span>
-                                <template x-if="lat && lng">
-                                    <p class="text-sm font-medium text-blue-600" x-text="'Lat: ' + lat.toFixed(6) + ', Lng: ' + lng.toFixed(6)"></p>
-                                </template>
-                                <template x-if="!lat || !lng">
-                                    <p class="text-sm text-slate-500">Klik "Perbarui" untuk mendeteksi lokasi Anda</p>
-                                </template>
+                            <div id="location-status-box" class="min-h-[150px] w-full rounded-lg border border-slate-200 bg-white flex flex-col items-center justify-center px-5 text-center">
+                                <span id="location-status-icon" class="material-symbols-outlined text-4xl text-blue-600 mb-2">location_searching</span>
+                                <p id="location-status-title" class="text-sm font-semibold text-slate-700">Lokasi belum dideteksi</p>
+                                <p id="location-status-message" class="mt-1 max-w-xl text-xs leading-5 text-slate-500">
+                                    Tekan “Deteksi Lokasi” dan izinkan browser mengakses lokasi Anda.
+                                </p>
+                                <p id="location-coordinate" class="mt-2 hidden text-xs font-medium text-blue-700"></p>
                             </div>
 
-                            <input type="hidden" name="latitude" :value="lat">
-                            <input type="hidden" name="longitude" :value="lng">
-                            <input type="hidden" name="alamat" :value="lat && lng ? `Koordinat ${lat.toFixed(6)}, ${lng.toFixed(6)}` : ''">
+                            <input type="hidden" name="latitude" id="attendance-latitude" value="{{ old('latitude') }}">
+                            <input type="hidden" name="longitude" id="attendance-longitude" value="{{ old('longitude') }}">
+                            <input type="hidden" name="alamat" id="attendance-address" value="{{ old('alamat') }}">
 
                             <div class="mt-4">
                                 <label class="block text-sm font-semibold text-slate-900 mb-2">Foto Kehadiran</label>
@@ -114,6 +111,13 @@
                             @error('latitude')
                                 <p class="text-xs text-red-600 mt-2">Lokasi wajib dideteksi sebelum submit.</p>
                             @enderror
+                            @error('longitude')
+                                <p class="text-xs text-red-600 mt-1">Koordinat lokasi belum lengkap. Silakan deteksi ulang lokasi.</p>
+                            @enderror
+
+                            <div class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+                                <span class="font-semibold">Catatan:</span> deteksi lokasi browser membutuhkan HTTPS atau localhost. Jika halaman dibuka melalui alamat IP HTTP seperti <span class="font-mono">http://192.168.x.x:8000</span>, browser dapat memblokir akses lokasi.
+                            </div>
                         </div>
 
                         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-blue-600/20">
@@ -249,5 +253,122 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('form-absensi-peserta');
+    const detectButton = document.getElementById('btn-detect-location');
+    if (!form || !detectButton) return;
+
+    const latitudeInput = document.getElementById('attendance-latitude');
+    const longitudeInput = document.getElementById('attendance-longitude');
+    const addressInput = document.getElementById('attendance-address');
+    const title = document.getElementById('location-status-title');
+    const message = document.getElementById('location-status-message');
+    const icon = document.getElementById('location-status-icon');
+    const coordinate = document.getElementById('location-coordinate');
+    const buttonText = document.getElementById('location-button-text');
+
+    const setLocationState = (type, heading, description, coords = null) => {
+        title.textContent = heading;
+        message.textContent = description;
+        coordinate.classList.add('hidden');
+        coordinate.textContent = '';
+
+        if (type === 'success') {
+            icon.textContent = 'location_on';
+            icon.className = 'material-symbols-outlined text-4xl text-emerald-600 mb-2';
+            if (coords) {
+                coordinate.textContent = `Lat: ${coords.lat.toFixed(6)}, Lng: ${coords.lng.toFixed(6)} · Akurasi ±${Math.round(coords.accuracy)} m`;
+                coordinate.classList.remove('hidden');
+            }
+        } else if (type === 'error') {
+            icon.textContent = 'location_off';
+            icon.className = 'material-symbols-outlined text-4xl text-red-500 mb-2';
+        } else {
+            icon.textContent = 'location_searching';
+            icon.className = 'material-symbols-outlined text-4xl text-blue-600 mb-2';
+        }
+    };
+
+    const detectLocation = () => {
+        if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            setLocationState(
+                'error',
+                'Lokasi diblokir karena koneksi belum aman',
+                `Halaman ini dibuka melalui ${location.origin}. Browser hanya mengizinkan lokasi pada HTTPS atau localhost. Gunakan HTTPS saat di-hosting, atau localhost saat tes di komputer ini.`
+            );
+            return;
+        }
+
+        if (!('geolocation' in navigator)) {
+            setLocationState('error', 'Perangkat tidak mendukung lokasi', 'Browser/perangkat ini tidak menyediakan fitur geolocation. Coba gunakan browser lain atau perangkat yang memiliki GPS/lokasi.');
+            return;
+        }
+
+        buttonText.textContent = 'Mendeteksi...';
+        detectButton.disabled = true;
+        detectButton.classList.add('opacity-60', 'cursor-not-allowed');
+        setLocationState('loading', 'Sedang mendeteksi lokasi', 'Tunggu beberapa saat dan pastikan GPS/lokasi perangkat aktif.');
+
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy || 0;
+
+                latitudeInput.value = lat;
+                longitudeInput.value = lng;
+                addressInput.value = `Koordinat ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+                setLocationState('success', 'Lokasi berhasil dideteksi', 'Koordinat sudah tersimpan dan siap digunakan untuk absensi.', { lat, lng, accuracy });
+                buttonText.textContent = 'Perbarui Lokasi';
+                detectButton.disabled = false;
+                detectButton.classList.remove('opacity-60', 'cursor-not-allowed');
+            },
+            function (error) {
+                latitudeInput.value = '';
+                longitudeInput.value = '';
+                addressInput.value = '';
+
+                let heading = 'Lokasi gagal dideteksi';
+                let description = 'Silakan coba lagi.';
+
+                if (error.code === error.PERMISSION_DENIED) {
+                    heading = 'Izin lokasi ditolak';
+                    description = 'Izinkan akses Location/Lokasi untuk situs ini melalui ikon di samping alamat browser, lalu tekan Deteksi Lokasi lagi.';
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    heading = 'Lokasi tidak tersedia';
+                    description = 'Aktifkan GPS/lokasi perangkat dan Wi-Fi/data lokasi, lalu coba kembali.';
+                } else if (error.code === error.TIMEOUT) {
+                    heading = 'Deteksi lokasi terlalu lama';
+                    description = 'Sinyal lokasi belum didapat. Pindah ke area dengan sinyal GPS/Wi-Fi yang lebih baik lalu coba lagi.';
+                }
+
+                setLocationState('error', heading, description);
+                buttonText.textContent = 'Coba Lagi';
+                detectButton.disabled = false;
+                detectButton.classList.remove('opacity-60', 'cursor-not-allowed');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
+    };
+
+    detectButton.addEventListener('click', detectLocation);
+
+    form.addEventListener('submit', function (event) {
+        const status = form.querySelector('input[name="status"]:checked')?.value;
+        if (status === 'hadir' && (!latitudeInput.value || !longitudeInput.value)) {
+            event.preventDefault();
+            setLocationState('error', 'Lokasi belum tersedia', 'Untuk status Hadir, tekan Deteksi Lokasi terlebih dahulu sampai koordinat berhasil ditemukan.');
+            document.getElementById('location-status-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+});
+</script>
 
 @endsection

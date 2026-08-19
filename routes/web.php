@@ -329,6 +329,10 @@ Route::middleware('admin.peserta')
             ->whereNumber('pengumpulan')
             ->name('pengumpulan-tugas.file');
 
+        Route::post('/pengumpulan-tugas/{pengumpulan}/review', [AdminPengumpulanTugasController::class, 'review'])
+            ->whereNumber('pengumpulan')
+            ->name('pengumpulan-tugas.review');
+
         Route::get('/pengumpulan-tugas/{pengumpulan}', [AdminPengumpulanTugasController::class, 'show'])
             ->whereNumber('pengumpulan')
             ->name('pengumpulan-tugas.show');
@@ -505,6 +509,9 @@ Route::middleware(['auth', 'role:peserta'])
         Route::post('/absensi', [PesertaMagangAbsensiController::class, 'store'])->name('absensi.store');
 
         Route::get('/penugasan', [PesertaMagangPenugasanController::class, 'index'])->name('penugasan.index');
+        Route::get('/penugasan/pengumpulan/{pengumpulan}/file', [PesertaMagangPenugasanController::class, 'file'])
+            ->whereNumber('pengumpulan')
+            ->name('penugasan.pengumpulan.file');
         Route::post('/penugasan/{id_tugas}/kumpul', [PesertaMagangPenugasanController::class, 'store'])->name('penugasan.store');
 
         Route::get('/aturan', [PesertaAturanController::class, 'index'])->name('aturan.index');
@@ -518,6 +525,9 @@ Route::middleware(['auth', 'role:peserta'])
         Route::post('/pembayaran', [PesertaMagangPembayaranController::class, 'store'])->name('pembayaran.store');
 
         Route::get('/laporan-mingguan', [PesertaMagangLaporanMingguanController::class, 'index'])->name('laporan-mingguan.index');
+        Route::get('/laporan-mingguan/template/{templateLaporan}/download', [PesertaMagangLaporanMingguanController::class, 'downloadTemplate'])
+            ->whereNumber('templateLaporan')
+            ->name('laporan-mingguan.template.download');
         Route::post('/laporan-mingguan', [PesertaMagangLaporanMingguanController::class, 'store'])->name('laporan-mingguan.store');
 
         Route::get('/sertifikat', [PesertaMagangSertifikatController::class, 'index'])->name('sertifikat.index');

@@ -16,14 +16,90 @@
         min-width: 0;
     }
 
+
+    /* Tombol revisi dibuat dengan CSS lokal agar tetap terlihat meskipun
+       utility Tailwind warna oranye belum masuk ke build Vite. */
+    .revision-file-input {
+        width: 100%;
+        margin-top: 1rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.75rem;
+        background: #fff;
+        padding: 0.45rem;
+        font-size: 0.875rem;
+        color: #334155;
+    }
+
+    .revision-file-input::file-selector-button {
+        border: 0;
+        border-radius: 0.6rem;
+        background: #f97316;
+        color: #fff;
+        font-weight: 700;
+        padding: 0.65rem 1rem;
+        margin-right: 1rem;
+        cursor: pointer;
+    }
+
+    .revision-file-input::file-selector-button:hover {
+        background: #ea580c;
+    }
+
+    .revision-submit-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 42px;
+        margin-top: 1rem;
+        border: 0;
+        border-radius: 0.75rem;
+        background: #f97316 !important;
+        color: #fff !important;
+        padding: 0.65rem 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 700;
+        line-height: 1.2;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+        cursor: pointer;
+    }
+
+    .revision-submit-btn:hover {
+        background: #ea580c !important;
+    }
+
     @media (min-width: 1024px) {
         .penugasan-two-column {
             grid-template-columns: minmax(360px, 0.9fr) minmax(520px, 1.35fr);
         }
 
+        /*
+         * Panel kanan tetap mengikuti viewport, tetapi isi detail memiliki
+         * scroll sendiri. Sebelumnya sticky tanpa max-height/overflow membuat
+         * bagian bawah detail tidak dapat dijangkau ketika kontennya panjang.
+         */
         .penugasan-detail-panel {
             position: sticky;
-            top: 1rem;
+            top: 6rem;
+            max-height: calc(100vh - 7.25rem);
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+            padding-right: 0.35rem;
+        }
+
+        .penugasan-detail-panel::-webkit-scrollbar {
+            width: 7px;
+        }
+
+        .penugasan-detail-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .penugasan-detail-panel::-webkit-scrollbar-thumb {
+            background: #a8bac8;
+            border-radius: 999px;
         }
     }
 </style>
@@ -72,21 +148,6 @@
         @endif
     </header>
 
-    <section class="rounded-2xl border border-sky-100 bg-sky-50/70 p-4">
-        <div class="flex items-start gap-3">
-            <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-700">
-                <span class="material-symbols-outlined">route</span>
-            </div>
-            <div>
-                <p class="font-bold text-slate-900">Alur penugasan berjenjang</p>
-                <p class="mt-1 text-sm leading-6 text-slate-600">
-                    Pelajari materi pada Minggu 1, lalu kumpulkan seluruh <strong>Tugas Materi</strong> dan <strong>Laporan Mingguan</strong> pada minggu tersebut.
-                    Minggu berikutnya baru terbuka setelah semua item yang wajib dikumpulkan pada minggu sebelumnya selesai. Materi tidak perlu di-upload.
-                </p>
-            </div>
-        </div>
-    </section>
-
     <div class="penugasan-two-column">
         {{-- KIRI: daftar penugasan --}}
         <aside class="penugasan-list-panel space-y-4">
@@ -114,7 +175,11 @@
                         $category = (string) ($task?->kategori_tugas ?? 'tugas');
                         $isMaterial = $category === 'materi';
                         $isCollectable = in_array($category, ['tugas', 'laporan'], true);
-                        $isCompleted = $isCollectable && ($assignment->status === 'selesai' || $submission);
+                        $reviewStatus = (string) ($submission?->status_review ?? '');
+                        $isApproved = $submission && in_array($reviewStatus, ['', 'disetujui'], true);
+                        $isWaitingReview = $submission && $reviewStatus === 'menunggu_review';
+                        $needsRevision = $submission && $reviewStatus === 'perlu_revisi';
+                        $isCompleted = $isCollectable && ($assignment->status === 'selesai' || $isApproved);
                         $isActive = $assignment->status === 'aktif' && !$isCompleted;
                         $isLocked = $assignment->status === 'terjadwal' && !$isCompleted;
                         $isSkipped = $assignment->status === 'dilewati';
@@ -142,9 +207,17 @@
                                 </span>
                             @endif
 
-                            @if($isCompleted)
+                            @if($needsRevision)
+                                <span class="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-bold text-orange-700 ring-1 ring-orange-200">
+                                    <span class="material-symbols-outlined text-[14px]">edit_note</span>Perlu Revisi
+                                </span>
+                            @elseif($isWaitingReview)
+                                <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 ring-1 ring-amber-200">
+                                    <span class="material-symbols-outlined text-[14px]">hourglass_top</span>Menunggu Koreksi
+                                </span>
+                            @elseif($isCompleted)
                                 <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-200">
-                                    <span class="material-symbols-outlined text-[14px]">check_circle</span>Selesai
+                                    <span class="material-symbols-outlined text-[14px]">check_circle</span>Disetujui
                                 </span>
                             @elseif($isLocked)
                                 <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-500 ring-1 ring-slate-200">
@@ -197,7 +270,11 @@
                     $detailCategory = (string) ($detailTask->kategori_tugas ?? 'tugas');
                     $detailIsMaterial = $detailCategory === 'materi';
                     $detailIsCollectable = in_array($detailCategory, ['tugas', 'laporan'], true);
-                    $detailCompleted = $detailIsCollectable && ($detailAssignment->status === 'selesai' || $detailSubmission);
+                    $detailReviewStatus = (string) ($detailSubmission?->status_review ?? '');
+                    $detailApproved = $detailSubmission && in_array($detailReviewStatus, ['', 'disetujui'], true);
+                    $detailWaitingReview = $detailSubmission && $detailReviewStatus === 'menunggu_review';
+                    $detailNeedsRevision = $detailSubmission && $detailReviewStatus === 'perlu_revisi';
+                    $detailCompleted = $detailIsCollectable && ($detailAssignment->status === 'selesai' || $detailApproved);
                     $detailActive = $detailAssignment->status === 'aktif' && !$detailCompleted;
                     $detailLocked = $detailAssignment->status === 'terjadwal' && !$detailCompleted;
                 @endphp
@@ -290,13 +367,58 @@
 
                             @if($detailIsMaterial)
                                 {{-- Materi sengaja tidak memiliki form upload. --}}
+                            @elseif($detailNeedsRevision)
+                                <div class="rounded-2xl border border-orange-200 bg-orange-50 p-5">
+                                    <div class="flex items-start gap-3">
+                                        <span class="material-symbols-outlined text-orange-600">edit_note</span>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="font-bold text-orange-900">Admin meminta revisi</p>
+                                            <p class="mt-2 whitespace-pre-line text-sm leading-6 text-orange-800">{{ $detailSubmission->catatan_revisi ?: 'Silakan perbaiki tugas sesuai arahan Admin.' }}</p>
+                                            <p class="mt-2 text-xs text-orange-700">Minggu berikutnya tetap terkunci sampai file revisi dikirim dan disetujui Admin.</p>
+                                            <a href="{{ route('peserta-magang.penugasan.pengumpulan.file', $detailSubmission) }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-orange-800 underline underline-offset-2">
+                                                <span class="material-symbols-outlined text-[16px]">open_in_new</span>Buka file terakhir
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <form action="{{ route('peserta-magang.penugasan.store', $detailTask->id_tugas) }}" method="POST" enctype="multipart/form-data" class="rounded-2xl border border-orange-200 bg-white p-5">
+                                    @csrf
+                                    <label class="block text-sm font-bold text-slate-800">Upload File Revisi</label>
+                                    <p class="mt-1 text-xs text-slate-500">PDF, DOC/DOCX, XLS/XLSX, ZIP, atau RAR. Maksimal 25 MB.</p>
+                                    <input type="file" name="file_jawaban" required accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar" class="revision-file-input">
+                                    <button type="submit" class="revision-submit-btn">
+                                        <span class="material-symbols-outlined text-[18px]">upload</span>Kirim File Revisi
+                                    </button>
+                                </form>
+                            @elseif($detailWaitingReview)
+                                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                                    <div class="flex items-start gap-3">
+                                        <span class="material-symbols-outlined text-amber-600">hourglass_top</span>
+                                        <div>
+                                            <p class="font-bold text-amber-900">Menunggu koreksi Admin</p>
+                                            <p class="mt-1 text-sm leading-6 text-amber-800">File sudah berhasil dikirim {{ $detailSubmission?->dikumpulkan_pada?->translatedFormat('d F Y, H:i') ?? '-' }}. Anda belum perlu mengirim ulang sampai Admin memberikan hasil koreksi.</p>
+                                            @if((int) $detailSubmission->revisi_ke > 0)
+                                                <p class="mt-2 text-xs font-semibold text-amber-700">File revisi ke-{{ $detailSubmission->revisi_ke }} sedang diperiksa.</p>
+                                            @endif
+                                            <a href="{{ route('peserta-magang.penugasan.pengumpulan.file', $detailSubmission) }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 underline underline-offset-2">
+                                                <span class="material-symbols-outlined text-[16px]">open_in_new</span>Buka file yang dikirim
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
                             @elseif($detailCompleted)
                                 <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
                                     <div class="flex items-start gap-3">
-                                        <span class="material-symbols-outlined text-emerald-600">task_alt</span>
+                                        <span class="material-symbols-outlined text-emerald-600">verified</span>
                                         <div>
-                                            <p class="font-bold text-emerald-800">{{ $detailCategory === 'laporan' ? 'Laporan sudah dikumpulkan' : 'Tugas sudah dikumpulkan' }}</p>
-                                            <p class="mt-1 text-sm text-emerald-700">Dikumpulkan {{ $detailSubmission?->dikumpulkan_pada?->translatedFormat('d F Y, H:i') ?? '-' }}.</p>
+                                            <p class="font-bold text-emerald-800">{{ $detailCategory === 'laporan' ? 'Laporan sudah disetujui Admin' : 'Tugas sudah disetujui Admin' }}</p>
+                                            <p class="mt-1 text-sm text-emerald-700">Tugas ini sudah dihitung selesai untuk progres mingguan.</p>
+                                            @if($detailSubmission)
+                                                <a href="{{ route('peserta-magang.penugasan.pengumpulan.file', $detailSubmission) }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 underline underline-offset-2">
+                                                    <span class="material-symbols-outlined text-[16px]">open_in_new</span>Buka file terakhir
+                                                </a>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -306,7 +428,7 @@
                                     <label class="block text-sm font-bold text-slate-800">
                                         {{ $detailCategory === 'laporan' ? 'Upload Laporan Mingguan' : 'Upload Hasil Tugas Materi' }}
                                     </label>
-                                    <p class="mt-1 text-xs text-slate-500">PDF, DOC/DOCX, XLS/XLSX, ZIP, atau RAR. Maksimal 25 MB.</p>
+                                    <p class="mt-1 text-xs text-slate-500">Setelah dikirim, tugas akan menunggu koreksi Admin. PDF, DOC/DOCX, XLS/XLSX, ZIP, atau RAR. Maksimal 25 MB.</p>
                                     <input type="file" name="file_jawaban" required accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar" class="mt-4 block w-full rounded-xl border border-slate-200 bg-white p-2 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:font-bold file:text-white hover:file:bg-blue-700">
                                     <button type="submit" class="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-sm hover:bg-blue-700">
                                         <span class="material-symbols-outlined text-[18px]">upload</span>

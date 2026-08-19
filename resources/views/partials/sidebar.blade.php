@@ -206,7 +206,11 @@
     style="background-color:#063551; background-image:linear-gradient(180deg,#063551 0%,#075177 52%,#052b45 100%);"
     aria-label="Navigasi portal"
 >
-    
+    <!-- Decorative background elements -->
+    <div class="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full border-[28px] border-white/[0.03]"></div>
+    <div class="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-sky-300/[0.05] blur-3xl"></div>
+    <div class="pointer-events-none absolute left-1/2 top-1/3 h-36 w-36 -translate-x-1/2 rounded-full bg-gradient-to-br from-sky-400/[0.03] to-transparent blur-2xl"></div>
+
     <div class="relative z-10 flex min-h-0 flex-1 flex-col">
         <div class="flex items-center justify-between px-2">
             <a href="{{ $homeRoute }}" class="group flex min-w-0 items-center gap-3">
