@@ -498,15 +498,31 @@
                                 <label for="position" class="block text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-700">
                                     Posisi Yang Dilamar
                                 </label>
-                                <input
+
+                                <select
                                     id="position"
                                     name="position"
-                                    type="text"
-                                    value="{{ old('position') }}"
-                                    placeholder="Contoh: Web Developer / Staff HRD"
                                     required
-                                    class="mt-1.5 block h-[42px] w-full rounded-lg border border-slate-300 bg-[#f8faff] px-3 text-[13px] text-slate-700 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-0 sm:text-sm"
+                                    class="mt-1.5 block h-[42px] w-full rounded-lg border border-slate-300 bg-[#f8faff] px-3 text-[13px] text-slate-700 focus:border-slate-400 focus:bg-white focus:ring-0 sm:text-sm"
                                 >
+                                    <option value="" disabled {{ old('position') ? '' : 'selected' }}>
+                                        Pilih Posisi Yang Dilamar
+                                    </option>
+                                    <option value="Web Developer" {{ old('position') == 'Web Developer' ? 'selected' : '' }}>
+                                        Web Developer
+                                    </option>
+                                    </option>
+                                    <option value="UI/UX Designer" {{ old('position') == 'UI/UX Designer' ? 'selected' : '' }}>
+                                        UI/UX Designer
+                                    </option>
+                                    <option value="Staff Administrasi" {{ old('position') == 'Staff Administrasi' ? 'selected' : '' }}>
+                                        Programmer
+                                    </option>
+                                    <option value="Marketing" {{ old('position') == 'Marketing' ? 'selected' : '' }}>
+                                        Marketing
+                                    </option>
+                                </select>
+
                                 @error('position')
                                     <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                                 @enderror
