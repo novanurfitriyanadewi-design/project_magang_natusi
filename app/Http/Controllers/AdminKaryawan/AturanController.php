@@ -21,7 +21,7 @@ class AturanController extends Controller
 
         $aturanList = $query->latest()->paginate(10)->withQueryString();
 
-        return view('admin-karyawan.aturan-perusahaan.index', compact('aturanList'));
+        return view('admin-karyawan.aturan.index', compact('aturanList'));
     }
 
     public function store(Request $request)

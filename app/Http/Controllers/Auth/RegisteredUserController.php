@@ -206,10 +206,6 @@ class RegisteredUserController extends Controller
                 'cv'            => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
                 'ijazah'        => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
                 'ktp'           => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-                'pas_foto'      => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:2048'],
-                'skck'          => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-                'portfolio'     => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,zip', 'max:5120'],
-                'pengalaman_kerja' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
             ];
         } else {
             $fileRules = [
@@ -253,8 +249,7 @@ class RegisteredUserController extends Controller
             'anggota.*.surat_pengajuan.mimes'    => 'Surat pengantar anggota harus berupa PDF, DOC, DOCX, JPG, JPEG, atau PNG.',
         ];
 
-<<<<<<< HEAD
-=======
+
         if ($roleSession === 'karyawan') {
             $messages['university.required'] = 'Pendidikan terakhir wajib diisi.';
             $messages['student_id.required'] = 'Posisi yang dilamar wajib diisi.';
@@ -299,7 +294,7 @@ class RegisteredUserController extends Controller
             ];
         }
 
->>>>>>> 859ba7b623b729b06f5638cfedfeb041e9ba866e
+
         $validated = $request->validate(
             array_merge(
                 [
@@ -382,7 +377,7 @@ class RegisteredUserController extends Controller
             }
         }
 
-<<<<<<< HEAD
+
         // Simpan Data User
         $user = User::create([
             'name'     => $validated['full_name'],
@@ -390,7 +385,7 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($validated['password']),
             'role'     => $roleSession === 'karyawan' ? 'pelamar_karyawan' : 'pelamar',
         ]);
-=======
+
         $magangBerkas = [];
         $anggotaBerkas = [];
         if ($roleSession === 'pelamar') {
@@ -580,11 +575,15 @@ class RegisteredUserController extends Controller
 
             return [$user, $permintaan];
         });
->>>>>>> 859ba7b623b729b06f5638cfedfeb041e9ba866e
+
 
         event(new Registered($user));
         Auth::login($user);
+        $request->session()->regenerate();
+        $request->session()->forget('register_role');
 
-        return redirect()->route('dashboard');
+        return redirect()
+            ->route('pengajuan.status')
+            ->with('success', 'Lamaran berhasil dikirim. Gunakan email dan kata sandi pendaftaran untuk memeriksa status.');
     }
 }

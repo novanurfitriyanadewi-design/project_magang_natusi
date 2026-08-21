@@ -424,6 +424,7 @@
                             @enderror
                         </div>
 
+
                         {{-- BERKAS PENGAJUAN MAGANG --}}
                         <div class="rounded-lg border border-sky-200 bg-sky-50/60 p-3.5">
                             <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-sky-800">Berkas Pengajuan Magang</p>
@@ -435,6 +436,62 @@
                                     @error('cv_magang')
                                         <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                                     @enderror
+
+                        {{-- Upload Berkas Lamaran (khusus Karyawan) --}}
+                        @if ($isEmployee)
+                            <div class="rounded-lg border border-slate-200 bg-slate-50/70 p-3.5">
+                                <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-700">
+                                    Berkas Lamaran (PDF/JPG/PNG, maks. 2MB per file)
+                                </p>
+
+                                <div class="mt-2.5 grid gap-2.5 sm:grid-cols-2">
+                                    @php
+    $berkasWajib = [
+        'surat_lamaran' => 'Surat Lamaran Kerja',
+        'cv'            => 'CV (Curriculum Vitae)',
+        'ijazah'        => 'Ijazah & Transkrip Nilai',
+        'ktp'           => 'Fotokopi KTP',
+    ];
+    $berkasOpsional = [];
+@endphp
+
+                                    @foreach ($berkasWajib as $field => $label)
+                                        <div>
+                                            <label for="{{ $field }}" class="block text-xs font-semibold text-slate-700">
+                                                {{ $label }} <span class="text-rose-500">*</span>
+                                            </label>
+                                            <input
+                                                id="{{ $field }}"
+                                                name="{{ $field }}"
+                                                type="file"
+                                                accept=".pdf,.jpg,.jpeg,.png"
+                                                required
+                                                class="mt-1 block w-full text-xs text-slate-600"
+                                            >
+                                            @error($field)
+                                                <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                    @endforeach
+
+                                    @foreach ($berkasOpsional as $field => $label)
+                                        <div>
+                                            <label for="{{ $field }}" class="block text-xs font-semibold text-slate-700">
+                                                {{ $label }} <span class="text-slate-400">(opsional)</span>
+                                            </label>
+                                            <input
+                                                id="{{ $field }}"
+                                                name="{{ $field }}"
+                                                type="file"
+                                                accept=".pdf,.jpg,.jpeg,.png"
+                                                class="mt-1 block w-full text-xs text-slate-600"
+                                            >
+                                            @error($field)
+                                                <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                    @endforeach
+>>>>>>>>> Temporary merge branch 2
                                 </div>
                                 <div>
                                     <label for="surat_pengajuan" class="block text-xs font-semibold text-slate-700">Surat Pengantar Ketua / Pemohon <span class="text-rose-500">*</span></label>
