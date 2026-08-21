@@ -198,15 +198,11 @@ class RegisteredUserController extends Controller
 
         if ($roleSession === 'karyawan') {
             $fileRules = [
-                'surat_lamaran'    => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-                'cv'               => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-                'ijazah'           => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-                'ktp'              => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-                'pas_foto'         => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:2048'],
-                'skck'             => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-                'portfolio'        => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,zip', 'max:5120'],
-                'pengalaman_kerja' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-            ];
+    'surat_lamaran' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+    'cv'            => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+    'ijazah'        => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+    'ktp'           => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+];
         } else {
             $fileRules = [
                 'cv_magang'       => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
@@ -487,7 +483,7 @@ class RegisteredUserController extends Controller
             $berkasPaths = [];
             $folderBerkas = 'permintaan-lamaran/' . Str::uuid();
 
-            foreach (['surat_lamaran', 'cv', 'ijazah', 'ktp', 'pas_foto', 'skck', 'portfolio', 'pengalaman_kerja'] as $field) {
+            foreach (['surat_lamaran', 'cv', 'ijazah', 'ktp'] as $field) {
                 if ($request->hasFile($field)) {
                     $berkasPaths["{$field}_path"] = $request->file($field)->store($folderBerkas, 'public');
                 }
