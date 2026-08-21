@@ -206,10 +206,6 @@ class RegisteredUserController extends Controller
                 'cv'            => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
                 'ijazah'        => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
                 'ktp'           => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-                'pas_foto'      => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:2048'],
-                'skck'          => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-                'portfolio'     => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,zip', 'max:5120'],
-                'pengalaman_kerja' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
             ];
         } else {
             $fileRules = [
@@ -335,17 +331,203 @@ class RegisteredUserController extends Controller
             }
         }
 
-        // Simpan Data User
-        $user = User::create([
-            'name'     => $validated['full_name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role'     => $roleSession === 'karyawan' ? 'pelamar_karyawan' : 'pelamar',
-        ]);
+        $magangBerkas = [];
+        $anggotaBerkas = [];
+        if ($roleSession === 'pelamar') {
+            $folderMagang = 'permintaan-magang/'.Str::uuid();
+            $magangBerkas = [
+                'cv_path'              => $request->file('cv_magang')->store($folderMagang.'/ketua', 'public'),
+                'surat_pengajuan_path' => $request->file('surat_pengajuan')->store($folderMagang.'/ketua', 'public'),
+            ];
+
+            foreach (array_values($validated['anggota'] ?? []) as $index => $anggota) {
+                $cv = $request->file("anggota.{$index}.cv_magang");
+                $surat = $request->file("anggota.{$index}.surat_pengajuan");
+
+                if (! $cv || ! $surat) {
+                    throw ValidationException::withMessages([
+                        "anggota.{$index}.cv_magang" => 'CV dan surat pengantar setiap anggota wajib diunggah.',
+                    ]);
+                }
+
+                $folderAnggota = $folderMagang.'/anggota-'.($index + 2);
+                $anggotaBerkas[$index] = [
+                    'cv_path'              => $cv->store($folderAnggota, 'public'),
+                    'surat_pengajuan_path' => $surat->store($folderAnggota, 'public'),
+                ];
+            }
+        }
+
+        $email = strtolower(trim($validated['email']));
+
+        $username = $roleSession === 'pelamar'
+            ? $this->makeApplicantUsernameFromEmail($email)
+            : $this->makeUniqueUsername($validated['student_id'], $email);
+
+        // ==========================================
+        // 1. ALUR PENDAFTARAN PELAMAR MAGANG
+        // ==========================================
+        if ($roleSession === 'pelamar') {
+            [$user, $permintaan] = DB::transaction(function () use ($validated, $email, $username, $magangBerkas, $anggotaBerkas) {
+                $user = User::query()->create([
+                    'nama'                 => trim($validated['full_name']),
+                    'username'             => $username,
+                    'email'                => $email,
+                    'role'                 => 'pelamar',
+                    'university'           => trim($validated['university']),
+                    'student_id'           => trim($validated['student_id']),
+                    'major'                => trim($validated['major']),
+                    'phone'                => trim($validated['phone']),
+                    'description'          => filled($validated['description'] ?? null) ? trim($validated['description']) : null,
+                    'password'             => Hash::make($validated['password']),
+                    'wajib_ganti_password' => false,
+                ]);
+
+                $permintaan = PermintaanMagang::query()->create(array_merge([
+                    'user_id'        => $user->id_user,
+                    'nama_pemohon'   => trim($validated['full_name']),
+                    'email'          => $email,
+                    'nama_sekolah'   => trim($validated['university']),
+                    'no_induk'       => trim($validated['student_id']),
+                    'jurusan'        => trim($validated['major']),
+                    'jenjang'        => $validated['jenjang'],
+                    'tipe_pengajuan' => $validated['tipe_pengajuan'],
+                    'jumlah_anggota' => $validated['jumlah_anggota'],
+                    'no_hp'          => trim($validated['phone']),
+                    'pesan'          => filled($validated['description'] ?? null) ? trim($validated['description']) : null,
+                    'status'         => 'menunggu',
+                    'akun_dibuat'    => false,
+                ], $magangBerkas));
+
+                $permintaan->anggota()->create([
+                    'user_id'              => $user->id_user,
+                    'nama'                 => trim($validated['full_name']),
+                    'email'                => $email,
+                    'no_induk'             => trim($validated['student_id']),
+                    'jurusan'              => trim($validated['major']),
+                    'no_hp'                => trim($validated['phone']),
+                    'cv_path'              => $magangBerkas['cv_path'],
+                    'surat_pengajuan_path' => $magangBerkas['surat_pengajuan_path'],
+                    'is_ketua'             => true,
+                ]);
+
+                foreach (array_values($validated['anggota'] ?? []) as $index => $anggota) {
+                    $permintaan->anggota()->create([
+                        'nama'                 => trim($anggota['nama']),
+                        'email'                => strtolower(trim($anggota['email'])),
+                        'no_induk'             => trim($anggota['no_induk']),
+                        'jurusan'              => trim($anggota['jurusan']),
+                        'no_hp'                => trim($anggota['no_hp']),
+                        'cv_path'              => $anggotaBerkas[$index]['cv_path'] ?? null,
+                        'surat_pengajuan_path' => $anggotaBerkas[$index]['surat_pengajuan_path'] ?? null,
+                        'is_ketua'             => false,
+                    ]);
+                }
+
+                $this->kirimNotifikasiKeAdmin(
+                    $permintaan->nama_pemohon,
+                    'Pengajuan Magang Baru',
+                    ['admin', 'admin_peserta', 'superadmin'],
+                    $permintaan->id_permintaan,
+                    $permintaan->jumlah_anggota
+                );
+
+                Notifikasi::query()->create([
+                    'user_id'      => $user->id_user,
+                    'judul'        => 'Pengajuan Berhasil Dikirim',
+                    'pesan'        => $permintaan->jumlah_anggota > 1
+                        ? "Pengajuan magang kelompok untuk {$permintaan->jumlah_anggota} orang telah diterima sistem dan sedang menunggu pemeriksaan Admin."
+                        : 'Pengajuan magang Anda telah diterima sistem dan sedang menunggu pemeriksaan Admin.',
+                    'kategori'     => 'pengajuan',
+                    'tipe'         => 'info',
+                    'referensi_id' => $permintaan->id_permintaan,
+                    'dibaca'       => false,
+                ]);
+
+                return [$user, $permintaan];
+            });
+
+            event(new Registered($user));
+            Auth::login($user);
+            $request->session()->regenerate();
+            $request->session()->forget('register_role');
+
+            return redirect()
+                ->route('pengajuan.status')
+                ->with('success', 'Pengajuan magang berhasil dikirim. Gunakan email dan kata sandi pendaftaran untuk memeriksa status.');
+        }
+
+        // ==========================================
+        // 2. ALUR PENDAFTARAN CALON KARYAWAN
+        // ==========================================
+        [$user, $permintaan] = DB::transaction(function () use ($validated, $email, $username, $request) {
+            $user = User::query()->create([
+                'nama'                 => trim($validated['full_name']),
+                'username'             => $username,
+                'email'                => $email,
+                'role'                 => 'pelamar',
+                'university'           => trim($validated['university']),
+                'student_id'           => trim($validated['student_id']),
+                'major'                => trim($validated['major']),
+                'phone'                => trim($validated['phone']),
+                'description'          => filled($validated['description'] ?? null) ? trim($validated['description']) : null,
+                'password'             => Hash::make($validated['password']),
+                'wajib_ganti_password' => false,
+            ]);
+
+            $berkasPaths = [];
+            $folderBerkas = 'permintaan-lamaran/' . Str::uuid();
+
+            foreach (['surat_lamaran', 'cv', 'ijazah', 'ktp'] as $field) {
+                if ($request->hasFile($field)) {
+                    $berkasPaths["{$field}_path"] = $request->file($field)->store($folderBerkas, 'public');
+                }
+            }
+
+            $permintaan = null;
+            if (class_exists(PermintaanLamaran::class)) {
+                $permintaan = PermintaanLamaran::query()->create(array_merge([
+                    'user_id'             => $user->id_user,
+                    'nama_pemohon'        => trim($validated['full_name']),
+                    'email'               => $email,
+                    'pendidikan_terakhir' => trim($validated['university']),
+                    'posisi'              => trim($validated['student_id']),
+                    'bidang_keahlian'     => trim($validated['major']),
+                    'no_hp'               => trim($validated['phone']),
+                    'tanggal_lamar'       => now(),
+                    'pesan'               => filled($validated['description'] ?? null) ? trim($validated['description']) : null,
+                    'status'              => 'menunggu',
+                    'akun_dibuat'         => false,
+                ], $berkasPaths));
+
+                $this->kirimNotifikasiKeAdmin(
+                    $permintaan->nama_pemohon,
+                    'Pengajuan Lamaran Karyawan Baru',
+                    ['admin', 'admin_karyawan', 'superadmin'],
+                    $permintaan->id_permintaan
+                );
+            }
+
+            Notifikasi::query()->create([
+                'user_id'      => $user->id_user,
+                'judul'        => 'Lamaran Berhasil Dikirim',
+                'pesan'        => 'Pengajuan lamaran karyawan Anda telah diterima sistem dan sedang menunggu persetujuan HRD.',
+                'kategori'     => 'pengajuan',
+                'tipe'         => 'info',
+                'referensi_id' => $permintaan?->id_permintaan ?? null,
+                'dibaca'       => false,
+            ]);
+
+            return [$user, $permintaan];
+        });
 
         event(new Registered($user));
         Auth::login($user);
+        $request->session()->regenerate();
+        $request->session()->forget('register_role');
 
-        return redirect()->route('dashboard');
+        return redirect()
+            ->route('pengajuan.status')
+            ->with('success', 'Lamaran berhasil dikirim. Gunakan email dan kata sandi pendaftaran untuk memeriksa status.');
     }
 }
