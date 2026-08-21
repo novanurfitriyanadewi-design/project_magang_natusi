@@ -538,20 +538,21 @@
                                 Berkas Lamaran (PDF/JPG/PNG, maks. 2MB per file)
                             </p>
 
-                            @php
-                                $berkasWajib = [
-                                    'surat_lamaran' => 'Surat Lamaran Kerja',
-                                    'cv'            => 'CV (Curriculum Vitae)',
-                                    'ijazah'        => 'Ijazah & Transkrip Nilai',
-                                    'ktp'           => 'Fotokopi KTP',
-                                    'pas_foto'      => 'Pas Foto Terbaru',
-                                    'skck'          => 'SKCK',
-                                ];
-                                $berkasOpsional = [
-                                    'portfolio'        => 'Portofolio',
-                                    'pengalaman_kerja' => 'Surat Pengalaman Kerja',
-                                ];
-                            @endphp
+                                <div class="mt-2.5 grid gap-2.5 sm:grid-cols-2">
+                                    @php
+                                        $berkasWajib = [
+                                            'surat_lamaran' => 'Surat Lamaran Kerja',
+                                            'cv'            => 'CV (Curriculum Vitae)',
+                                            'ijazah'        => 'Ijazah & Transkrip Nilai',
+                                            'ktp'           => 'Fotokopi KTP',
+                                            'pas_foto'      => 'Pas Foto Terbaru',
+                                            'skck'          => 'SKCK',
+                                        ];
+                                        $berkasOpsional = [
+                                            'portfolio'        => 'Portofolio',
+                                            'pengalaman_kerja' => 'Surat Pengalaman Kerja',
+                                        ];
+                                    @endphp
 
                             <div class="mt-2.5 grid gap-2.5 sm:grid-cols-2">
                                 @foreach ($berkasWajib as $field => $label)

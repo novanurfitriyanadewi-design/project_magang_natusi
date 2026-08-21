@@ -22,15 +22,11 @@
         $keyword = request('search');
 
         $daftarBerkas = [
-            'surat_lamaran_path'    => 'Surat Lamaran Kerja',
-            'cv_path'               => 'CV (Curriculum Vitae)',
-            'ijazah_path'           => 'Ijazah & Transkrip Nilai',
-            'ktp_path'              => 'Fotokopi KTP',
-            'pas_foto_path'         => 'Pas Foto Terbaru',
-            'skck_path'             => 'SKCK',
-            'portfolio_path'        => 'Portofolio',
-            'pengalaman_kerja_path' => 'Surat Pengalaman Kerja',
-        ];
+    'surat_lamaran_path' => 'Surat Lamaran Kerja',
+    'cv_path'            => 'CV (Curriculum Vitae)',
+    'ijazah_path'        => 'Ijazah & Transkrip Nilai',
+    'ktp_path'           => 'Fotokopi KTP',
+];
     @endphp
 
     <section class="mt-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
