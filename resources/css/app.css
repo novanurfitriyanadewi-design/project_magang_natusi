@@ -14,3 +14,25 @@
 .headline{
     font-family: 'Manrope', sans-serif;
 }
+
+.admin-announcement-create{
+    background-color: #05658f;
+    color: #ffffff;
+    cursor: pointer;
+    opacity: 1;
+}
+
+.admin-announcement-create:hover{
+    background-color: #045575;
+}
+
+.admin-rule-create{
+    background-color: #05658f;
+    color: #ffffff;
+    cursor: pointer;
+    opacity: 1;
+}
+
+.admin-rule-create:hover{
+    background-color: #045575;
+}

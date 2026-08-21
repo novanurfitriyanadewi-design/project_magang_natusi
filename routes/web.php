@@ -13,7 +13,7 @@ use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAtur
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
-use App\Http\Controllers\Superadmin\QrisPembayaranController as SuperadminQrisPembayaranController;
+// use App\Http\Controllers\Superadmin\QrisPembayaranController as SuperadminQrisPembayaranController;
 use App\Http\Controllers\Superadmin\SuperadminDivisiController;
 
 // Admin Peserta Controllers
@@ -199,15 +199,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::delete('/metode-pembayaran/qris', [SuperadminMetodePembayaranController::class, 'destroyQris'])
             ->name('metode-pembayaran.qris.destroy');
 
-        /* QRIS Pembayaran (mandiri, tidak terikat rekening) */
-        Route::get('/qris-pembayaran', [SuperadminQrisPembayaranController::class, 'index'])
-            ->name('qris-pembayaran.index');
-        Route::post('/qris-pembayaran', [SuperadminQrisPembayaranController::class, 'store'])
-            ->name('qris-pembayaran.store');
-        Route::post('/qris-pembayaran/{qris}/toggle', [SuperadminQrisPembayaranController::class, 'toggle'])
-            ->name('qris-pembayaran.toggle');
-        Route::delete('/qris-pembayaran/{qris}', [SuperadminQrisPembayaranController::class, 'destroy'])
-            ->name('qris-pembayaran.destroy');
+
 
         /* Kelola Divisi */
         Route::get('/divisi', [SuperadminDivisiController::class, 'index'])->name('divisi.index');

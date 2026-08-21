@@ -1,6 +1,6 @@
 @extends('layouts.portal')
 
-@section('title', 'Permintaan Magang')
+@section('title', 'Peserta Magang')
 
 @section('content')
 <div x-data="{
@@ -30,8 +30,8 @@
 
     <section class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-            <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">Permintaan Magang</h1>
-            <p class="mt-1 text-sm text-slate-500">Tinjau data pendaftar serta tentukan status pengajuan magang di CV Natusi.</p>
+            <h1 class="mt-5 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">Data Peserta Magang</h1>
+            <p class="mt-1 text-sm text-slate-500">Kelola dan tinjau data peserta magang di CV Natusi.</p>
         </div>
     </section>
 
@@ -43,7 +43,7 @@
     <section class="mt-5 overflow-hidden rounded-3xl border border-sky-100/90 bg-white/95 shadow-[0_20px_50px_rgba(15,52,94,0.09)] backdrop-blur">
         <div class="flex flex-col gap-4 border-b border-sky-100 bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <h2 class="text-lg font-bold text-slate-950">Data Pengajuan Magang</h2>
+                <h2 class="text-lg font-bold text-slate-950">Data Peserta Magang</h2>
                 <p class="mt-0.5 text-sm text-slate-500">Gunakan tombol Show Detail untuk melihat data lengkap pendaftar.</p>
             </div>
         </div>
@@ -61,8 +61,8 @@
             </form>
 
             <p class="text-xs text-slate-500">
-                Menampilkan <strong class="text-slate-700">{{ $permintaan_magang->firstItem() ?? 0 }}–{{ $permintaan_magang->lastItem() ?? 0 }}</strong>
-                dari <strong class="text-slate-700">{{ $permintaan_magang->total() }}</strong> pengajuan
+                Menampilkan <strong class="text-slate-700">{{ $peserta->firstItem() ?? 0 }}–{{ $peserta->lastItem() ?? 0 }}</strong>
+                dari <strong class="text-slate-700">{{ $peserta->total() }}</strong> peserta
             </p>
         </div>
 
@@ -80,33 +80,34 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white/80">
-                    @forelse ($permintaan_magang as $item)
+                    @forelse ($peserta as $item)
                         @php
-                            $id = $item->id_permintaan ?? $item->id ?? null;
-                            $nama = $item->nama_pemohon ?? $item->nama ?? '-';
-                            $alamat = $item->peserta?->alamat ?? '-';
-                            $email = $item->email ?? '-';
-                            $instansi = $item->nama_sekolah ?? '-';
-                            $noInduk = $item->no_induk ?? '-';
-                            $jurusan = $item->jurusan ?? '-';
-                            $noHp = $item->no_hp ?? '-';
-                            $pesan = $item->pesan ?? '-';
+                            $id = $item->id_peserta ?? $item->id_permintaan ?? $item->id ?? null;
+                            $nama = $item->user?->nama ?? $item->nama_pemohon ?? $item->nama ?? '-';
+                            $alamat = $item->alamat ?? '-';
+                            $email = $item->user?->email ?? $item->email ?? '-';
+                            $instansi = $item->permintaan?->nama_sekolah ?? $item->user?->university ?? $item->nama_sekolah ?? '-';
+                            $noInduk = $item->permintaan?->no_induk ?? $item->user?->student_id ?? $item->no_induk ?? '-';
+                            $jurusan = $item->jurusan?->nama_jurusan ?? $item->permintaan?->jurusan ?? $item->user?->major ?? $item->jurusan ?? '-';
+                            $noHp = $item->user?->phone ?? $item->no_hp ?? '-';
+                            $pesan = $item->permintaan?->pesan ?? $item->pesan ?? '-';
                             $status = strtolower($item->status ?? 'menunggu');
                             $status = $status === 'diterima' ? 'disetujui' : $status;
                             $tanggal = !empty($item->created_at) ? \Carbon\Carbon::parse($item->created_at)->locale('id')->translatedFormat('d M Y, H:i') : '-';
                             $initial = strtoupper(mb_substr(trim($nama), 0, 2));
-                            $anggotaPayload = $item->anggota->map(fn ($anggota) => [
+                            $anggotaSource = $item->permintaan?->anggota ?? collect();
+                            $anggotaPayload = $anggotaSource->map(fn ($anggota) => [
                                 'nama' => $anggota->nama,
                                 'email' => $anggota->email,
                                 'no_induk' => $anggota->no_induk,
                                 'jurusan' => $anggota->jurusan,
                                 'no_hp' => $anggota->no_hp,
                                 'is_ketua' => (bool) $anggota->is_ketua,
-                                'cv_url' => ($anggota->cv_path ?: ($anggota->is_ketua ? $item->cv_path : null))
-                                    ? route('pengajuan.berkas.lihat', ['permintaan' => $item, 'jenis' => 'cv', 'ref' => $anggota->id_anggota ?: 'ketua'])
+                                'cv_url' => ($anggota->cv_path ?: ($anggota->is_ketua ? ($item->cv_path ?? $item->permintaan?->cv_path) : null))
+                                    ? route('pengajuan.berkas.lihat', ['permintaan' => $item->permintaan_id ?? $item->id_permintaan ?? $id, 'jenis' => 'cv', 'ref' => $anggota->id_anggota ?: 'ketua'])
                                     : null,
-                                'surat_url' => ($anggota->surat_pengajuan_path ?: ($anggota->is_ketua ? $item->surat_pengajuan_path : null))
-                                    ? route('pengajuan.berkas.lihat', ['permintaan' => $item, 'jenis' => 'surat', 'ref' => $anggota->id_anggota ?: 'ketua'])
+                                'surat_url' => ($anggota->surat_pengajuan_path ?: ($anggota->is_ketua ? ($item->surat_pengajuan_path ?? $item->permintaan?->surat_pengajuan_path) : null))
+                                    ? route('pengajuan.berkas.lihat', ['permintaan' => $item->permintaan_id ?? $item->id_permintaan ?? $id, 'jenis' => 'surat', 'ref' => $anggota->id_anggota ?: 'ketua'])
                                     : null,
                                 'username_peserta' => $anggota->username_peserta,
                             ])->values()->all();
@@ -118,15 +119,16 @@
                                     'jurusan' => $jurusan,
                                     'no_hp' => $noHp,
                                     'is_ketua' => true,
-                                    'cv_url' => $item->cv_path ? route('pengajuan.berkas.lihat', ['permintaan' => $item, 'jenis' => 'cv', 'ref' => 'ketua']) : null,
-                                    'surat_url' => $item->surat_pengajuan_path ? route('pengajuan.berkas.lihat', ['permintaan' => $item, 'jenis' => 'surat', 'ref' => 'ketua']) : null,
-                                    'username_peserta' => $item->username_peserta,
+                                    'cv_url' => ($item->cv_path ?? $item->permintaan?->cv_path) ? route('pengajuan.berkas.lihat', ['permintaan' => $item->permintaan_id ?? $item->id_permintaan ?? $id, 'jenis' => 'cv', 'ref' => 'ketua']) : null,
+                                    'surat_url' => ($item->surat_pengajuan_path ?? $item->permintaan?->surat_pengajuan_path) ? route('pengajuan.berkas.lihat', ['permintaan' => $item->permintaan_id ?? $item->id_permintaan ?? $id, 'jenis' => 'surat', 'ref' => 'ketua']) : null,
+                                    'username_peserta' => $item->user?->username ?? $item->username_peserta ?? null,
                                 ];
                             }
-                            $revisiPayload = $item->riwayatBerkas->map(fn ($berkas) => [
+                            $revisiSource = $item->permintaan?->riwayatBerkas ?? collect();
+                            $revisiPayload = $revisiSource->map(fn ($berkas) => [
                                 'jenis' => $berkas->jenis_berkas,
                                 'versi' => (int) $berkas->versi,
-                                'url' => route('pengajuan.berkas.lihat', ['permintaan' => $item, 'jenis' => 'revisi', 'ref' => $berkas->getKey()]),
+                                'url' => route('pengajuan.berkas.lihat', ['permintaan' => $item->permintaan_id ?? $item->id_permintaan ?? $id, 'jenis' => 'revisi', 'ref' => $berkas->getKey()]),
                                 'tanggal' => $berkas->created_at?->locale('id')->translatedFormat('d M Y, H:i'),
                             ])->values()->all();
                             $detailPayload = [
@@ -160,7 +162,7 @@
                                     </span>
                                     <div class="min-w-0">
                                         <p class="max-w-52 truncate text-sm font-bold text-slate-900">{{ $nama }}</p>
-                                        <p class="mt-0.5 text-xs text-slate-500">ID #{{ $id ?? '-' }} · {{ (int) ($item->jumlah_anggota ?: max(1, $item->anggota->count())) }} peserta</p>
+                                        <p class="mt-0.5 text-xs text-slate-500">ID #{{ $id ?? '-' }} · {{ (int) ($item->jumlah_anggota ?: 1) }} peserta</p>
                                     </div>
                                 </div>
                             </td>
@@ -212,9 +214,9 @@
             </table>
         </div>
 
-        @if ($permintaan_magang->hasPages())
+        @if ($peserta->hasPages())
             <div class="border-t border-sky-100 bg-sky-50/50 px-6 py-4">
-                {{ $permintaan_magang->appends(request()->query())->links() }}
+                {{ $peserta->appends(request()->query())->links() }}
             </div>
         @endif
     </section>
