@@ -437,61 +437,6 @@
                                         <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                                     @enderror
 
-                        {{-- Upload Berkas Lamaran (khusus Karyawan) --}}
-                        @if ($isEmployee)
-                            <div class="rounded-lg border border-slate-200 bg-slate-50/70 p-3.5">
-                                <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-700">
-                                    Berkas Lamaran (PDF/JPG/PNG, maks. 2MB per file)
-                                </p>
-
-                                <div class="mt-2.5 grid gap-2.5 sm:grid-cols-2">
-                                    @php
-    $berkasWajib = [
-        'surat_lamaran' => 'Surat Lamaran Kerja',
-        'cv'            => 'CV (Curriculum Vitae)',
-        'ijazah'        => 'Ijazah & Transkrip Nilai',
-        'ktp'           => 'Fotokopi KTP',
-    ];
-    $berkasOpsional = [];
-@endphp
-
-                                    @foreach ($berkasWajib as $field => $label)
-                                        <div>
-                                            <label for="{{ $field }}" class="block text-xs font-semibold text-slate-700">
-                                                {{ $label }} <span class="text-rose-500">*</span>
-                                            </label>
-                                            <input
-                                                id="{{ $field }}"
-                                                name="{{ $field }}"
-                                                type="file"
-                                                accept=".pdf,.jpg,.jpeg,.png"
-                                                required
-                                                class="mt-1 block w-full text-xs text-slate-600"
-                                            >
-                                            @error($field)
-                                                <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                    @endforeach
-
-                                    @foreach ($berkasOpsional as $field => $label)
-                                        <div>
-                                            <label for="{{ $field }}" class="block text-xs font-semibold text-slate-700">
-                                                {{ $label }} <span class="text-slate-400">(opsional)</span>
-                                            </label>
-                                            <input
-                                                id="{{ $field }}"
-                                                name="{{ $field }}"
-                                                type="file"
-                                                accept=".pdf,.jpg,.jpeg,.png"
-                                                class="mt-1 block w-full text-xs text-slate-600"
-                                            >
-                                            @error($field)
-                                                <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                    @endforeach
->>>>>>>>> Temporary merge branch 2
                                 </div>
                                 <div>
                                     <label for="surat_pengajuan" class="block text-xs font-semibold text-slate-700">Surat Pengantar Ketua / Pemohon <span class="text-rose-500">*</span></label>
@@ -555,20 +500,36 @@
                                 <label for="position" class="block text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-700">
                                     Posisi Yang Dilamar
                                 </label>
-                                <input
+
+                                <select
                                     id="position"
                                     name="position"
-                                    type="text"
-                                    value="{{ old('position') }}"
-                                    placeholder="Contoh: Web Developer / Staff HRD"
                                     required
-                                    class="mt-1.5 block h-[42px] w-full rounded-lg border border-slate-300 bg-[#f8faff] px-3 text-[13px] text-slate-700 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-0 sm:text-sm"
+                                    class="mt-1.5 block h-[42px] w-full rounded-lg border border-slate-300 bg-[#f8faff] px-3 text-[13px] text-slate-700 focus:border-slate-400 focus:bg-white focus:ring-0 sm:text-sm"
                                 >
+                                    <option value="" disabled {{ old('position') ? '' : 'selected' }}>
+                                        Pilih Posisi Yang Dilamar
+                                    </option>
+                                    <option value="Web Developer" {{ old('position') == 'Web Developer' ? 'selected' : '' }}>
+                                        Web Developer
+                                    </option>
+                                    <option value="UI/UX Designer" {{ old('position') == 'UI/UX Designer' ? 'selected' : '' }}>
+                                        UI/UX Designer
+                                    </option>
+                                    <option value="Staff Administrasi" {{ old('position') == 'Staff Administrasi' ? 'selected' : '' }}>
+                                        Programmer
+                                    </option>
+                                    <option value="Marketing" {{ old('position') == 'Marketing' ? 'selected' : '' }}>
+                                        Marketing
+                                    </option>
+                                </select>
+
                                 @error('position')
                                     <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                                 @enderror
                             </div>
                         </div>
+
 
                         {{-- KEAHLIAN --}}
                         <div>
@@ -602,12 +563,6 @@
                                             'cv'            => 'CV (Curriculum Vitae)',
                                             'ijazah'        => 'Ijazah & Transkrip Nilai',
                                             'ktp'           => 'Fotokopi KTP',
-                                            'pas_foto'      => 'Pas Foto Terbaru',
-                                            'skck'          => 'SKCK',
-                                        ];
-                                        $berkasOpsional = [
-                                            'portfolio'        => 'Portofolio',
-                                            'pengalaman_kerja' => 'Surat Pengalaman Kerja',
                                         ];
                                     @endphp
 
@@ -631,23 +586,6 @@
                                     </div>
                                 @endforeach
 
-                                @foreach ($berkasOpsional as $field => $label)
-                                    <div>
-                                        <label for="{{ $field }}" class="block text-xs font-semibold text-slate-700">
-                                            {{ $label }} <span class="text-slate-400">(opsional)</span>
-                                        </label>
-                                        <input
-                                            id="{{ $field }}"
-                                            name="{{ $field }}"
-                                            type="file"
-                                            accept=".pdf,.jpg,.jpeg,.png"
-                                            class="mt-1 block w-full text-xs text-slate-600"
-                                        >
-                                        @error($field)
-                                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
-                                        @enderror
-                                    </div>
-                                @endforeach
                             </div>
                         </div>
 
@@ -751,6 +689,7 @@
                             @enderror
                         </div>
                     </div>
+
 
                     {{-- INFO --}}
                     <p class="rounded-lg border px-3 py-2 text-[11px] leading-5" style="border-color: {{ $accentSoft }}; background-color: {{ $accentSoft }}; color: {{ $accentDark }};">
