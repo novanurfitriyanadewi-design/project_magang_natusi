@@ -166,7 +166,6 @@
         }
     @endphp
 
-    @if (count($tourSteps) > 0)
         <div
             id="natusi-tour-root"
             class="hidden"
@@ -437,8 +436,42 @@
 
         <script>
             (() => {
-                const steps = @json($tourSteps);
+                const configuredSteps = @json($tourSteps);
                 const role = @json($tourRole);
+
+                const sidebarSteps = Array.from(
+                    document.querySelectorAll(
+                        'aside[aria-label="Navigasi portal"] [data-tour]'
+                    )
+                ).reduce((steps, element) => {
+                    const tourId = element.dataset.tour;
+
+                    if (
+                        !tourId
+                        || element.getAttribute('aria-disabled') === 'true'
+                        || steps.some((step) => step.id === tourId)
+                    ) {
+                        return steps;
+                    }
+
+                    const label = element.textContent.trim()
+                        .replace(/\s+/g, ' ');
+
+                    steps.push({
+                        id: tourId,
+                        selector: `[data-tour="${CSS.escape(tourId)}"]`,
+                        title: label,
+                        description: tourId === 'profile'
+                            ? 'Kelola nama, email, foto profil, dan kata sandi akun dari menu ini.'
+                            : `Pilih menu ini untuk membuka halaman ${label}.`,
+                    });
+
+                    return steps;
+                }, []);
+
+                const steps = sidebarSteps.length > 0
+                    ? sidebarSteps
+                    : configuredSteps;
 
                 if (!Array.isArray(steps) || steps.length === 0) {
                     return;
@@ -652,6 +685,14 @@
                         return;
                     }
 
+                    const collapsedGroup = target.closest('[x-show]');
+
+                    if (collapsedGroup && collapsedGroup.offsetParent === null) {
+                        collapsedGroup.parentElement
+                            ?.querySelector(':scope > button')
+                            ?.click();
+                    }
+
                     const navRect = nav.getBoundingClientRect();
                     const targetRect = target.getBoundingClientRect();
                     const padding = 14;
@@ -846,6 +887,9 @@
                     previous,
                 };
 
+                document.getElementById('natusi-support-trigger')
+                    ?.addEventListener('click', startTour);
+
                 nextButton.addEventListener('click', next);
                 previousButton.addEventListener('click', previous);
                 skipButton.addEventListener('click', finish);
@@ -903,5 +947,4 @@
                 sessionStorage.removeItem(storage.index);
             })();
         </script>
-    @endif
 @endauth

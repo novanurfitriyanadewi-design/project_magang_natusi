@@ -77,6 +77,8 @@
                 .includes(this.query.toLowerCase());
         }
     }"
+    @natusi-tour-open-sidebar.window="sidebarOpen = true"
+    @natusi-tour-close-sidebar.window="sidebarOpen = false"
     class="relative min-h-screen"
 >
 
