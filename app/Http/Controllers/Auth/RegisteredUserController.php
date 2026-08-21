@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Divisi;
 use App\Models\Jurusan;
 use App\Models\Notifikasi;
 use App\Models\PermintaanLamaran;
@@ -35,6 +36,9 @@ class RegisteredUserController extends Controller
 
         return view('auth.register', [
             'registerRole' => in_array($role, ['pelamar', 'karyawan'], true) ? $role : 'pelamar',
+            'divisiList'   => Divisi::query()
+                ->orderBy('nama_divisi')
+                ->get(),
             'jurusanList'  => Jurusan::query()
                 ->aktif()
                 ->orderBy('tingkat')
@@ -194,7 +198,7 @@ class RegisteredUserController extends Controller
             $emailRules[] = Rule::unique('permintaan_lamaran', 'email')->where($permintaanMasihAktif);
             $studentIdRules = ['nullable', 'string', 'max:50'];
             $nikRules = ['required', 'string', 'max:30'];
-            $positionRules = ['required', 'string', 'max:255'];
+            $positionRules = ['required', 'string', 'max:255', Rule::exists('divisi', 'nama_divisi')];
         }
 
         $fileRules = [];
@@ -243,6 +247,7 @@ class RegisteredUserController extends Controller
             'university.required' => $roleSession === 'karyawan' ? 'Pendidikan terakhir wajib diisi.' : 'Asal sekolah / instansi wajib diisi.',
             'student_id.required' => 'Nomor induk (NIM/NISN) wajib diisi.',
             'major.required'      => 'Jurusan wajib diisi.',
+            'position.exists'     => 'Posisi yang dilamar harus dipilih dari divisi yang tersedia.',
             'anggota.*.cv_magang.required'       => 'CV setiap anggota kelompok wajib diunggah.',
             'anggota.*.surat_pengajuan.required' => 'Surat pengantar setiap anggota kelompok wajib diunggah.',
             'anggota.*.cv_magang.mimes'          => 'CV anggota harus berupa PDF, DOC, atau DOCX.',
@@ -252,7 +257,6 @@ class RegisteredUserController extends Controller
 
         if ($roleSession === 'karyawan') {
             $messages['university.required'] = 'Pendidikan terakhir wajib diisi.';
-            $messages['student_id.required'] = 'Posisi yang dilamar wajib diisi.';
             $messages['major.required']      = 'Bidang / keahlian utama wajib diisi.';
         } else {
             $messages['university.required']                 = 'Asal sekolah / instansi wajib diisi.';
@@ -546,7 +550,7 @@ class RegisteredUserController extends Controller
                     'nama_pemohon'        => trim($validated['full_name']),
                     'email'               => $email,
                     'pendidikan_terakhir' => trim($validated['university']),
-                    'posisi'              => trim($validated['student_id']),
+                    'posisi'              => trim($validated['position']),
                     'bidang_keahlian'     => trim($validated['major']),
                     'no_hp'               => trim($validated['phone']),
                     'tanggal_lamar'       => now(),

@@ -55,7 +55,6 @@ use App\Http\Controllers\PesertaMagang\AturanController as PesertaAturanControll
 use App\Http\Controllers\PesertaMagang\PembayaranController as PesertaMagangPembayaranController;
 use App\Http\Controllers\PesertaMagang\SertifikatController as PesertaMagangSertifikatController;
 use App\Http\Controllers\PesertaMagang\LaporanMingguanController as PesertaMagangLaporanMingguanController;
-use App\Http\Controllers\Peserta\TugasController as PesertaTugasController;
 
 // Karyawan Controllers
 use App\Http\Controllers\Karyawan\DashboardController as KaryawanDashboardController;
@@ -507,11 +506,6 @@ Route::middleware(['auth', 'role:peserta'])
         Route::post('/penugasan/{id_tugas}/kumpul', [PesertaMagangPenugasanController::class, 'store'])->name('penugasan.store');
 
         Route::get('/aturan', [PesertaAturanController::class, 'index'])->name('aturan.index');
-
-        Route::get('/tugas', [PesertaTugasController::class, 'index'])->name('tugas.index');
-        Route::get('/tugas/{penugasan}/file', [PesertaTugasController::class, 'downloadTask'])->name('tugas.file.download');
-        Route::get('/tugas/{penugasan}/template-laporan', [PesertaTugasController::class, 'downloadReportTemplate'])->name('tugas.template-laporan.download');
-        Route::post('/tugas/{penugasan}/kumpulkan', [PesertaTugasController::class, 'submit'])->name('tugas.submit');
 
         Route::get('/pembayaran', [PesertaMagangPembayaranController::class, 'index'])->name('pembayaran.index');
         Route::post('/pembayaran', [PesertaMagangPembayaranController::class, 'store'])->name('pembayaran.store');
