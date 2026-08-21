@@ -15,20 +15,21 @@ class User extends Authenticatable
     protected $table = 'users';
     protected $primaryKey = 'id_user';
     protected $fillable = [
-        'nama',
-        'email',
-        'username',
-        'password',
-        'role',
-        'university',
-        'student_id',
-        'major',
-        'phone',
-        'description',
-        'wajib_ganti_password',
-        'api_token',
-        'foto_profil',
-    ];
+    'nama',
+    'email',
+    'username',
+    'password',
+    'role',
+    'university',
+    'student_id',
+    'nik',              
+    'major',
+    'phone',
+    'description',
+    'wajib_ganti_password',
+    'api_token',
+    'foto_profil',
+];
 
     protected $hidden = [
         'password',

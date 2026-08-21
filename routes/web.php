@@ -430,6 +430,7 @@ Route::middleware('admin.karyawan')
         // Permintaan Lamaran Karyawan
         Route::get('/permintaan-lamaran', [AdminPermintaanLamaranController::class, 'index'])->name('permintaan-lamaran.index');
         Route::post('/permintaan-lamaran/{id}/action', [AdminPermintaanLamaranController::class, 'action'])->whereNumber('id')->name('permintaan-lamaran.action');
+        Route::delete('/permintaan-lamaran/{id}', [AdminPermintaanLamaranController::class, 'destroy'])->whereNumber('id')->name('permintaan-lamaran.destroy');
 
         // Pengumuman Karyawan
         Route::resource('pengumuman', AdminKaryawanPengumumanController::class)->except(['show']);
