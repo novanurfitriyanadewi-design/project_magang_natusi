@@ -351,6 +351,12 @@ Route::middleware('admin.peserta')
         Route::patch('/pembayaran/{pembayaran}/tolak', [AdminDataPembayaranController::class, 'tolak'])
             ->name('pembayaran.tolak');
 
+        Route::get('/pembayaran/{pembayaran}/bukti', [AdminDataPembayaranController::class, 'bukti'])
+            ->name('pembayaran.bukti');
+
+        Route::get('/pembayaran/{pembayaran}/bukti/download', [AdminDataPembayaranController::class, 'downloadBukti'])
+            ->name('pembayaran.bukti.download');
+
         /* Metode Pembayaran */
         Route::get('/metode-pembayaran', [AdminDataMetodePembayaranController::class, 'index'])
             ->name('metode-pembayaran.index');

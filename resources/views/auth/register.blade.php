@@ -18,15 +18,12 @@
     @php
         $registerRole = $registerRole ?? session('register_role', 'pelamar');
         $isEmployee = $registerRole === 'karyawan';
-
-        // Warna disamakan untuk semua role
         $accent = '#08678f';
         $accentDark = '#075c80';
         $accentSoft = '#e8f4f9';
     @endphp
 
     <style>
-        /* Tombol upload file ikut warna aksen role aktif (tidak bisa pakai class Tailwind dinamis) */
         input[type="file"]::file-selector-button {
             margin-right: 0.75rem;
             border: 0;
@@ -83,24 +80,24 @@
                     <div class="mt-6 max-w-[420px]">
                         <h1 class="text-[18px] font-bold leading-relaxed tracking-[-0.02em] lg:text-[20px]">
                             @if ($isEmployee)
-                                Build Your Professional Career With Us.
+                                Bangun Karier Profesionalmu Bersama Kami.
                             @else
-                                Your Gateway to the Best Internship Experience.
+                                Gerbang Menuju Pengalaman Magang Terbaik
                             @endif
                         </h1>
                         <p class="mt-2 text-[13px] font-medium leading-relaxed text-white/75 lg:text-[15px]">
                             @if ($isEmployee)
-                                Join the professional team at CV Natusi. Grow your talent, leadership, and drive innovation together with us.
+                                Bergabunglah dengan tim profesional CV Natusi. Kembangkan potensi, jiwa kepemimpinan, dan ciptakan inovasi bersama kami.
                             @else
-                                Join our exclusive portal to connect with industry leaders and build a clearer career path.
+                                Bergabunglah dengan portal eksklusif kami untuk terhubung dengan para profesional di dunia industri dan membangun jalur karier yang lebih jelas.
                             @endif
                         </p>
                     </div>
 
                     <blockquote class="mt-auto max-w-[420px] border-l-[3px] border-white/50 pl-4 pt-6 text-[13px] italic leading-6 text-white/85">
-                        &ldquo;CV Natusi remains committed to creating a space for talented professionals to grow and produce impactful work.&rdquo;
+                        &ldquo;CV Natusi berkomitmen untuk menciptakan ruang bagi para talenta agar dapat berkembang dan menghasilkan karya yang memberikan dampak.&rdquo;
                         <footer class="mt-2 text-[11px] font-semibold not-italic text-white">
-                            &mdash; Natusi Development Team
+                            &mdash; Tim Natusi
                         </footer>
                     </blockquote>
                 </aside>
