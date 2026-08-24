@@ -25,7 +25,7 @@ class PesertaMagangController extends Controller
         $status = $request->string('status', 'semua')->toString();
 
         $query = PesertaMagang::query()
-            ->with(['user', 'permintaan', 'jurusan']);
+            ->with(['user', 'permintaan', 'jurusan', 'permintaan.pesertas.user']);
 
         if ($search !== '') {
             $query->where(function ($query) use ($search) {
@@ -122,6 +122,20 @@ class PesertaMagangController extends Controller
         }
 
         return response()->download($file, 'peserta magang.xlsx');
+    }
+
+    public function show(PesertaMagang $pesertaMagang): View
+    {
+        $pesertaMagang->load([
+            'user',
+            'jurusan',
+            'permintaan',
+            'permintaan.pesertas.user',
+        ]);
+
+        return view('admin-peserta.peserta_show', [
+            'peserta' => $pesertaMagang,
+        ]);
     }
 
     public function updateStatus(Request $request, PesertaMagang $pesertaMagang): RedirectResponse
