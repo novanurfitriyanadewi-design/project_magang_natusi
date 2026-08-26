@@ -5,18 +5,19 @@ namespace App\Http\Controllers\AdminKaryawan;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use App\Models\Karyawan;
+use App\Models\Notifikasi;
 use App\Models\PermintaanLamaran;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PermintaanLamaranController extends Controller
 {
     public function index(Request $request)
     {
         $total_pendaftar = DB::table('permintaan_lamaran')
-            ->where('status', '!=', 'ditolak')
             ->count();
 
         $total_disetujui = DB::table('permintaan_lamaran')
@@ -27,9 +28,12 @@ class PermintaanLamaranController extends Controller
             ->where('status', 'interview')
             ->count();
 
+        $total_ditolak = DB::table('permintaan_lamaran')
+            ->where('status', 'ditolak')
+            ->count();
+
         $query = DB::table('permintaan_lamaran as pl')
             ->leftJoin('karyawan as k', 'k.permintaan_id', '=', 'pl.id_permintaan')
-            ->where('pl.status', '!=', 'ditolak')
             ->select([
                 'pl.*',
                 'k.alamat',
@@ -37,7 +41,7 @@ class PermintaanLamaranController extends Controller
 
         $status = $request->string('status')->toString();
 
-        if (in_array($status, ['menunggu', 'interview', 'disetujui'], true)) {
+        if (in_array($status, ['menunggu', 'interview', 'disetujui', 'ditolak'], true)) {
             $query->where('pl.status', $status);
         }
 
@@ -56,14 +60,14 @@ class PermintaanLamaranController extends Controller
         $permintaan_lamaran = $query
             ->orderByDesc('pl.created_at')
             ->orderByDesc('pl.id_permintaan')
-            ->paginate(10)
-            ->withQueryString();
+            ->get();
 
         return view('admin-karyawan.karyawan.permintaan-lamaran', compact(
             'permintaan_lamaran',
             'total_pendaftar',
             'total_disetujui',
-            'total_interview'
+            'total_interview',
+            'total_ditolak'
         ));
     }
 
@@ -263,5 +267,46 @@ class PermintaanLamaranController extends Controller
             'success',
             "Pengajuan lamaran atas nama {$pendaftar->nama_pemohon} berhasil disetujui. Kredensial akun Karyawan baru telah dibuat."
         );
+    }
+
+    public function destroy(int $id): RedirectResponse
+    {
+        $pendaftar = PermintaanLamaran::query()->whereKey($id)->first();
+
+        if (! $pendaftar) {
+            return back()->with('error', 'Data pengajuan lamaran tidak ditemukan.');
+        }
+
+        if ($pendaftar->status !== 'ditolak') {
+            return back()->with('error', 'Hanya pengajuan yang ditolak yang dapat dihapus.');
+        }
+
+        $filePaths = collect([
+            'surat_lamaran_path',
+            'cv_path',
+            'ijazah_path',
+            'ktp_path',
+            'pas_foto_path',
+            'skck_path',
+            'portfolio_path',
+            'pengalaman_kerja_path',
+        ])->map(fn (string $column) => $pendaftar->{$column})->filter();
+
+        DB::transaction(function () use ($pendaftar, $filePaths): void {
+            Notifikasi::query()->where('referensi_id', $pendaftar->id_permintaan)->delete();
+
+            $pendaftar->delete();
+
+            if ($pendaftar->user_id) {
+                Notifikasi::query()->where('user_id', $pendaftar->user_id)->delete();
+                User::query()->whereKey($pendaftar->user_id)->delete();
+            }
+
+            foreach ($filePaths as $filePath) {
+                Storage::disk('public')->delete($filePath);
+            }
+        });
+
+        return back()->with('success', "Data lamaran {$pendaftar->nama_pemohon} berhasil dihapus. Pelamar dapat mendaftar kembali.");
     }
 }

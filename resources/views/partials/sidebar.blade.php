@@ -137,13 +137,13 @@
             ['label' => 'Aturan Perusahaan', 'route' => 'karyawan.aturan.index', 'match' => 'karyawan.aturan.*', 'icon' => 'rules', 'tour' => 'aturan'],
         ],
         default => [
-            ['label' => 'Dashboard', 'route' => 'peserta-magang.dashboard', 'match' => 'peserta-magang.dashboard', 'icon' => 'dashboard'],
-            ['label' => 'Absensi', 'route' => 'peserta-magang.absensi.index', 'match' => 'peserta-magang.absensi.*', 'icon' => 'attendance-user'],
-            ['label' => 'Penugasan', 'route' => 'peserta-magang.penugasan.index', 'match' => 'peserta-magang.penugasan.*', 'icon' => 'assignment'],
-            ['label' => 'Aturan Laporan Mingguan', 'route' => 'peserta-magang.laporan-mingguan.index', 'match' => 'peserta-magang.laporan-mingguan.*', 'icon' => 'report'],
-            ['label' => 'Pembayaran', 'route' => 'peserta-magang.pembayaran.index', 'match' => 'peserta-magang.pembayaran.*', 'icon' => 'payment'],
-            ['label' => 'Sertifikat Saya', 'route' => 'peserta-magang.sertifikat.index', 'match' => 'peserta-magang.sertifikat.*', 'icon' => 'report'],
-            ['label' => 'Aturan Perusahaan', 'route' => 'peserta-magang.aturan.index', 'match' => 'peserta-magang.aturan.*', 'icon' => 'rules'],
+            ['label' => 'Dashboard', 'route' => 'peserta-magang.dashboard', 'match' => 'peserta-magang.dashboard', 'icon' => 'dashboard', 'tour' => 'dashboard'],
+            ['label' => 'Absensi', 'route' => 'peserta-magang.absensi.index', 'match' => 'peserta-magang.absensi.*', 'icon' => 'attendance-user', 'tour' => 'attendance'],
+            ['label' => 'Penugasan', 'route' => 'peserta-magang.penugasan.index', 'match' => 'peserta-magang.penugasan.*', 'icon' => 'assignment', 'tour' => 'assignments'],
+            ['label' => 'Aturan Laporan Mingguan', 'route' => 'peserta-magang.laporan-mingguan.index', 'match' => 'peserta-magang.laporan-mingguan.*', 'icon' => 'report', 'tour' => 'weekly-report-rules'],
+            ['label' => 'Pembayaran', 'route' => 'peserta-magang.pembayaran.index', 'match' => 'peserta-magang.pembayaran.*', 'icon' => 'payment', 'tour' => 'payments'],
+            ['label' => 'Sertifikat Saya', 'route' => 'peserta-magang.sertifikat.index', 'match' => 'peserta-magang.sertifikat.*', 'icon' => 'report', 'tour' => 'certificate'],
+            ['label' => 'Aturan Perusahaan', 'route' => 'peserta-magang.aturan.index', 'match' => 'peserta-magang.aturan.*', 'icon' => 'rules', 'tour' => 'company-rules'],
         ],
     };
 
@@ -301,7 +301,7 @@
 
                                     <a
                                         href="{{ $childHref }}"
-                                        data-tour="{{ $menu['tour'] ?? '' }}"
+                                        data-tour="{{ $child['tour'] ?? '' }}"
                                         @if (! $childAvailable) aria-disabled="true" title="Halaman ini belum dibuat" @endif
                                         @click="sidebarOpen = false"
                                         @class([
@@ -431,23 +431,17 @@
             </a>
 
             <div class="my-3 border-t border-white/10"></div>
-            <a
-                href="#"
-                @click="sidebarOpen = false"
-                class="group flex min-h-[48px] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sky-50/85 transition-all duration-200 hover:translate-x-0.5 hover:bg-white/10 hover:text-white"
-            >
                 <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/10 text-white ring-1 ring-white/10 transition-all duration-200 group-hover:scale-105 group-hover:bg-white/15">
                     <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </span>
                 <span class="min-w-0 flex-1 truncate text-left font-semibold">Support</span>
-            </a>
+            </button>
 
             <form method="POST" action="{{ route('logout') }}" class="w-full">
                 @csrf
                 <button
                     type="submit"
                     class="group flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sky-50/85 transition-all duration-200 hover:translate-x-0.5 hover:bg-white/10 hover:text-white"
-                >
                     <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/10 text-white ring-1 ring-white/10 transition-all duration-200 group-hover:scale-105 group-hover:bg-white/15">
                         <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </span>

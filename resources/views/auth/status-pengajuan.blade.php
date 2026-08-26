@@ -31,7 +31,11 @@
     $unreadNotificationCount = $unreadNotificationCount ?? 0;
     $isAuthenticated = auth()->check();
 
-    $isEmployee = $isEmployee ?? (session('register_role') === 'karyawan' || ($permintaan->role ?? '') === 'karyawan');
+    // Deteksi dari TIPE MODEL $permintaan, bukan role user saja
+    $isEmployee = $isEmployee
+        || $permintaan instanceof \App\Models\PermintaanLamaran
+        || session('register_role') === 'karyawan'
+        || ($permintaan->role ?? '') === 'karyawan';
 
     $jadwalFormatted = null;
     if (!empty($permintaan?->jadwal_interview)) {
@@ -52,7 +56,7 @@
     ];
     $badgeColor = $badgeColors[$status] ?? 'bg-slate-100 text-slate-700 border-slate-200';
 
-    // Label badge tanpa kata "PENDING"
+    // Label badge
     $badgeLabels = [
         'menunggu' => 'MENUNGGU',
         'interview' => 'INTERVIEW',
@@ -377,11 +381,42 @@
                                 $details = [
                                     ['label' => 'Nama Lengkap', 'value' => $permintaan->nama_pemohon ?? null],
                                     ['label' => 'Alamat Email', 'value' => $permintaan->email ?? null],
-                                    ['label' => $isEmployee ? 'Pendidikan Terakhir' : 'Asal Sekolah / Universitas', 'value' => $permintaan->nama_sekolah ?? null],
-                                    ['label' => $isEmployee ? 'Bidang / Keahlian' : 'Jurusan', 'value' => $permintaan->jurusan ?? null],
-                                    ['label' => $isEmployee ? 'Posisi Yang Dilamar' : 'NIS / NIM', 'value' => $permintaan->no_induk ?? null],
-                                    ['label' => 'Nomor Telepon / WA', 'value' => $permintaan->no_hp ?? null],
+                                    [
+                                        'label' => $isEmployee ? 'Pendidikan Terakhir' : 'Asal Sekolah / Universitas',
+                                        'value' => $isEmployee
+                                            ? ($permintaan->pendidikan_terakhir ?? null)
+                                            : ($permintaan->nama_sekolah ?? null),
+                                    ],
+                                    [
+                                        'label' => $isEmployee ? 'Posisi Yang Dilamar' : 'Jurusan',
+                                        'value' => $isEmployee
+                                            ? ($permintaan->posisi ?? null)
+                                            : ($permintaan->jurusan ?? null),
+                                    ],
                                 ];
+
+                                if ($isEmployee) {
+                                    $details[] = [
+                                        'label' => 'Bidang / Keahlian',
+                                        'value' => $permintaan->bidang_keahlian ?? null,
+                                    ];
+                                } else {
+                                    $details[] = [
+                                        'label' => 'NIS / NIM',
+                                        'value' => $permintaan->no_induk ?? null,
+                                    ];
+                                }
+
+                                // Nomor Telepon
+                                $details[] = ['label' => 'Nomor Telepon / WA', 'value' => $permintaan->no_hp ?? null];
+
+                                // Khusus karyawan: NIK diletakkan persis setelah nomor telepon / WA
+                                if ($isEmployee) {
+                                    $details[] = [
+                                        'label' => 'NIK (Nomor Induk Kependudukan)',
+                                        'value' => $permintaan->nik ?? null,
+                                    ];
+                                }
                             @endphp
 
                             @foreach($details as $item)
@@ -471,7 +506,6 @@
 
             {{-- Sidebar --}}
             <aside class="space-y-5">
-
                 {{-- Card "Cara Memeriksa Status" --}}
                 <section class="overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50/80 to-orange-50/80 px-5 py-5 shadow-[0_12px_32px_rgba(180,83,9,0.12)]">
                     <div class="flex items-center gap-2">
@@ -505,35 +539,41 @@
                     </div>
                 </section>
 
-                {{-- Card "Butuh Bantuan?" dengan kontak lebih menonjol --}}
+                {{-- Card "Butuh Bantuan?" --}}
                 <section class="overflow-hidden rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-blue-100/60 px-5 py-5 shadow-[0_12px_32px_rgba(2,132,199,0.15)]">
                     <div class="flex items-center gap-2">
                         <h2 class="text-base font-extrabold text-sky-800">Butuh Bantuan?</h2>
                     </div>
-                    <p class="mt-3 text-xs leading-5 text-slate-600">Jika Anda mengalami kendala teknis atau memiliki pertanyaan, hubungi tim HRD kami.</p>
+                    <p class="mt-3 text-xs leading-5 text-slate-600">
+                        Jika Anda mengalami kendala teknis atau memiliki pertanyaan, hubungi tim HRD kami.
+                    </p>
+
                     <div class="mt-4 space-y-2">
+                        {{-- Email --}}
                         <div class="flex items-center gap-2 rounded-lg border border-sky-100 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-700">
                             <span class="text-sky-600">📧</span>
-                            <a href="mailto:{{ config('mail.from.address') }}" class="hover:text-sky-700 hover:underline">{{ config('mail.from.address') }}</a>
+                            <a href="mailto:{{ config('mail.from.address') }}" class="hover:text-sky-700 hover:underline">
+                                {{ config('mail.from.address', 'hrd@natusi.co.id') }}
+                            </a>
                         </div>
+
+                        {{-- Telepon / WhatsApp --}}
                         <div class="flex items-center gap-2 rounded-lg border border-sky-100 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-700">
-                            <span class="text-sky-600">📱</span>
-                            <span>+62 812-3456-7890</span>
+                            <span class="text-emerald-600">💬</span>
+                            <a href="https://wa.me/6281234567890" target="_blank" class="hover:text-emerald-700 hover:underline">
+                                +62 812-3456-7890 (HRD)
+                            </a>
                         </div>
                     </div>
-                    <a href="mailto:{{ config('mail.from.address') }}" class="mt-5 inline-flex w-full items-center justify-center rounded-xl border border-sky-600 bg-white px-4 py-3 text-xs font-extrabold text-sky-700 transition hover:bg-sky-50 shadow-sm">
-                        Kirim Email ke HRD
-                    </a>
                 </section>
-
             </aside>
         </div>
     </main>
 
-    <footer class="border-t border-slate-200 bg-white">
-        <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 text-[10px] text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-            <p>© {{ date('Y') }} <strong>CV Natusi</strong>. Portal Pendaftaran {{ $isEmployee ? 'Karyawan' : 'Magang' }}.</p>
-            <p>Status diperbarui setiap kali halaman dimuat ulang.</p>
+    {{-- Footer --}}
+    <footer class="mt-auto border-t border-slate-200 bg-white py-6">
+        <div class="mx-auto max-w-7xl px-4 text-center text-xs text-slate-500 sm:px-6 lg:px-8">
+            &copy; {{ date('Y') }} CV Natusi. All rights reserved.
         </div>
     </footer>
 </div>

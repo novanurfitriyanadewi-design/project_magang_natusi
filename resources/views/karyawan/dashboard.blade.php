@@ -9,7 +9,7 @@
     <section class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-950">
-                Selamat {{ Carbon\Carbon::now()->hour < 11 ? 'Pagi' : (Carbon\Carbon::now()->hour < 15 ? 'Siang' : (Carbon\Carbon::now()->hour < 18 ? 'Sore' : 'Malam')) }}, {{ explode(' ', $user->name)[0] ?? $user->name }}!
+                Selamat {{ Carbon\Carbon::now()->hour < 11 ? 'Pagi' : (Carbon\Carbon::now()->hour < 15 ? 'Siang' : (Carbon\Carbon::now()->hour < 18 ? 'Sore' : 'Malam')) }}, {{ explode(' ', $user->nama)[0] ?? $user->nama }}!
             </h1>
             <p class="mt-1 text-sm text-slate-500">
                 Berikut ringkasan aktivitas Anda di CV Natusi hari ini, {{ \Illuminate\Support\Carbon::now()->translatedFormat('d F Y') }}.

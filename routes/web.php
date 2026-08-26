@@ -13,7 +13,7 @@ use App\Http\Controllers\Superadmin\AturanPerusahaanController as SuperadminAtur
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\JamAbsensiController as SuperadminJamAbsensiController;
 use App\Http\Controllers\Superadmin\MetodePembayaranController as SuperadminMetodePembayaranController;
-use App\Http\Controllers\Superadmin\QrisPembayaranController as SuperadminQrisPembayaranController;
+// use App\Http\Controllers\Superadmin\QrisPembayaranController as SuperadminQrisPembayaranController;
 use App\Http\Controllers\Superadmin\SuperadminDivisiController;
 
 // Admin Peserta Controllers
@@ -55,7 +55,6 @@ use App\Http\Controllers\PesertaMagang\AturanController as PesertaAturanControll
 use App\Http\Controllers\PesertaMagang\PembayaranController as PesertaMagangPembayaranController;
 use App\Http\Controllers\PesertaMagang\SertifikatController as PesertaMagangSertifikatController;
 use App\Http\Controllers\PesertaMagang\LaporanMingguanController as PesertaMagangLaporanMingguanController;
-use App\Http\Controllers\Peserta\TugasController as PesertaTugasController;
 
 // Karyawan Controllers
 use App\Http\Controllers\Karyawan\DashboardController as KaryawanDashboardController;
@@ -199,15 +198,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::delete('/metode-pembayaran/qris', [SuperadminMetodePembayaranController::class, 'destroyQris'])
             ->name('metode-pembayaran.qris.destroy');
 
-        /* QRIS Pembayaran (mandiri, tidak terikat rekening) */
-        Route::get('/qris-pembayaran', [SuperadminQrisPembayaranController::class, 'index'])
-            ->name('qris-pembayaran.index');
-        Route::post('/qris-pembayaran', [SuperadminQrisPembayaranController::class, 'store'])
-            ->name('qris-pembayaran.store');
-        Route::post('/qris-pembayaran/{qris}/toggle', [SuperadminQrisPembayaranController::class, 'toggle'])
-            ->name('qris-pembayaran.toggle');
-        Route::delete('/qris-pembayaran/{qris}', [SuperadminQrisPembayaranController::class, 'destroy'])
-            ->name('qris-pembayaran.destroy');
+
 
         /* Kelola Divisi */
         Route::get('/divisi', [SuperadminDivisiController::class, 'index'])->name('divisi.index');
@@ -445,6 +436,7 @@ Route::middleware('admin.karyawan')
         // Permintaan Lamaran Karyawan
         Route::get('/permintaan-lamaran', [AdminPermintaanLamaranController::class, 'index'])->name('permintaan-lamaran.index');
         Route::post('/permintaan-lamaran/{id}/action', [AdminPermintaanLamaranController::class, 'action'])->whereNumber('id')->name('permintaan-lamaran.action');
+        Route::delete('/permintaan-lamaran/{id}', [AdminPermintaanLamaranController::class, 'destroy'])->whereNumber('id')->name('permintaan-lamaran.destroy');
 
         // Pengumuman Karyawan
         Route::resource('pengumuman', AdminKaryawanPengumumanController::class)->except(['show']);
@@ -521,11 +513,6 @@ Route::middleware(['auth', 'role:peserta'])
         Route::post('/penugasan/{id_tugas}/kumpul', [PesertaMagangPenugasanController::class, 'store'])->name('penugasan.store');
 
         Route::get('/aturan', [PesertaAturanController::class, 'index'])->name('aturan.index');
-
-        Route::get('/tugas', [PesertaTugasController::class, 'index'])->name('tugas.index');
-        Route::get('/tugas/{penugasan}/file', [PesertaTugasController::class, 'downloadTask'])->name('tugas.file.download');
-        Route::get('/tugas/{penugasan}/template-laporan', [PesertaTugasController::class, 'downloadReportTemplate'])->name('tugas.template-laporan.download');
-        Route::post('/tugas/{penugasan}/kumpulkan', [PesertaTugasController::class, 'submit'])->name('tugas.submit');
 
         Route::get('/pembayaran', [PesertaMagangPembayaranController::class, 'index'])->name('pembayaran.index');
         Route::post('/pembayaran', [PesertaMagangPembayaranController::class, 'store'])->name('pembayaran.store');

@@ -21,6 +21,7 @@ class PermintaanLamaran extends Model
         'nik',                  // Menggunakan 'nik'
         'pendidikan_terakhir',  // Menggunakan 'pendidikan_terakhir'
         'posisi',
+        'bidang_keahlian',      // <-- FIX: kolom baru, tadinya belum ada di fillable
         'tanggal_lamar',
         'no_hp',
         'pesan',
@@ -31,14 +32,13 @@ class PermintaanLamaran extends Model
         'lokasi_interview',
         'akun_dibuat',
         'cv_path',
-        'surat_lamaran_path',   // <-- baru
-    'ijazah_path',          // <-- baru
-    'ktp_path',             // <-- baru
-    'pas_foto_path',        // <-- baru
-    'skck_path',            // <-- baru
-    'portfolio_path',
-    'pengalaman_kerja_path', // <-- baru
-        'portfolio_path',
+        'surat_lamaran_path',
+        'ijazah_path',
+        'ktp_path',
+        'pas_foto_path',
+        'skck_path',
+        'portfolio_path',        // FIX: duplikat dihapus (sebelumnya muncul 2x)
+        'pengalaman_kerja_path',
         'alasan_penolakan',
         'catatan_revisi',
     ];
