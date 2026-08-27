@@ -472,6 +472,9 @@ Route::middleware('admin.karyawan')
             // Laporan Data Karyawan
             Route::get('/karyawan', [LaporanKaryawanController::class, 'index'])->name('karyawan');
             Route::get('/karyawan/export', [LaporanKaryawanController::class, 'export'])->name('karyawan.export');
+
+            // Laporan Gaji Karyawan
+            Route::get('/gaji', [AdminPembayaranKaryawanController::class, 'laporan'])->name('gaji');
         });
     });
 

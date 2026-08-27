@@ -234,8 +234,8 @@ class PermintaanLamaranController extends Controller
                     'nama_karyawan' => $pendaftar->nama_pemohon,
                     'email'         => $pendaftar->email,
                     'no_hp'         => $pendaftar->no_hp ?? null,
-                    'jabatan'       => $pendaftar->posisi ?? $pendaftar->jabatan ?? null,
                     'status'        => 'aktif',
+                    'tanggal_bergabung' => today(),
                     'created_at'    => now(),
                     'updated_at'    => now(),
                 ]);
@@ -245,6 +245,7 @@ class PermintaanLamaranController extends Controller
                     ->update([
                         'user_id'    => $karyawanUserId,
                         'status'     => 'aktif',
+                        'tanggal_bergabung' => $karyawanRecord->tanggal_bergabung ?? today(),
                         'updated_at' => now(),
                     ]);
             }

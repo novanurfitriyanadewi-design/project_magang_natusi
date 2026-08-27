@@ -26,12 +26,21 @@ class PayslipController extends Controller
 
             $slipGaji = $query->orderByDesc('periode')->paginate(12)->withQueryString();
 
+            // Total gaji sesuai filter yang aktif
+            $totalQuery = PembayaranKaryawan::where('karyawan_id', $karyawan->id_karyawan);
+            if ($request->filled('tahun')) {
+                $totalQuery->where('periode', 'like', $request->tahun . '-%');
+            }
+            $totalGaji = (clone $totalQuery)->where('status', 'terbayar')->sum('nominal');
+            $jumlahSlipTerbayar = (clone $totalQuery)->where('status', 'terbayar')->count();
+            $slipTerakhir = (clone $totalQuery)->where('status', 'terbayar')->orderByDesc('periode')->first();
+
             $tahunList = PembayaranKaryawan::where('karyawan_id', $karyawan->id_karyawan)
                 ->selectRaw('DISTINCT SUBSTRING(periode, 1, 4) as tahun')
                 ->orderByDesc('tahun')
                 ->pluck('tahun');
         }
 
-        return view('karyawan.payslip.index', compact('slipGaji', 'tahunList'));
+        return view('karyawan.payslip.index', compact('slipGaji', 'tahunList', 'totalGaji', 'jumlahSlipTerbayar', 'slipTerakhir'));
     }
 }

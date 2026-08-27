@@ -11,6 +11,10 @@ class Karyawan extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'tanggal_bergabung' => 'date',
+    ];
+
     protected $table = 'karyawan';
     protected $primaryKey = 'id_karyawan';
 
@@ -23,7 +27,9 @@ class Karyawan extends Model
         'no_hp',
         'alamat',
         'jabatan',
+        'divisi_id',
         'status',
+        'tanggal_bergabung',
     ];
 
     public function user(): BelongsTo

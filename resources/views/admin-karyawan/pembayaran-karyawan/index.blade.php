@@ -34,23 +34,33 @@
 
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-3">
         <div>
-            <h2 class="text-2xl font-bold text-[#006191]">Slip Gaji</h2>
+            <span class="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#006191] ring-1 ring-sky-100">
+                Pembayaran Gaji
+            </span>
+            <h2 class="mt-2 text-2xl font-bold text-[#006191]">Slip Gaji</h2>
             <p class="text-sm text-slate-500">Ringkasan periode {{ $periodeFilter }}</p>
         </div>
 
         <div class="flex gap-3">
             <form method="GET" action="{{ route('admin-karyawan.pembayaran-karyawan.index') }}" class="flex gap-3">
                 <select name="status" onchange="this.form.submit()"
-                    class="bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-[#006191]">
+                    class="bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm shadow-sm focus:border-[#006191] focus:ring-2 focus:ring-[#006191]">
                     <option value="" @selected(! $statusFilter)>Semua Status</option>
                     <option value="terbayar" @selected($statusFilter === 'terbayar')>Terbayar</option>
                     <option value="belum_terbayar" @selected($statusFilter === 'belum_terbayar')>Belum Terbayar</option>
                 </select>
             </form>
 
+            <a href="{{ route('admin-karyawan.laporan.gaji') }}"
+                class="inline-flex items-center gap-2 border border-slate-300 bg-white text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M9 17v-6m4 6V7m4 10v-3M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                Laporan Gaji
+            </a>
+
             <button type="button" @click="openCreate()"
-                class="bg-[#006191] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#004b70] transition-colors">
-                + Bayar Gaji
+                class="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#006191] to-[#0a7ab5] text-white px-4 py-2 rounded-lg text-sm font-semibold shadow hover:bg-[#004b70] transition-colors">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                Bayar Gaji
             </button>
         </div>
     </header>
@@ -59,54 +69,91 @@
         <div class="bg-green-100 text-green-700 px-4 py-3 rounded-lg text-sm">{{ session('success') }}</div>
     @endif
 
-    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-gradient-to-br from-blue-600 to-[#006191] text-white p-4 rounded-xl shadow-md flex items-center justify-between">
-            <div class="space-y-0.5">
-                <span class="text-blue-100 text-[11px] font-bold uppercase tracking-wider block">Total Karyawan</span>
-                <div class="text-2xl font-black leading-tight">{{ $totalKaryawan }}</div>
-            </div>
-            <div class="bg-white/20 p-2.5 rounded-lg backdrop-blur-sm shrink-0">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            </div>
-        </div>
-
-        <div class="bg-gradient-to-br from-emerald-500 to-green-600 text-white p-4 rounded-xl shadow-md flex items-center justify-between">
-            <div class="space-y-0.5">
-                <span class="text-emerald-100 text-[11px] font-bold uppercase tracking-wider block">Sudah Dibayar</span>
-                <div class="text-2xl font-black leading-tight">{{ $sudahDibayar }}</div>
-            </div>
-            <div class="bg-white/20 p-2.5 rounded-lg backdrop-blur-sm shrink-0">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-sky-600 to-cyan-600 p-5 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
+            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full bg-white/10"></div>
+            <div class="relative flex items-start justify-between gap-3">
+                <div>
+                    <span class="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-sm">Total Karyawan</span>
+                    <p class="mt-2.5 text-2xl font-black leading-tight">{{ $totalKaryawan }}</p>
+                </div>
+                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/25 backdrop-blur-sm">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                </div>
             </div>
         </div>
 
-        <div class="bg-gradient-to-br from-rose-500 to-red-600 text-white p-4 rounded-xl shadow-md flex items-center justify-between">
-            <div class="space-y-0.5">
-                <span class="text-rose-100 text-[11px] font-bold uppercase tracking-wider block">Belum Dibayar</span>
-                <div class="text-2xl font-black leading-tight">{{ $belumDibayar }}</div>
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 p-5 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
+            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full bg-white/10"></div>
+            <div class="relative flex items-start justify-between gap-3">
+                <div>
+                    <span class="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-sm">Sudah Dibayar</span>
+                    <p class="mt-2.5 text-2xl font-black leading-tight">{{ $sudahDibayar }}</p>
+                    <p class="mt-1 text-[11px] font-medium text-emerald-100">Rp {{ number_format($totalNominalLunas, 0, ',', '.') }}</p>
+                </div>
+                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/25 backdrop-blur-sm">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
             </div>
-            <div class="bg-white/20 p-2.5 rounded-lg backdrop-blur-sm shrink-0">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 via-red-500 to-orange-600 p-5 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
+            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full bg-white/10"></div>
+            <div class="relative flex items-start justify-between gap-3">
+                <div>
+                    <span class="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-sm">Belum Dibayar</span>
+                    <p class="mt-2.5 text-2xl font-black leading-tight">{{ $belumDibayar }}</p>
+                    <p class="mt-1 text-[11px] font-medium text-rose-100">Perlu diproses HRD</p>
+                </div>
+                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/25 backdrop-blur-sm">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 p-5 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
+            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full bg-white/10"></div>
+            <div class="relative flex items-start justify-between gap-3">
+                <div>
+                    <span class="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-sm">Total Nominal Lunas</span>
+                    <p class="mt-2.5 text-xl sm:text-2xl font-black leading-tight whitespace-nowrap">Rp {{ number_format($totalNominalLunas, 0, ',', '.') }}</p>
+                    <p class="mt-1 text-[11px] font-medium text-violet-100">Tergabung periode {{ $periodeFilter }}</p>
+                </div>
+                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/25 backdrop-blur-sm">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m9-6a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="bg-white rounded-xl shadow overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-200">
-            <h3 class="text-lg font-semibold">Detail Slip Gaji</h3>
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+                <span class="grid h-8 w-8 place-items-center rounded-lg bg-sky-50 text-[#006191]">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </span>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-800 leading-tight">Detail Slip Gaji</h3>
+                    <p class="text-xs text-slate-400">Periode {{ $periodeFilter }}</p>
+                </div>
+            </div>
+            <a href="{{ route('admin-karyawan.laporan.gaji', ['tahun' => substr($periodeFilter, 0, 4), 'bulan' => substr($periodeFilter, 5, 2)]) }}"
+                class="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-4 py-1.5 text-xs font-bold text-[#006191] ring-1 ring-sky-100 hover:bg-sky-100 transition-colors">
+                Lihat Laporan Periode Ini
+            </a>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="bg-slate-50 text-xs uppercase text-slate-500">
-                        <th class="px-6 py-3">Nama Karyawan</th>
-                        <th class="px-6 py-3">Nominal</th>
-                        <th class="px-6 py-3">Status</th>
-                        <th class="px-6 py-3">Tanggal Bayar</th>
-                        <th class="px-6 py-3">Keterangan</th>
-                        <th class="px-6 py-3">Bukti Transfer</th>
-                        <th class="px-6 py-3">Aksi</th>
+            <table class="w-full min-w-[760px] text-left">
+                <thead class="bg-gradient-to-r from-[#006191] to-[#0a7ab5]">
+                    <tr class="bg-gradient-to-r from-[#006191] to-[#0a7ab5] text-[11px] uppercase tracking-wider text-white">
+                        <th class="px-6 py-3.5 font-extrabold">Nama Karyawan</th>
+                        <th class="px-6 py-3.5 font-extrabold">Nominal</th>
+                        <th class="px-6 py-3.5 font-extrabold">Status</th>
+                        <th class="px-6 py-3.5 font-extrabold">Tanggal Bayar</th>
+                        <th class="px-6 py-3.5 font-extrabold">Keterangan</th>
+                        <th class="px-6 py-3.5 font-extrabold">Bukti Transfer</th>
+                        <th class="px-6 py-3.5 font-extrabold">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -116,10 +163,15 @@
                             <td class="px-6 py-3 font-semibold">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
                             <td class="px-6 py-3">
                                 @php
-                                    $badge = $item->status === 'terbayar' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                                    $badge = $item->status === 'terbayar'
+                                        ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                                        : 'bg-red-50 text-red-600 ring-1 ring-red-200';
                                     $labelStatus = $item->status === 'terbayar' ? 'Terbayar' : 'Belum Terbayar';
                                 @endphp
-                                <span class="{{ $badge }} px-3 py-1 rounded-full text-xs font-bold">{{ $labelStatus }}</span>
+                                <span class="{{ $badge }} inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide">
+                                    <span class="h-1.5 w-1.5 rounded-full {{ $item->status === 'terbayar' ? 'bg-emerald-500' : 'bg-red-500' }}"></span>
+                                    {{ $labelStatus }}
+                                </span>
                             </td>
                             <td class="px-6 py-3 text-slate-500">{{ $item->tanggal_bayar ?? '-' }}</td>
                             <td class="px-6 py-3">{{ $item->keterangan ?? '-' }}</td>

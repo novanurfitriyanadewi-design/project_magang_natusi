@@ -11,8 +11,8 @@
         detailKaryawan: {},
         editKaryawan: {
             action: '', nama_karyawan: '', nip: '', email: '',
-            no_hp: '', alamat: '', jabatan: '', status: 'aktif',
-            tanggal_bergabung: '', divisi_id: ''
+            no_hp: '', alamat: '', status: 'aktif', jabatan: '',
+            tanggal_bergabung: '', divisi_id: '', divisi_nama: ''
         },
         deleteKaryawan: { action: '', nama: '' },
         openDetail(k) { this.detailKaryawan = k; this.detailOpen = true; },
@@ -136,8 +136,8 @@
                     <tr>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Nama Karyawan</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">NIP</th>
-                        <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Jabatan</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Divisi</th>
+                        <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Jabatan</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">No. HP</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Tgl Bergabung</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Status</th>
@@ -160,7 +160,6 @@
                                 </div>
                             </td>
                             <td class="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-600">{{ $karyawan->nip ?? '-' }}</td>
-                            <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{{ $karyawan->jabatan ?? '-' }}</td>
                             <td class="whitespace-nowrap px-5 py-4">
                                 @if ($karyawan->divisi)
                                     <span class="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700">
@@ -170,6 +169,7 @@
                                     <span class="text-xs text-slate-400">Belum ada</span>
                                 @endif
                             </td>
+                            <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{{ $karyawan->jabatan ?? '-' }}</td>
                             <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{{ $karyawan->no_hp ?? '-' }}</td>
                             <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
                                 {{ $karyawan->tanggal_bergabung?->translatedFormat('d M Y') ?? '-' }}
@@ -192,25 +192,14 @@
                                             email: @js($karyawan->email),
                                             no_hp: @js($karyawan->no_hp ?? '-'),
                                             alamat: @js($karyawan->alamat ?? '-'),
-                                            jabatan: @js($karyawan->jabatan ?? '-'),
                                             divisi: @js($karyawan->divisi->nama_divisi ?? 'Belum ada'),
+                                            jabatan: @js($karyawan->jabatan ?? '-'),
                                             status: @js($meta['label']),
                                             tanggal: @js(optional($karyawan->tanggal_bergabung)->translatedFormat('d M Y') ?? '-'),
-                                            cuti_url: @js($karyawan->cutis->first() ? route('admin-karyawan.cuti.show', $karyawan->cutis->first()) : ''),
-                                            surat_url: @js($karyawan->cutis->first() ? route('admin-karyawan.cuti.letter', $karyawan->cutis->first()) : ''),
-                                            cuti_label: @js($karyawan->cutis->first()?->jenis_label ?? ''),
                                         })"
                                     >
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg>
                                     </button>
-                                    @if ($karyawan->cutis->isNotEmpty())
-                                        <a href="{{ route('admin-karyawan.cuti.show', $karyawan->cutis->first()) }}" title="Detail pengajuan cuti" class="rounded-lg p-2 text-amber-600 hover:bg-amber-50">
-                                            <span class="material-symbols-outlined text-[20px]">event_note</span>
-                                        </a>
-                                        <a href="{{ route('admin-karyawan.cuti.letter', $karyawan->cutis->first()) }}" target="_blank" title="Lihat surat cuti" class="rounded-lg p-2 text-emerald-600 hover:bg-emerald-50">
-                                            <span class="material-symbols-outlined text-[20px]">description</span>
-                                        </a>
-                                    @endif
                                     <button
                                         type="button"
                                         title="Edit"
@@ -222,10 +211,10 @@
                                             email: @js($karyawan->email),
                                             no_hp: @js($karyawan->no_hp),
                                             alamat: @js($karyawan->alamat),
-                                            jabatan: @js($karyawan->jabatan),
                                             status: @js($karyawan->status),
-                                            tanggal_bergabung: @js(optional($karyawan->tanggal_bergabung)->format('Y-m-d')),
+                                            jabatan: @js($karyawan->jabatan ?? ''),
                                             divisi_id: @js($karyawan->divisi_id ?? ''),
+                                            divisi_nama: @js($karyawan->divisi->nama_divisi ?? 'Belum ada divisi'),
                                         })"
                                     >
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -275,21 +264,11 @@
                 <div class="flex justify-between"><span class="text-slate-400">NIP</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.nip"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">Email</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.email"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">No. HP</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.no_hp"></span></div>
-                <div class="flex justify-between"><span class="text-slate-400">Jabatan</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.jabatan"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">Divisi</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.divisi"></span></div>
+                <div class="flex justify-between"><span class="text-slate-400">Jabatan</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.jabatan"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">Alamat</span><span class="font-semibold text-slate-800 text-right" x-text="detailKaryawan.alamat"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">Tgl Bergabung</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.tanggal"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">Status</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.status"></span></div>
-                <template x-if="detailKaryawan.cuti_url">
-                    <div class="mt-4 border-t border-slate-100 pt-4">
-                        <p class="font-bold text-slate-800">Pengajuan Cuti Terbaru</p>
-                        <p class="mt-1 text-slate-500" x-text="detailKaryawan.cuti_label"></p>
-                        <div class="mt-3 flex gap-2">
-                            <a :href="detailKaryawan.cuti_url" class="rounded-lg bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700">Detail & Proses</a>
-                            <a :href="detailKaryawan.surat_url" target="_blank" class="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">Lihat Surat</a>
-                        </div>
-                    </div>
-                </template>
             </div>
             <div class="border-t border-slate-100 px-6 py-4 text-right">
                 <button type="button" @click="detailOpen = false" class="rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-200">Tutup</button>
@@ -325,17 +304,26 @@
                     <input type="text" name="no_hp" x-model="editKaryawan.no_hp" class="w-full rounded-xl border-slate-300 focus:border-sky-500 focus:ring-sky-500">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-bold text-slate-700">Jabatan</label>
-                    <input type="text" name="jabatan" x-model="editKaryawan.jabatan" class="w-full rounded-xl border-slate-300 focus:border-sky-500 focus:ring-sky-500">
+                    <label class="mb-1 block text-sm font-bold text-slate-700">Divisi</label>
+                    <input
+                        type="text"
+                        readonly
+                        :value="editKaryawan.divisi_nama || 'Belum ada divisi'"
+                        class="w-full rounded-xl border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed focus:ring-0"
+                    >
+                    <p class="mt-1 text-[11px] text-slate-400">Otomatis sesuai divisi saat pendaftaran magang/kerja.</p>
+                    <input type="hidden" name="divisi_id" x-model="editKaryawan.divisi_id">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-bold text-slate-700">Divisi</label>
-                    <select name="divisi_id" x-model="editKaryawan.divisi_id" class="w-full rounded-xl border-slate-300 focus:border-sky-500 focus:ring-sky-500">
-                        <option value="">Belum ada divisi</option>
-                        @foreach ($divisiList as $divisi)
-                            <option value="{{ $divisi->id_divisi }}">{{ $divisi->nama_divisi }}</option>
-                        @endforeach
-                    </select>
+                    <label class="mb-1 block text-sm font-bold text-slate-700">Jabatan</label>
+                    <input
+                        type="text"
+                        readonly
+                        :value="editKaryawan.jabatan || '-'"
+                        class="w-full rounded-xl border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed focus:ring-0"
+                    >
+                    <p class="mt-1 text-[11px] text-slate-400">Otomatis sesuai jabatan saat pendaftaran.</p>
+                    <input type="hidden" name="jabatan" x-model="editKaryawan.jabatan">
                 </div>
                 <div class="sm:col-span-2">
                     <label class="mb-1 block text-sm font-bold text-slate-700">Alamat</label>
@@ -347,10 +335,6 @@
                         <option value="aktif">Aktif</option>
                         <option value="nonaktif">Non-Aktif</option>
                     </select>
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-bold text-slate-700">Tgl Bergabung</label>
-                    <input type="date" name="tanggal_bergabung" x-model="editKaryawan.tanggal_bergabung" class="w-full rounded-xl border-slate-300 focus:border-sky-500 focus:ring-sky-500">
                 </div>
             </div>
             <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">

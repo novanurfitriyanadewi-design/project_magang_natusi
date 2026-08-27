@@ -65,13 +65,11 @@ class KaryawanController extends Controller
             'nip'           => ['nullable', 'string', 'max:50', 'unique:karyawan,nip'],
             'no_hp'         => ['nullable', 'string', 'max:20'],
             'alamat'        => ['nullable', 'string'],
-            'jabatan'       => ['nullable', 'string', 'max:255'],
             'status'        => ['required', 'in:aktif,nonaktif'],
             'divisi_id'     => ['nullable', 'exists:divisi,id_divisi'],
         ]);
 
-        // Otomatis mengisi tanggal_bergabung saat karyawan baru ditambahkan/diterima
-        $validated['tanggal_bergabung'] = now();
+        $validated['tanggal_bergabung'] = $validated['status'] === 'aktif' ? today() : null;
 
         Karyawan::create($validated);
 
@@ -86,11 +84,13 @@ class KaryawanController extends Controller
             'nip'               => ['nullable', 'string', 'max:50', 'unique:karyawan,nip,' . $karyawan->id_karyawan . ',id_karyawan'],
             'no_hp'             => ['nullable', 'string', 'max:20'],
             'alamat'            => ['nullable', 'string'],
-            'jabatan'           => ['nullable', 'string', 'max:255'],
             'status'            => ['required', 'in:aktif,nonaktif'],
-            'tanggal_bergabung' => ['nullable', 'date'],
             'divisi_id'         => ['nullable', 'exists:divisi,id_divisi'],
         ]);
+
+        if ($validated['status'] === 'aktif' && $karyawan->status !== 'aktif') {
+            $validated['tanggal_bergabung'] = today();
+        }
 
         $karyawan->update($validated);
 

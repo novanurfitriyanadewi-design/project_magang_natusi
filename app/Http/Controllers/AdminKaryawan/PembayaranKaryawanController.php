@@ -45,6 +45,60 @@ class PembayaranKaryawanController extends Controller
         ]);
     }
 
+    public function laporan(Request $request)
+    {
+        $tahun = $request->query('tahun', now()->format('Y'));
+        $bulan = $request->query('bulan', '');
+        $status = $request->query('status', '');
+
+        $tahunList = PembayaranKaryawan::selectRaw('DISTINCT SUBSTRING(periode, 1, 4) as tahun')
+            ->orderByDesc('tahun')
+            ->pluck('tahun');
+        if (! $tahunList->contains(now()->format('Y'))) {
+            $tahunList->prepend(now()->format('Y'));
+        }
+        if ($tahun === 'all') {
+            $query = PembayaranKaryawan::with('karyawan');
+        } else {
+            $query = PembayaranKaryawan::with('karyawan')->where('periode', 'like', $tahun . '-%');
+            if ($bulan !== '') {
+                $query->where('periode', sprintf('%s-%02d', $tahun, (int) $bulan));
+            }
+        }
+
+        if ($status !== '') {
+            $query->where('status', $status);
+        }
+
+        $data = $query->orderByDesc('periode')->orderBy('karyawan_id')->get();
+
+        // Rekap per karyawan
+        $rekapKaryawan = $data->groupBy(fn ($item) => optional($item->karyawan)->nama_karyawan ?? '-')
+            ->map(function ($group, $nama) {
+                return [
+                    'nama' => $nama,
+                    'jumlah_slip' => $group->count(),
+                    'total_terbayar' => $group->where('status', 'terbayar')->sum('nominal'),
+                    'total_belum' => $group->where('status', 'belum_terbayar')->sum('nominal'),
+                    'total_keseluruhan' => $group->sum('nominal'),
+                ];
+            })
+            ->sortBy('nama')
+            ->values();
+
+        $stats = [
+            'total_gaji' => $data->where('status', 'terbayar')->sum('nominal'),
+            'total_belum' => $data->where('status', 'belum_terbayar')->sum('nominal'),
+            'total_slip' => $data->count(),
+            'slip_terbayar' => $data->where('status', 'terbayar')->count(),
+        ];
+
+        return view('admin-karyawan.laporan.gaji', compact(
+            'data', 'stats', 'rekapKaryawan',
+            'tahunList', 'tahun', 'bulan', 'status'
+        ));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

@@ -116,6 +116,7 @@
                 'children' => [
                     ['label' => 'Laporan Karyawan', 'route' => 'admin-karyawan.laporan.karyawan', 'match' => 'admin-karyawan.laporan.karyawan*', 'tour' => 'report-karyawan'],
                     ['label' => 'Laporan Absensi Karyawan', 'route' => 'admin-karyawan.laporan.absensi', 'match' => 'admin-karyawan.laporan.absensi*', 'tour' => 'report-attendance-karyawan'],
+                    ['label' => 'Laporan Gaji Karyawan', 'route' => 'admin-karyawan.laporan.gaji', 'match' => 'admin-karyawan.laporan.gaji', 'tour' => 'report-gaji-karyawan'],
                 ],
             ],
         ],

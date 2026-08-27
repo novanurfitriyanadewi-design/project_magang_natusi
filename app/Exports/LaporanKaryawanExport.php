@@ -11,29 +11,29 @@ class LaporanKaryawanExport implements FromCollection, WithHeadings, WithMapping
 {
     protected $dariTgl;
     protected $sampaiTgl;
-    protected $jabatan;
+    protected $divisiId;
     protected $search;
 
-    public function __construct($dariTgl = null, $sampaiTgl = null, $jabatan = null, $search = null)
+    public function __construct($dariTgl = null, $sampaiTgl = null, $divisiId = null, $search = null)
     {
         $this->dariTgl = $dariTgl;
         $this->sampaiTgl = $sampaiTgl;
-        $this->jabatan = $jabatan;
+        $this->divisiId = $divisiId;
         $this->search = $search;
     }
 
     public function collection()
     {
-        $query = Karyawan::query();
+        $query = Karyawan::query()->with('divisi');
 
         if ($this->dariTgl) {
-            $query->whereDate('created_at', '>=', $this->dariTgl);
+            $query->whereDate('tanggal_bergabung', '>=', $this->dariTgl);
         }
         if ($this->sampaiTgl) {
-            $query->whereDate('created_at', '<=', $this->sampaiTgl);
+            $query->whereDate('tanggal_bergabung', '<=', $this->sampaiTgl);
         }
-        if ($this->jabatan) {
-            $query->where('jabatan', $this->jabatan);
+        if ($this->divisiId) {
+            $query->where('divisi_id', $this->divisiId);
         }
         if ($this->search) {
             $query->where(function ($q) {
@@ -47,7 +47,7 @@ class LaporanKaryawanExport implements FromCollection, WithHeadings, WithMapping
 
     public function headings(): array
     {
-        return ['Nama Karyawan', 'NIP', 'Email', 'No. HP', 'Jabatan', 'Status', 'Tanggal Bergabung'];
+        return ['Nama Karyawan', 'NIP', 'Email', 'No. HP', 'Divisi', 'Status', 'Tanggal Bergabung'];
     }
 
     public function map($karyawan): array
@@ -57,9 +57,9 @@ class LaporanKaryawanExport implements FromCollection, WithHeadings, WithMapping
             $karyawan->nip ?? '-',
             $karyawan->email ?? '-',
             $karyawan->no_hp ?? '-',
-            $karyawan->jabatan ?? '-',
+            $karyawan->divisi?->nama_divisi ?? '-',
             ucfirst($karyawan->status),
-            $karyawan->created_at ? $karyawan->created_at->format('d-m-Y') : '-',
+            $karyawan->tanggal_bergabung ? $karyawan->tanggal_bergabung->format('d-m-Y') : '-',
         ];
     }
 }
