@@ -16,6 +16,10 @@ class PayslipController extends Controller
 
         $slipGaji = collect();
         $tahunList = collect();
+        $totalGaji = 0;
+        $jumlahSlipTerbayar = 0;
+        $jumlahSlipMenunggu = 0;
+        $slipTerakhir = null;
 
         if ($karyawan) {
             $query = PembayaranKaryawan::where('karyawan_id', $karyawan->id_karyawan);
@@ -33,6 +37,7 @@ class PayslipController extends Controller
             }
             $totalGaji = (clone $totalQuery)->where('status', 'terbayar')->sum('nominal');
             $jumlahSlipTerbayar = (clone $totalQuery)->where('status', 'terbayar')->count();
+            $jumlahSlipMenunggu = (clone $totalQuery)->where('status', 'belum_terbayar')->count();
             $slipTerakhir = (clone $totalQuery)->where('status', 'terbayar')->orderByDesc('periode')->first();
 
             $tahunList = PembayaranKaryawan::where('karyawan_id', $karyawan->id_karyawan)
@@ -41,6 +46,13 @@ class PayslipController extends Controller
                 ->pluck('tahun');
         }
 
-        return view('karyawan.payslip.index', compact('slipGaji', 'tahunList', 'totalGaji', 'jumlahSlipTerbayar', 'slipTerakhir'));
+        return view('karyawan.payslip.index', compact(
+            'slipGaji',
+            'tahunList',
+            'totalGaji',
+            'jumlahSlipTerbayar',
+            'jumlahSlipMenunggu',
+            'slipTerakhir'
+        ));
     }
 }

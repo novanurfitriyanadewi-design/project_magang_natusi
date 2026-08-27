@@ -32,19 +32,20 @@
     }"
 >
 
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-3">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-3 rounded-2xl border border-sky-800 p-6 text-white shadow-md md:p-7" style="background: linear-gradient(135deg, #075177 0%, #006191 55%, #0a7ab5 100%);">
         <div>
-            <span class="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#006191] ring-1 ring-sky-100">
+            <span class="inline-flex items-center gap-2 rounded-full bg-sky-900/40 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white ring-1 ring-sky-200/40">
                 Pembayaran Gaji
             </span>
-            <h2 class="mt-2 text-2xl font-bold text-[#006191]">Slip Gaji</h2>
-            <p class="text-sm text-slate-500">Ringkasan periode {{ $periodeFilter }}</p>
+            <h2 class="mt-2 text-2xl font-bold text-white">Slip Gaji</h2>
+            <p class="text-sm text-sky-100">Ringkasan periode {{ $periodeFilter }}</p>
         </div>
 
         <div class="flex gap-3">
             <form method="GET" action="{{ route('admin-karyawan.pembayaran-karyawan.index') }}" class="flex gap-3">
                 <select name="status" onchange="this.form.submit()"
-                    class="bg-white border border-slate-300 rounded-lg px-4 py-2 text-sm shadow-sm focus:border-[#006191] focus:ring-2 focus:ring-[#006191]">
+                    class="rounded-lg border border-sky-300 bg-[#075177] px-4 py-2 text-sm font-semibold text-white shadow-sm focus:border-white focus:ring-2 focus:ring-white/40"
+                    style="background-color: #075177; color: #ffffff;">
                     <option value="" @selected(! $statusFilter)>Semua Status</option>
                     <option value="terbayar" @selected($statusFilter === 'terbayar')>Terbayar</option>
                     <option value="belum_terbayar" @selected($statusFilter === 'belum_terbayar')>Belum Terbayar</option>
@@ -52,13 +53,15 @@
             </form>
 
             <a href="{{ route('admin-karyawan.laporan.gaji') }}"
-                class="inline-flex items-center gap-2 border border-slate-300 bg-white text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors">
+                class="inline-flex items-center gap-2 rounded-lg border border-sky-300 bg-[#075177] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#063f5d]"
+                style="background-color: #075177; color: #ffffff;">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M9 17v-6m4 6V7m4 10v-3M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                 Laporan Gaji
             </a>
 
             <button type="button" @click="openCreate()"
-                class="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#006191] to-[#0a7ab5] text-white px-4 py-2 rounded-lg text-sm font-semibold shadow hover:bg-[#004b70] transition-colors">
+                class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow transition-colors hover:brightness-110"
+                style="background-color: #004b70;">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 Bayar Gaji
             </button>
@@ -70,56 +73,56 @@
     @endif
 
     <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-sky-600 to-cyan-600 p-5 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full bg-white/10"></div>
+        <div class="relative overflow-hidden rounded-2xl bg-[#087eb8] p-5 text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg" style="background: linear-gradient(135deg, #075177 0%, #087eb8 100%);">
+            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full border border-cyan-200/20"></div>
             <div class="relative flex items-start justify-between gap-3">
                 <div>
-                    <span class="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-sm">Total Karyawan</span>
+                    <span class="inline-block rounded-full bg-sky-950/35 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">Total Karyawan</span>
                     <p class="mt-2.5 text-2xl font-black leading-tight">{{ $totalKaryawan }}</p>
                 </div>
-                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/25 backdrop-blur-sm">
+                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-sky-950/35">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 </div>
             </div>
         </div>
 
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 p-5 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full bg-white/10"></div>
+        <div class="relative overflow-hidden rounded-2xl bg-[#159b72] p-5 text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg" style="background: linear-gradient(135deg, #12805f 0%, #159b72 100%);">
+            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full border border-emerald-100/20"></div>
             <div class="relative flex items-start justify-between gap-3">
                 <div>
-                    <span class="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-sm">Sudah Dibayar</span>
+                    <span class="inline-block rounded-full bg-emerald-950/30 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">Sudah Dibayar</span>
                     <p class="mt-2.5 text-2xl font-black leading-tight">{{ $sudahDibayar }}</p>
                     <p class="mt-1 text-[11px] font-medium text-emerald-100">Rp {{ number_format($totalNominalLunas, 0, ',', '.') }}</p>
                 </div>
-                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/25 backdrop-blur-sm">
+                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-950/30">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
             </div>
         </div>
 
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 via-red-500 to-orange-600 p-5 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full bg-white/10"></div>
+        <div class="relative overflow-hidden rounded-2xl bg-[#d94a45] p-5 text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg" style="background: linear-gradient(135deg, #c83f47 0%, #d94a45 100%);">
+            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full border border-rose-100/20"></div>
             <div class="relative flex items-start justify-between gap-3">
                 <div>
-                    <span class="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-sm">Belum Dibayar</span>
+                    <span class="inline-block rounded-full bg-rose-950/30 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">Belum Dibayar</span>
                     <p class="mt-2.5 text-2xl font-black leading-tight">{{ $belumDibayar }}</p>
                     <p class="mt-1 text-[11px] font-medium text-rose-100">Perlu diproses HRD</p>
                 </div>
-                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/25 backdrop-blur-sm">
+                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-rose-950/30">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                 </div>
             </div>
         </div>
 
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 p-5 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all">
-            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full bg-white/10"></div>
+        <div class="relative overflow-hidden rounded-2xl bg-[#6950b8] p-5 text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg" style="background: linear-gradient(135deg, #51409b 0%, #6950b8 100%);">
+            <div class="absolute -right-6 -bottom-8 h-28 w-28 rounded-full border border-violet-100/20"></div>
             <div class="relative flex items-start justify-between gap-3">
                 <div>
-                    <span class="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-sm">Total Nominal Lunas</span>
+                    <span class="inline-block rounded-full bg-violet-950/30 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">Total Nominal Lunas</span>
                     <p class="mt-2.5 text-xl sm:text-2xl font-black leading-tight whitespace-nowrap">Rp {{ number_format($totalNominalLunas, 0, ',', '.') }}</p>
                     <p class="mt-1 text-[11px] font-medium text-violet-100">Tergabung periode {{ $periodeFilter }}</p>
                 </div>
-                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/25 backdrop-blur-sm">
+                <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-violet-950/30">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m9-6a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
             </div>
@@ -145,8 +148,8 @@
 
         <div class="overflow-x-auto">
             <table class="w-full min-w-[760px] text-left">
-                <thead class="bg-gradient-to-r from-[#006191] to-[#0a7ab5]">
-                    <tr class="bg-gradient-to-r from-[#006191] to-[#0a7ab5] text-[11px] uppercase tracking-wider text-white">
+                <thead style="background-color: #075177; color: #ffffff;">
+                    <tr class="text-[11px] uppercase tracking-wider text-white" style="background-color: #075177; color: #ffffff;">
                         <th class="px-6 py-3.5 font-extrabold">Nama Karyawan</th>
                         <th class="px-6 py-3.5 font-extrabold">Nominal</th>
                         <th class="px-6 py-3.5 font-extrabold">Status</th>
