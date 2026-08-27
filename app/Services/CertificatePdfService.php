@@ -80,17 +80,19 @@ class CertificatePdfService
 
     private function buildSignatureQr(string $signatureUrl): string
     {
-        $result = Builder::create()
-            ->writer(new PngWriter())
-            ->writerOptions([])
-            ->data($signatureUrl)
-            ->encoding(new Encoding('UTF-8'))
-            ->errorCorrectionLevel(ErrorCorrectionLevel::Medium)
-            ->size(360)
-            ->margin(24)
-            ->roundBlockSizeMode(RoundBlockSizeMode::Margin)
-            ->validateResult(false)
-            ->build();
+        $builder = new Builder(
+            writer: new PngWriter(),
+            writerOptions: [],
+            data: $signatureUrl,
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::Medium,
+            size: 360,
+            margin: 24,
+            roundBlockSizeMode: RoundBlockSizeMode::Margin,
+            validateResult: false,
+        );
+
+        $result = $builder->build();
 
         return $result->getDataUri();
     }

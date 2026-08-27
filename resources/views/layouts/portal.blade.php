@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('title', 'Portal Magang Dan Karyawan') | CV Natusi</title>
@@ -30,13 +30,27 @@
 
         html{
             font-family:'Inter',sans-serif;
+            -webkit-text-size-adjust:100%;
+            text-size-adjust:100%;
         }
 
         body{
             margin:0;
-            min-height:100vh;
+            min-height:100dvh;
             background:#f8fafc;
             color:#0f172a;
+            overflow-x:hidden;
+        }
+
+        img, svg, video, canvas, table{
+            max-width:100%;
+            height:auto;
+        }
+
+        .table-responsive{
+            width:100%;
+            overflow-x:auto;
+            -webkit-overflow-scrolling:touch;
         }
 
         .material-symbols-outlined{
@@ -101,12 +115,12 @@
     <div class="lg:pl-[245px]">
 
         <main
-            class="pt-[72px] min-h-screen bg-slate-50 px-6 py-6"
+            class="min-h-screen bg-slate-50 px-4 pb-6 pt-[72px] sm:px-6 lg:px-8"
         >
 
             @if(session('success'))
 
-                <div class="mb-5 rounded-xl border border-green-200 bg-green-50 p-4 text-green-700">
+                <div class="mb-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700 sm:text-base">
 
                     {{ session('success') }}
 
@@ -116,7 +130,7 @@
 
             @if(session('error'))
 
-                <div class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+                <div class="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 sm:text-base">
 
                     {{ session('error') }}
 
@@ -128,7 +142,7 @@
 
         </main>
 
-        <footer class="border-t bg-white py-4 text-center text-xs text-slate-500">
+        <footer class="border-t bg-white px-4 py-4 text-center text-xs text-slate-500">
 
             © {{ date('Y') }} CV Natusi Internship Portal
 

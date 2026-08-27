@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cuti;
 use App\Models\Notifikasi;
 use Illuminate\Http\Request;
+use App\Services\LeaveLetterPdfService;
 
 class CutiController extends Controller
 {
@@ -37,6 +38,18 @@ class CutiController extends Controller
         return view('admin-karyawan.cuti.index', compact(
             'cutis', 'search', 'status', 'totalPengajuan', 'menunggu', 'disetujui', 'ditolak'
         ));
+    }
+
+    public function show(Cuti $cuti)
+    {
+        $cuti->load('karyawan.divisi');
+
+        return view('admin-karyawan.cuti.show', compact('cuti'));
+    }
+
+    public function letter(Cuti $cuti, LeaveLetterPdfService $pdf)
+    {
+        return $pdf->download($cuti);
     }
 
     public function approve(Cuti $cuti)

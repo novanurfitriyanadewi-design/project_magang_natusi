@@ -452,11 +452,14 @@ Route::middleware('admin.karyawan')
 
         // Pengajuan Resign (sisi admin)
         Route::get('/resign', [AdminResignController::class, 'index'])->name('resign.index');
+        Route::get('/resign/{resign}', [AdminResignController::class, 'adminShow'])->whereNumber('resign')->name('resign.show');
         Route::patch('/resign/{resign}/approve', [AdminResignController::class, 'approve'])->name('resign.approve');
         Route::patch('/resign/{resign}/reject', [AdminResignController::class, 'reject'])->name('resign.reject');
 
         // Pengajuan Cuti (sisi admin)
         Route::get('/cuti', [AdminCutiController::class, 'index'])->name('cuti.index');
+        Route::get('/cuti/{cuti}', [AdminCutiController::class, 'show'])->whereNumber('cuti')->name('cuti.show');
+        Route::get('/cuti/{cuti}/surat', [AdminCutiController::class, 'letter'])->whereNumber('cuti')->name('cuti.letter');
         Route::patch('/cuti/{cuti}/approve', [AdminCutiController::class, 'approve'])->name('cuti.approve');
         Route::patch('/cuti/{cuti}/reject', [AdminCutiController::class, 'reject'])->name('cuti.reject');
 
@@ -558,7 +561,9 @@ Route::middleware(['auth', 'role:karyawan'])
 
         // Menu Tambahan Karyawan (View Langsung)
         Route::get('/cuti', [\App\Http\Controllers\Karyawan\CutiController::class, 'index'])->name('cuti.index');
-Route::post('/cuti', [\App\Http\Controllers\Karyawan\CutiController::class, 'store'])->name('cuti.store');
+        Route::post('/cuti', [\App\Http\Controllers\Karyawan\CutiController::class, 'store'])->name('cuti.store');
+        Route::get('/cuti/{cuti}/surat', [\App\Http\Controllers\Karyawan\CutiController::class, 'letter'])
+            ->whereNumber('cuti')->name('cuti.letter');
 
         Route::get('/payslip', [\App\Http\Controllers\Karyawan\PayslipController::class, 'index'])->name('payslip.index');
 

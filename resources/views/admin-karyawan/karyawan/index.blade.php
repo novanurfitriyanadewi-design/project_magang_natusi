@@ -196,10 +196,21 @@
                                             divisi: @js($karyawan->divisi->nama_divisi ?? 'Belum ada'),
                                             status: @js($meta['label']),
                                             tanggal: @js(optional($karyawan->tanggal_bergabung)->translatedFormat('d M Y') ?? '-'),
+                                            cuti_url: @js($karyawan->cutis->first() ? route('admin-karyawan.cuti.show', $karyawan->cutis->first()) : ''),
+                                            surat_url: @js($karyawan->cutis->first() ? route('admin-karyawan.cuti.letter', $karyawan->cutis->first()) : ''),
+                                            cuti_label: @js($karyawan->cutis->first()?->jenis_label ?? ''),
                                         })"
                                     >
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg>
                                     </button>
+                                    @if ($karyawan->cutis->isNotEmpty())
+                                        <a href="{{ route('admin-karyawan.cuti.show', $karyawan->cutis->first()) }}" title="Detail pengajuan cuti" class="rounded-lg p-2 text-amber-600 hover:bg-amber-50">
+                                            <span class="material-symbols-outlined text-[20px]">event_note</span>
+                                        </a>
+                                        <a href="{{ route('admin-karyawan.cuti.letter', $karyawan->cutis->first()) }}" target="_blank" title="Lihat surat cuti" class="rounded-lg p-2 text-emerald-600 hover:bg-emerald-50">
+                                            <span class="material-symbols-outlined text-[20px]">description</span>
+                                        </a>
+                                    @endif
                                     <button
                                         type="button"
                                         title="Edit"
@@ -269,6 +280,16 @@
                 <div class="flex justify-between"><span class="text-slate-400">Alamat</span><span class="font-semibold text-slate-800 text-right" x-text="detailKaryawan.alamat"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">Tgl Bergabung</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.tanggal"></span></div>
                 <div class="flex justify-between"><span class="text-slate-400">Status</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.status"></span></div>
+                <template x-if="detailKaryawan.cuti_url">
+                    <div class="mt-4 border-t border-slate-100 pt-4">
+                        <p class="font-bold text-slate-800">Pengajuan Cuti Terbaru</p>
+                        <p class="mt-1 text-slate-500" x-text="detailKaryawan.cuti_label"></p>
+                        <div class="mt-3 flex gap-2">
+                            <a :href="detailKaryawan.cuti_url" class="rounded-lg bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700">Detail & Proses</a>
+                            <a :href="detailKaryawan.surat_url" target="_blank" class="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">Lihat Surat</a>
+                        </div>
+                    </div>
+                </template>
             </div>
             <div class="border-t border-slate-100 px-6 py-4 text-right">
                 <button type="button" @click="detailOpen = false" class="rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-200">Tutup</button>

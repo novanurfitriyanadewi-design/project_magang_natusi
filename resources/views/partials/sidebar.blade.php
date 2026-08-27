@@ -193,7 +193,7 @@
 
     /* Active indicator glow */
     .sidebar-active-glow {
-        box-shadow: 
+        box-shadow:
             0 0 20px rgba(6, 95, 137, 0.15),
             0 10px 28px rgba(0, 32, 58, 0.22);
     }
@@ -431,6 +431,12 @@
             </a>
 
             <div class="my-3 border-t border-white/10"></div>
+
+                        <button
+                type="button"
+                id="natusi-support-trigger"
+                class="group flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sky-50/85 transition-all duration-200 hover:translate-x-0.5 hover:bg-white/10 hover:text-white"
+            >
                 <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/10 text-white ring-1 ring-white/10 transition-all duration-200 group-hover:scale-105 group-hover:bg-white/15">
                     <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </span>
@@ -442,6 +448,7 @@
                 <button
                     type="submit"
                     class="group flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sky-50/85 transition-all duration-200 hover:translate-x-0.5 hover:bg-white/10 hover:text-white"
+                >
                     <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/10 text-white ring-1 ring-white/10 transition-all duration-200 group-hover:scale-105 group-hover:bg-white/15">
                         <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </span>

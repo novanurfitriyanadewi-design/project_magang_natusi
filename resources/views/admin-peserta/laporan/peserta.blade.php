@@ -16,6 +16,16 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded">
+            <ul class="list-disc list-inside text-sm">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
             <h1 class="text-3xl font-bold text-gray-800">Laporan Peserta Magang</h1>
@@ -70,6 +80,7 @@
                         <th class="px-6 py-4 text-left">Periode</th>
                         <th class="px-6 py-4 text-center">Status</th>
                         <th class="px-6 py-4 text-center">Durasi</th>
+                        <th class="px-6 py-4 text-center">Aksi</th>
                     </tr>
                 </thead>
 
@@ -157,6 +168,177 @@
 
         <div class="px-6 py-4 border-t bg-gray-50">
             {{ $peserta->links() }}
+        </div>
+    </div>
+
+    {{-- ================= MODAL TAMBAH ================= --}}
+    <div
+        x-show="showAddModal"
+        x-cloak
+        x-transition.opacity
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        @keydown.escape.window="showAddModal = false"
+    >
+        <div
+            @click.outside="showAddModal = false"
+            x-show="showAddModal"
+            x-transition
+            class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-xl"
+        >
+            <form method="POST" :action="baseUrl" class="divide-y divide-gray-100">
+                @csrf
+
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h3 class="text-lg font-bold text-gray-800">Tambah Peserta Magang</h3>
+                    <button type="button" @click="showAddModal = false" class="text-gray-400 hover:text-gray-600">&times;</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 px-6 py-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                        <textarea name="alamat" rows="2" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat Pendidikan</label>
+                        <input type="text" name="tingkat_pendidikan" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                        <input type="text" name="kelas" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                        <input type="date" name="tgl_mulai" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai</label>
+                        <input type="date" name="tgl_selesai" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Durasi Magang (bulan)</label>
+                        <input type="number" name="durasi_magang" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Guru Pembimbing</label>
+                        <input type="text" name="nama_guru" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">No. HP Guru</label>
+                        <input type="text" name="no_hpguru" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select name="status" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="aktif">Aktif</option>
+                            <option value="selesai">Selesai</option>
+                            <option value="dibatalkan">Dibatalkan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 px-6 py-4">
+                    <button type="button" @click="showAddModal = false" class="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-50">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ================= MODAL EDIT ================= --}}
+    <div
+        x-show="showEditModal"
+        x-cloak
+        x-transition.opacity
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        @keydown.escape.window="showEditModal = false"
+    >
+        <div
+            @click.outside="showEditModal = false"
+            x-show="showEditModal"
+            x-transition
+            class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-xl"
+        >
+            <form method="POST" :action="baseUrl + '/' + editItem.id" class="divide-y divide-gray-100">
+                @csrf
+                @method('PUT')
+
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h3 class="text-lg font-bold text-gray-800">Edit Peserta Magang</h3>
+                    <button type="button" @click="showEditModal = false" class="text-gray-400 hover:text-gray-600">&times;</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 px-6 py-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                        <textarea name="alamat" rows="2" x-model="editItem.alamat" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat Pendidikan</label>
+                        <input type="text" name="tingkat_pendidikan" x-model="editItem.tingkat_pendidikan" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                        <input type="text" name="kelas" x-model="editItem.kelas" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                        <input type="date" name="tgl_mulai" x-model="editItem.tgl_mulai" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai</label>
+                        <input type="date" name="tgl_selesai" x-model="editItem.tgl_selesai" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Durasi Magang (bulan)</label>
+                        <input type="number" name="durasi_magang" x-model="editItem.durasi_magang" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nama Guru Pembimbing</label>
+                        <input type="text" name="nama_guru" x-model="editItem.nama_guru" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">No. HP Guru</label>
+                        <input type="text" name="no_hpguru" x-model="editItem.no_hpguru" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select name="status" x-model="editItem.status" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="aktif">Aktif</option>
+                            <option value="selesai">Selesai</option>
+                            <option value="dibatalkan">Dibatalkan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 px-6 py-4">
+                    <button type="button" @click="showEditModal = false" class="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-50">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                        Update
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

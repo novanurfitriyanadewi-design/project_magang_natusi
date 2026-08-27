@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="mx-auto max-w-5xl">
+<div class="mx-auto max-w-5xl" x-data="{ jenis: @js(old('jenis_cuti', 'tahunan')), mulai: @js(old('tanggal_mulai', '')), selesai: @js(old('tanggal_selesai', '')), alasan: @js(old('alasan', '')) }">
 
     <div class="mb-7 flex items-center gap-3">
         <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-[#05658f]">
@@ -64,12 +64,12 @@
                     </ol>
                 </div>
 
-                <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-[#05658f] to-[#0a7fb0] p-6 text-white shadow-sm">
+                <div class="rounded-2xl border border-[#045575] bg-[#05658f] p-6 text-white shadow-sm" style="background: linear-gradient(135deg, #05658f 0%, #0a7fb0 100%); color: #ffffff;">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-[18px]">lightbulb</span>
-                        <p class="text-xs font-bold uppercase tracking-wide text-blue-100">Sebelum mengajukan</p>
+                        <p class="text-xs font-bold uppercase tracking-wide text-white">Sebelum mengajukan</p>
                     </div>
-                    <p class="mt-2 text-sm leading-6 text-blue-50">
+                    <p class="mt-2 text-sm leading-6 text-white" style="color: #ffffff;">
                         Ajukan cuti minimal beberapa hari sebelum tanggal mulai, agar HRD punya waktu meninjau dan mengatur pekerjaan pengganti.
                     </p>
                 </div>
@@ -84,7 +84,7 @@
 
                     <div>
                         <label class="mb-1.5 block text-xs font-semibold text-slate-600">Jenis Cuti</label>
-                        <select name="jenis_cuti" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-[#05658f] focus:ring-4 focus:ring-[#05658f]/10">
+                        <select name="jenis_cuti" x-model="jenis" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-[#05658f] focus:ring-4 focus:ring-[#05658f]/10">
                             <option value="tahunan">Cuti Tahunan</option>
                             <option value="sakit">Cuti Sakit</option>
                             <option value="melahirkan">Cuti Melahirkan</option>
@@ -99,7 +99,7 @@
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <label class="mb-1.5 block text-xs font-semibold text-slate-600">Tanggal Mulai</label>
-                            <input type="date" name="tanggal_mulai" value="{{ old('tanggal_mulai') }}"
+                            <input type="date" name="tanggal_mulai" x-model="mulai"
                                 class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-[#05658f] focus:ring-4 focus:ring-[#05658f]/10">
                             @error('tanggal_mulai')
                                 <p class="mt-1 text-xs font-medium text-red-500">{{ $message }}</p>
@@ -107,7 +107,7 @@
                         </div>
                         <div>
                             <label class="mb-1.5 block text-xs font-semibold text-slate-600">Tanggal Selesai</label>
-                            <input type="date" name="tanggal_selesai" value="{{ old('tanggal_selesai') }}"
+                            <input type="date" name="tanggal_selesai" x-model="selesai"
                                 class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-[#05658f] focus:ring-4 focus:ring-[#05658f]/10">
                             @error('tanggal_selesai')
                                 <p class="mt-1 text-xs font-medium text-red-500">{{ $message }}</p>
@@ -117,8 +117,8 @@
 
                     <div>
                         <label class="mb-1.5 block text-xs font-semibold text-slate-600">Alasan</label>
-                        <textarea name="alasan" rows="4" placeholder="Jelaskan alasan pengajuan cuti Anda..."
-                            class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-[#05658f] focus:ring-4 focus:ring-[#05658f]/10">{{ old('alasan') }}</textarea>
+                        <textarea name="alasan" x-model="alasan" rows="4" placeholder="Jelaskan alasan pengajuan cuti Anda..."
+                            class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-[#05658f] focus:ring-4 focus:ring-[#05658f]/10"></textarea>
                         @error('alasan')
                             <p class="mt-1 text-xs font-medium text-red-500">{{ $message }}</p>
                         @enderror
@@ -137,11 +137,25 @@
                         </p>
                     </div>
 
-                    <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl bg-[#05658f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#045575]">
+                    <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-xl bg-[#05658f] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#045575]" style="background-color: #05658f; color: #ffffff;">
                         <span class="material-symbols-outlined text-[18px]">send</span>
-                        Kirim Pengajuan
+                        Simpan & Kirim Pengajuan
                     </button>
                 </form>
+
+                <div class="mt-6 rounded-xl border border-sky-100 bg-sky-50/70 p-5" x-show="jenis || mulai || selesai || alasan">
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 class="text-sm font-bold text-slate-800">Template Surat Izin Cuti</h2>
+                        <span class="text-[11px] font-semibold text-sky-700">Preview otomatis</span>
+                    </div>
+                    <div class="mt-4 border-t border-sky-100 pt-4 text-xs leading-6 text-slate-600">
+                        <p class="text-center font-bold uppercase text-slate-800">Surat Izin Cuti</p>
+                        <p class="mt-3">Yang bertanda tangan di bawah ini menerangkan bahwa karyawan <strong>{{ $karyawan?->nama_karyawan ?? '-' }}</strong> mengajukan <strong x-text="jenis === 'melahirkan' ? 'Cuti Melahirkan' : (jenis === 'sakit' ? 'Cuti Sakit' : (jenis === 'tahunan' ? 'Cuti Tahunan' : 'Cuti Alasan Penting'))"></strong>.</p>
+                        <p>Periode: <strong x-text="mulai || '-'"></strong> sampai <strong x-text="selesai || '-'"></strong>.</p>
+                        <p>Alasan: <span x-text="alasan || '-' "></span></p>
+                    </div>
+                    <p class="mt-3 text-[11px] text-slate-500">Surat PDF resmi akan tersedia setelah pengajuan tersimpan.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -180,6 +194,11 @@
                             Lihat Bukti Pendukung
                         </a>
                     @endif
+
+                    <a href="{{ route('karyawan.cuti.letter', $cuti) }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:underline">
+                        <span class="material-symbols-outlined text-[14px]">description</span>
+                        Lihat Template Surat
+                    </a>
 
                     <div class="mt-3 flex items-center gap-1.5 border-t border-slate-100 pt-3 text-xs text-slate-400">
                         <span class="material-symbols-outlined text-[14px]">schedule</span>

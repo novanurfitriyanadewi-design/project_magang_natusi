@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* Material Symbols */
-.material-symbols-outlined{
+.material-symbols-outlined {
     font-variation-settings:
         'FILL' 0,
         'wght' 400,
@@ -11,28 +11,57 @@
         'opsz' 24;
 }
 
-.headline{
+.headline {
     font-family: 'Manrope', sans-serif;
 }
 
-.admin-announcement-create{
+/* ===== RESPONSIVE BASE ===== */
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    overflow-x: hidden;
+    min-height: 100dvh; /* pakai dvh biar aman dari address bar mobile browser */
+}
+
+/* Cegah elemen lebar (tabel, gambar, kode) bikin horizontal scroll di HP */
+img, svg, video, canvas, table {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Tabel biasanya paling sering bikin layout jebol di mobile.
+   Bungkus <table> kamu dengan <div class="table-responsive"> */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Safe area untuk HP dengan notch (iPhone dsb) */
+.safe-top    { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+.admin-announcement-create {
     background-color: #05658f;
     color: #ffffff;
     cursor: pointer;
     opacity: 1;
 }
 
-.admin-announcement-create:hover{
+.admin-announcement-create:hover {
     background-color: #045575;
 }
 
-.admin-rule-create{
+.admin-rule-create {
     background-color: #05658f;
     color: #ffffff;
     cursor: pointer;
     opacity: 1;
 }
 
-.admin-rule-create:hover{
+.admin-rule-create:hover {
     background-color: #045575;
 }

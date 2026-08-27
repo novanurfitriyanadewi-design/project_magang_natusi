@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cuti;
 use App\Models\Notifikasi;
 use App\Models\User;
+use App\Services\LeaveLetterPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -82,5 +83,12 @@ class CutiController extends Controller
             });
 
         return back()->with('success', 'Pengajuan cuti berhasil dikirim dan menunggu persetujuan HRD.');
+    }
+
+    public function letter(Cuti $cuti, LeaveLetterPdfService $pdf)
+    {
+        abort_unless($cuti->karyawan?->user_id === Auth::id(), 403);
+
+        return $pdf->download($cuti);
     }
 }

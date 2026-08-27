@@ -181,6 +181,9 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-center gap-2">
+                                    <a href="{{ route('admin-karyawan.resign.show', $item) }}" title="Detail pengajuan" class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-50 text-sky-600 transition hover:bg-sky-100">
+                                        <span class="material-symbols-outlined text-lg">visibility</span>
+                                    </a>
                                     @if ($item->status === 'pending')
                                         <form action="{{ route('admin-karyawan.resign.approve', $item) }}" method="POST" onsubmit="return confirm('Setujui pengajuan resign ini?');">
                                             @csrf

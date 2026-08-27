@@ -47,6 +47,13 @@ class ResignController extends Controller
         ));
     }
 
+    public function adminShow(Resign $resign)
+    {
+        $resign->load('karyawan.divisi');
+
+        return view('admin-karyawan.resign.show', compact('resign'));
+    }
+
     public function approve(Resign $resign)
     {
         $resign->update([

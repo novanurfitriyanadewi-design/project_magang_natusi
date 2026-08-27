@@ -138,8 +138,14 @@
                                 @endif
                             </td>
                             <td class="px-5 py-3">
+                                <div class="flex justify-center gap-2">
+                                    <a href="{{ route('admin-karyawan.cuti.show', $cuti) }}" title="Detail pengajuan" class="rounded-lg p-1.5 text-sky-600 hover:bg-sky-50">
+                                        <span class="material-symbols-outlined text-[19px]">visibility</span>
+                                    </a>
+                                    <a href="{{ route('admin-karyawan.cuti.letter', $cuti) }}" target="_blank" title="Lihat surat" class="rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50">
+                                        <span class="material-symbols-outlined text-[19px]">description</span>
+                                    </a>
                                 @if ($cuti->status === 'pending')
-                                    <div class="flex justify-center gap-2">
                                         <form method="POST" action="{{ route('admin-karyawan.cuti.approve', $cuti->id) }}">
                                             @csrf
                                             @method('PATCH')
@@ -152,10 +158,10 @@
                                             class="rounded-lg border border-rose-200 px-3 py-1.5 text-[11px] font-bold text-rose-700 hover:bg-rose-600 hover:text-white">
                                             Tolak
                                         </button>
-                                    </div>
                                 @else
-                                    <p class="text-center text-xs text-slate-400">—</p>
+                                    <span class="text-xs text-slate-400">Selesai</span>
                                 @endif
+                                </div>
                             </td>
                         </tr>
 

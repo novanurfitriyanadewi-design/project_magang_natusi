@@ -61,4 +61,9 @@ class Karyawan extends Model
 {
     return $this->belongsTo(divisi::class, 'divisi_id', 'id_divisi');
 }
+
+    public function cutis()
+    {
+        return $this->hasMany(Cuti::class, 'karyawan_id', 'id_karyawan');
+    }
 }

@@ -11,7 +11,10 @@ class KaryawanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Karyawan::query()->with('divisi');
+        $query = Karyawan::query()->with([
+            'divisi',
+            'cutis' => fn ($query) => $query->latest(),
+        ]);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

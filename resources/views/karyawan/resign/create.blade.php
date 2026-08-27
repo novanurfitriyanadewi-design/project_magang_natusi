@@ -87,12 +87,12 @@
                 </div>
 
                 {{-- TIP --}}
-                <div class="reveal rounded-2xl border border-slate-200 bg-gradient-to-br from-[#05658f] to-[#0a7fb0] p-6 text-white shadow-sm" style="--d:3">
+                <div class="reveal rounded-2xl border border-[#045575] bg-[#05658f] p-6 text-white shadow-sm" style="--d:3; background: linear-gradient(135deg, #05658f 0%, #0a7fb0 100%); color: #ffffff;">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-[18px]">lightbulb</span>
-                        <p class="text-xs font-bold uppercase tracking-wide text-blue-100">Sebelum mengajukan</p>
+                        <p class="text-xs font-bold uppercase tracking-wide text-white">Sebelum mengajukan</p>
                     </div>
-                    <p class="mt-2 text-sm leading-6 text-blue-50">
+                    <p class="mt-2 text-sm leading-6 text-white" style="color: #ffffff;">
                         Disarankan mengajukan resign jauh-jauh hari, idealnya minimal 30 hari sebelum tanggal efektif, agar proses serah terima pekerjaan berjalan lancar.
                     </p>
                 </div>
@@ -240,10 +240,11 @@
                     <button
                         id="resign-submit-btn"
                         type="submit"
-                        class="flex w-full items-center justify-center gap-2 rounded-xl bg-[#05658f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#045575] disabled:cursor-not-allowed"
+                        class="flex w-full items-center justify-center gap-2 rounded-xl bg-[#05658f] px-5 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#045575] disabled:cursor-not-allowed"
+                        style="background-color: #05658f; color: #ffffff;"
                     >
                         <span class="material-symbols-outlined text-[18px]">send</span>
-                        Kirim Pengajuan
+                        Simpan & Kirim Pengajuan
                     </button>
 
                 </form>

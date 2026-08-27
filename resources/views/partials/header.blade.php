@@ -186,7 +186,7 @@
                         placeholder="{{ $searchPlaceholder }}"
                         autocomplete="off"
                         class="
-                            h-11 w-[330px] rounded-full
+                            h-11 w-[min(28vw,330px)] rounded-full
                             border border-slate-200
                             bg-slate-50/80
                             py-2 pl-11 pr-4
@@ -241,7 +241,7 @@
                         placeholder="Cari menu..."
                         autocomplete="off"
                         class="
-                            h-11 w-[330px] rounded-full
+                            h-11 w-[min(28vw,330px)] rounded-full
                             border border-slate-200
                             bg-slate-50/80
                             py-2 pl-11 pr-4
@@ -497,7 +497,7 @@
                     x-transition.origin.top.right
                     @click.outside="profileOpen = false"
                     class="
-                        absolute right-0 z-50 mt-3 w-60
+                        absolute right-0 z-50 mt-3 w-[min(88vw,240px)]
                         overflow-hidden rounded-2xl
                         border border-slate-200 bg-white p-2
                         shadow-[0_20px_55px_rgba(15,52,94,0.18)]
