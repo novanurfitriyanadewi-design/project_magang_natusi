@@ -11,7 +11,7 @@
     $roleLabel = match ($user->role ?? '') {
         'superadmin' => 'Direktur Utama Internal',
         'admin' => 'Admin Internal',
-        'karyawan' => 'Karyawan',
+        'karyawan' => $user->karyawan?->divisi?->nama_divisi ?? 'Belum Ditentukan',
         'pelamar' => 'Pelamar',
         default => ucfirst((string) ($user->role ?? 'Pengguna')),
     };
@@ -193,12 +193,12 @@
                         </div>
 
                         <div>
-                            <label for="profile-role" class="mb-2 block text-sm font-bold text-slate-700">Jabatan dan hak akses</label>
+                            <label for="profile-role" class="mb-2 block text-sm font-bold text-slate-700">Jabatan / Divisi</label>
                             <div class="relative">
                                 <input id="profile-role" type="text" value="{{ $roleLabel }}" readonly class="h-12 w-full cursor-not-allowed rounded-xl border-slate-200 bg-slate-100 px-4 text-slate-500">
                                 <svg class="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="10" width="12" height="10" rx="2"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg>
                             </div>
-                            <p class="mt-2 text-xs text-slate-500">Jabatan tidak dapat diubah melalui halaman profil.</p>
+                            <p class="mt-2 text-xs text-slate-500">Jabatan mengikuti divisi yang ditetapkan oleh Admin Karyawan.</p>
                         </div>
                     </div>
 

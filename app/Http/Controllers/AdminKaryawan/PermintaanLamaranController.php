@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\AdminKaryawan;
 
 use App\Http\Controllers\Controller;
+use App\Mail\EmployeeAccountMail;
 use Carbon\Carbon;
 use App\Models\Karyawan;
 use App\Models\Notifikasi;
@@ -11,7 +12,10 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class PermintaanLamaranController extends Controller
 {
@@ -22,6 +26,18 @@ class PermintaanLamaranController extends Controller
 
         $total_disetujui = DB::table('permintaan_lamaran')
             ->where('status', 'disetujui')
+            ->where(function ($query) {
+                $query->whereNotExists(function ($subQuery) {
+                    $subQuery->selectRaw('1')
+                        ->from('karyawan')
+                        ->whereColumn('karyawan.permintaan_id', 'permintaan_lamaran.id_permintaan');
+                })->orWhereExists(function ($subQuery) {
+                    $subQuery->selectRaw('1')
+                        ->from('karyawan')
+                        ->whereColumn('karyawan.permintaan_id', 'permintaan_lamaran.id_permintaan')
+                        ->where('karyawan.status', 'aktif');
+                });
+            })
             ->count();
 
         $total_interview = DB::table('permintaan_lamaran')
@@ -37,12 +53,17 @@ class PermintaanLamaranController extends Controller
             ->select([
                 'pl.*',
                 'k.alamat',
+                'k.status as status_karyawan',
             ]);
 
         $status = $request->string('status')->toString();
 
-        if (in_array($status, ['menunggu', 'interview', 'disetujui', 'ditolak'], true)) {
-            $query->where('pl.status', $status);
+        if ($status === 'nonaktif') {
+            $query->where('k.status', 'nonaktif');
+        } elseif (in_array($status, ['menunggu', 'interview', 'disetujui', 'ditolak'], true)) {
+            $query->where('pl.status', $status)->where(function ($subQuery) {
+                $subQuery->whereNull('k.status')->orWhere('k.status', 'aktif');
+            });
         }
 
         if ($request->filled('search')) {
@@ -113,10 +134,10 @@ class PermintaanLamaranController extends Controller
                 if ($user) {
                     $jadwal = Carbon::parse($validated['jadwal_interview'])->translatedFormat('d M Y, H:i');
 
-                    DB::table('notifikasi')->insert([
-                        'user_id'      => $user->id_user ?? $user->id,
+                    Notifikasi::query()->create([
+                        'user_id'      => $user->id_user,
                         'judul'        => 'Jadwal Interview Lamaran Karyawan',
-                        'pesan'        => "Anda diundang untuk interview pada {$jadwal} WIB di {$validated['lokasi_interview']}. Mohon hadir tepat waktu.",
+                        'pesan'        => "Halo {$user->nama}, berdasarkan hasil peninjauan lamaran Anda, kami mengundang Anda untuk mengikuti interview pada {$jadwal} WIB di {$validated['lokasi_interview']}. Mohon hadir 15 menit lebih awal dan membawa dokumen pendukung yang relevan. Informasi lengkap juga telah kami kirimkan ke email terdaftar Anda.",
                         'kategori'     => 'pengajuan',
                         'tipe'         => 'info',
                         'referensi_id' => $id,
@@ -149,10 +170,10 @@ class PermintaanLamaranController extends Controller
                     ]);
 
                 if ($user) {
-                    DB::table('notifikasi')->insert([
-                        'user_id'      => $user->id_user ?? $user->id,
+                    Notifikasi::query()->create([
+                        'user_id'      => $user->id_user,
                         'judul'        => 'Status Lamaran Karyawan',
-                        'pesan'        => 'Mohon maaf, pengajuan lamaran karyawan Anda belum dapat kami terima. Alasan: '.$validated['alasan_penolakan'],
+                        'pesan'        => 'Terima kasih atas ketertarikan Anda untuk bergabung bersama CV Natusi. Setelah melalui proses peninjauan, lamaran Anda belum dapat kami lanjutkan pada tahap ini. Alasan: '.$validated['alasan_penolakan']. ' Detail keputusan juga telah kami kirimkan ke email terdaftar Anda.',
                         'kategori'     => 'pengajuan',
                         'tipe'         => 'peringatan',
                         'referensi_id' => $id,
@@ -179,36 +200,20 @@ class PermintaanLamaranController extends Controller
             );
         }
 
-        DB::transaction(function () use ($id, $pendaftar, $user) {
-            $userIdPelamar = $user->id_user ?? $user->id;
-
-            // Generate Username & Password Baru untuk Karyawan
-            $namaSlug = \Illuminate\Support\Str::of($pendaftar->nama_pemohon)->slug('_')->lower()->toString();
-            if (empty($namaSlug)) {
-                $namaSlug = 'karyawan';
-            }
-
-            do {
-                $usernameBaru = $namaSlug . '_' . rand(1000, 9999);
-            } while (DB::table('users')->where('username', $usernameBaru)->exists());
-
+        $credentials = DB::transaction(function () use ($id, $pendaftar, $user) {
+            // Promosikan akun pendaftar yang sama agar username dan email tetap konsisten.
+            $usernameBaru = $user->username ?: $pendaftar->email;
             $passwordBaru = 'Karyawan#' . rand(10000, 99999);
 
-            // 1. Buat User account khusus Karyawan (role = 'karyawan')
-            $karyawanUserId = DB::table('users')->insertGetId([
-                'nama'                 => $pendaftar->nama_pemohon,
+            $user->update([
                 'username'             => $usernameBaru,
-                'email'                => null, // Null agar tidak bentrok dengan email pelamar
+                'email'                => $user->email ?: $pendaftar->email,
                 'password'             => bcrypt($passwordBaru),
                 'role'                 => 'karyawan',
-                'phone'                => $pendaftar->no_hp ?? null,
-                'university'           => $pendaftar->pendidikan_terakhir ?? null,
-                'student_id'           => $pendaftar->nik ?? null,
-                'major'                => $pendaftar->posisi ?? null,
                 'wajib_ganti_password' => false,
-                'created_at'           => now(),
-                'updated_at'           => now(),
-            ], 'id_user');
+            ]);
+
+            $karyawanUserId = $user->id_user;
 
             // 2. Update status lamaran & simpan username/password baru
             DB::table('permintaan_lamaran')
@@ -222,6 +227,18 @@ class PermintaanLamaranController extends Controller
                 ]);
 
             // 3. Tambahkan record ke tabel karyawan
+            //    FIX: nip di-copy dari data pelamar (nik).
+            //    FIX: posisi yang dipilih pelamar saat mengisi form dipetakan ke divisi,
+            //         bukan disimpan sebagai jabatan. Admin masih bisa mengubahnya via Edit.
+            $posisiLamaran = trim((string) ($pendaftar->posisi ?? ''));
+
+            $divisiIdLamaran = null;
+            if ($posisiLamaran !== '') {
+                $divisiIdLamaran = DB::table('divisi')
+                    ->where('nama_divisi', 'like', "%{$posisiLamaran}%")
+                    ->value('id_divisi');
+            }
+
             $karyawanRecord = DB::table('karyawan')
                 ->where('permintaan_id', $id)
                 ->orWhere('user_id', $karyawanUserId)
@@ -229,32 +246,39 @@ class PermintaanLamaranController extends Controller
 
             if (! $karyawanRecord) {
                 DB::table('karyawan')->insert([
-                    'user_id'       => $karyawanUserId,
-                    'permintaan_id' => $id,
-                    'nama_karyawan' => $pendaftar->nama_pemohon,
-                    'email'         => $pendaftar->email,
-                    'no_hp'         => $pendaftar->no_hp ?? null,
-                    'status'        => 'aktif',
+                    'user_id'           => $karyawanUserId,
+                    'permintaan_id'     => $id,
+                    'nama_karyawan'     => $pendaftar->nama_pemohon,
+                    'email'             => $pendaftar->email,
+                    'no_hp'             => $pendaftar->no_hp ?? null,
+                    'nip'               => $pendaftar->nik ?? null,     // <-- FIX: auto-fill NIK
+                    'divisi_id'         => $divisiIdLamaran,             // <-- FIX: posisi form -> divisi
+                    'alamat'            => $pendaftar->alamat ?? null,   // <-- FIX: alamat dari form
+                    'status'            => 'aktif',
                     'tanggal_bergabung' => today(),
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
+                    'created_at'        => now(),
+                    'updated_at'        => now(),
                 ]);
             } else {
                 DB::table('karyawan')
                     ->where('id_karyawan', $karyawanRecord->id_karyawan)
                     ->update([
-                        'user_id'    => $karyawanUserId,
-                        'status'     => 'aktif',
+                        'user_id'           => $karyawanUserId,
+                        'status'            => 'aktif',
+                        // Jangan timpa kalau admin sudah pernah isi manual sebelumnya
+                        'nip'               => $karyawanRecord->nip ?? ($pendaftar->nik ?? null),
+                        'divisi_id'         => $karyawanRecord->divisi_id ?? $divisiIdLamaran,
+                        'alamat'            => filled($karyawanRecord->alamat ?? null) ? $karyawanRecord->alamat : ($pendaftar->alamat ?? null),
                         'tanggal_bergabung' => $karyawanRecord->tanggal_bergabung ?? today(),
-                        'updated_at' => now(),
+                        'updated_at'        => now(),
                     ]);
             }
 
             // 4. Kirim notifikasi ke akun pelamar
-            DB::table('notifikasi')->insert([
-                'user_id'      => $userIdPelamar,
+            Notifikasi::query()->create([
+                'user_id'      => $user->id_user,
                 'judul'        => 'Selamat! Lamaran Karyawan Disetujui',
-                'pesan'        => "Pengajuan lamaran Anda telah disetujui. Akun Karyawan baru Anda: Username: {$usernameBaru} | Password: {$passwordBaru}. Silakan login menggunakan kredensial baru tersebut.",
+                'pesan'        => "Selamat, {$user->nama}! Lamaran Anda telah disetujui dan akun karyawan Anda sudah aktif. Kredensial login baru telah dikirim ke email {$user->email}. Gunakan username {$usernameBaru} atau email tersebut, beserta password yang tercantum pada email. Silakan periksa kotak masuk atau folder Spam/Promosi.",
                 'kategori'     => 'pengajuan',
                 'tipe'         => 'sukses',
                 'referensi_id' => $id,
@@ -262,7 +286,30 @@ class PermintaanLamaranController extends Controller
                 'created_at'   => now(),
                 'updated_at'   => now(),
             ]);
+
+            return [
+                'username' => $usernameBaru,
+                'password' => $passwordBaru,
+                'email' => $user->email,
+            ];
         });
+
+        if (config('natusi.email_notifications_enabled') && filter_var($credentials['email'], FILTER_VALIDATE_EMAIL)) {
+            try {
+                Mail::to($credentials['email'])->send(new EmployeeAccountMail(
+                    $pendaftar,
+                    $credentials['username'],
+                    $credentials['password'],
+                    route('login'),
+                ));
+            } catch (Throwable $exception) {
+                Log::warning('Email kredensial akun karyawan gagal dikirim.', [
+                    'permintaan_id' => $id,
+                    'recipient' => $credentials['email'],
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
 
         return back()->with(
             'success',

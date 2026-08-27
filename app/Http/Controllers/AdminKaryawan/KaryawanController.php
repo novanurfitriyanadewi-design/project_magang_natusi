@@ -5,6 +5,7 @@ namespace App\Http\Controllers\AdminKaryawan;
 use App\Http\Controllers\Controller;
 use App\Models\Karyawan;
 use App\Models\Divisi;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class KaryawanController extends Controller
@@ -92,7 +93,14 @@ class KaryawanController extends Controller
             $validated['tanggal_bergabung'] = today();
         }
 
-        $karyawan->update($validated);
+        DB::transaction(function () use ($karyawan, $validated): void {
+            $karyawan->update($validated);
+
+            if ($validated['status'] === 'nonaktif' && $karyawan->user_id) {
+                // Email dibebaskan agar pemilik dapat mengajukan lamaran baru.
+                $karyawan->user()->update(['email' => null]);
+            }
+        });
 
         return back()->with('success', 'Data karyawan berhasil diperbarui.');
     }

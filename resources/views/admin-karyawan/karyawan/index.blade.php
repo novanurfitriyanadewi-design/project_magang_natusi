@@ -8,11 +8,11 @@
         detailOpen: false,
         editOpen: false,
         deleteOpen: false,
-        detailKaryawan: {},
+        detailKaryawan: { berkas: [] },
         editKaryawan: {
-            action: '', nama_karyawan: '', nip: '', email: '',
-            no_hp: '', alamat: '', status: 'aktif', jabatan: '',
-            tanggal_bergabung: '', divisi_id: '', divisi_nama: ''
+            action: '', nama_karyawan: '', nik: '', email: '',
+            no_hp: '', alamat: '', status: 'aktif',
+            tanggal_bergabung: '', divisi_id: ''
         },
         deleteKaryawan: { action: '', nama: '' },
         openDetail(k) { this.detailKaryawan = k; this.detailOpen = true; },
@@ -89,7 +89,7 @@
             <label class="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">Cari</label>
             <input
                 type="text" name="search" value="{{ request('search') }}"
-                placeholder="Cari nama, NIP, atau email..."
+                placeholder="Cari nama, NIK, atau email..."
                 class="w-full rounded-lg border-slate-300 text-sm focus:border-sky-500 focus:ring-sky-500"
             >
         </div>
@@ -120,7 +120,7 @@
             <select name="urutan" class="w-full rounded-lg border-slate-300 text-sm focus:border-sky-500 focus:ring-sky-500">
                 <option value="nama_asc" @selected(request('urutan', 'nama_asc') === 'nama_asc')>Nama (A-Z)</option>
                 <option value="nama_desc" @selected(request('urutan') === 'nama_desc')>Nama (Z-A)</option>
-                <option value="nip" @selected(request('urutan') === 'nip')>NIP</option>
+                <option value="nip" @selected(request('urutan') === 'nip')>NIK</option>
                 <option value="tanggal" @selected(request('urutan') === 'tanggal')>Tanggal Bergabung</option>
             </select>
         </div>
@@ -135,10 +135,10 @@
                 <thead class="bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50">
                     <tr>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Nama Karyawan</th>
-                        <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">NIP</th>
+                        <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">NIK</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Divisi</th>
-                        <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Jabatan</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">No. HP</th>
+                        <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Alamat</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Tgl Bergabung</th>
                         <th class="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Status</th>
                         <th class="px-5 py-3.5 text-center text-[11px] font-bold uppercase tracking-[0.09em] text-slate-500">Aksi</th>
@@ -169,8 +169,8 @@
                                     <span class="text-xs text-slate-400">Belum ada</span>
                                 @endif
                             </td>
-                            <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{{ $karyawan->jabatan ?? '-' }}</td>
                             <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{{ $karyawan->no_hp ?? '-' }}</td>
+                            <td class="max-w-[220px] truncate px-5 py-4 text-sm text-slate-600" title="{{ $karyawan->alamat ?? '-' }}">{{ $karyawan->alamat ?? '-' }}</td>
                             <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600">
                                 {{ $karyawan->tanggal_bergabung?->translatedFormat('d M Y') ?? '-' }}
                             </td>
@@ -186,6 +186,7 @@
                                         type="button"
                                         title="Detail"
                                         class="rounded-lg p-2 text-sky-600 hover:bg-sky-50"
+                                        {{-- [UBAH] jabatan dihapus dari data detail --}}
                                         @click="openDetail({
                                             nama: @js($karyawan->nama_karyawan),
                                             nip: @js($karyawan->nip ?? '-'),
@@ -193,9 +194,22 @@
                                             no_hp: @js($karyawan->no_hp ?? '-'),
                                             alamat: @js($karyawan->alamat ?? '-'),
                                             divisi: @js($karyawan->divisi->nama_divisi ?? 'Belum ada'),
-                                            jabatan: @js($karyawan->jabatan ?? '-'),
                                             status: @js($meta['label']),
+                                            statusValue: @js($karyawan->status),
                                             tanggal: @js(optional($karyawan->tanggal_bergabung)->translatedFormat('d M Y') ?? '-'),
+                                            berkas: @js(collect([
+                                                ['label' => 'Surat Lamaran Kerja', 'path' => $karyawan->permintaanLamaran->surat_lamaran_path ?? null],
+                                                ['label' => 'CV (Curriculum Vitae)', 'path' => $karyawan->permintaanLamaran->cv_path ?? null],
+                                                ['label' => 'Ijazah & Transkrip Nilai', 'path' => $karyawan->permintaanLamaran->ijazah_path ?? null],
+                                                ['label' => 'Fotokopi KTP', 'path' => $karyawan->permintaanLamaran->ktp_path ?? null],
+                                                ['label' => 'Pas Foto', 'path' => $karyawan->permintaanLamaran->pas_foto_path ?? null],
+                                                ['label' => 'SKCK', 'path' => $karyawan->permintaanLamaran->skck_path ?? null],
+                                                ['label' => 'Portofolio', 'path' => $karyawan->permintaanLamaran->portfolio_path ?? null],
+                                                ['label' => 'Pengalaman Kerja', 'path' => $karyawan->permintaanLamaran->pengalaman_kerja_path ?? null],
+                                            ])->map(fn ($b) => [
+                                                'label' => $b['label'],
+                                                'url'   => $b['path'] ? \Illuminate\Support\Facades\Storage::url($b['path']) : null,
+                                            ])->filter(fn ($b) => $b['url'])->values()),
                                         })"
                                     >
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg>
@@ -212,9 +226,7 @@
                                             no_hp: @js($karyawan->no_hp),
                                             alamat: @js($karyawan->alamat),
                                             status: @js($karyawan->status),
-                                            jabatan: @js($karyawan->jabatan ?? ''),
                                             divisi_id: @js($karyawan->divisi_id ?? ''),
-                                            divisi_nama: @js($karyawan->divisi->nama_divisi ?? 'Belum ada divisi'),
                                         })"
                                     >
                                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -235,7 +247,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-10 text-center text-sm text-slate-400">Belum ada data karyawan.</td>
+                            <td colspan="9" class="px-5 py-10 text-center text-sm text-slate-400">Belum ada data karyawan.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -251,27 +263,119 @@
         </div>
     </section>
 
-    {{-- MODAL DETAIL --}}
+    {{-- ============================================================ --}}
+    {{-- MODAL DETAIL — didesain ulang, tanpa field Jabatan            --}}
+    {{-- ============================================================ --}}
     <div x-cloak x-show="detailOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/40" @click="detailOpen = false"></div>
-        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl">
-            <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                <h3 class="text-lg font-bold text-slate-950">Detail Karyawan</h3>
-                <button type="button" @click="detailOpen = false" class="text-slate-400 hover:text-slate-700">✕</button>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="detailOpen = false"></div>
+
+        <div class="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+
+            {{-- Header gradient dengan avatar & status --}}
+            <div class="relative shrink-0 overflow-hidden bg-gradient-to-br from-sky-600 via-blue-600 to-indigo-700 px-6 pb-14 pt-6 text-white">
+                <span class="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10"></span>
+                <span class="pointer-events-none absolute -bottom-10 right-10 h-20 w-20 rounded-full bg-white/10"></span>
+
+                <div class="relative flex items-start justify-between">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-100">Profil Karyawan</p>
+                    <button type="button" @click="detailOpen = false" class="grid h-8 w-8 place-items-center rounded-full bg-white/15 text-white hover:bg-white/25">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+
+                <div class="relative mt-3 flex items-center gap-4">
+                    <span class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/20 text-xl font-extrabold ring-2 ring-white/30" x-text="(detailKaryawan.nama || '').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()"></span>
+                    <div class="min-w-0">
+                        <h3 class="truncate text-xl font-extrabold leading-tight" x-text="detailKaryawan.nama"></h3>
+                        <p class="truncate text-sm text-sky-100" x-text="detailKaryawan.divisi"></p>
+                    </div>
+                </div>
             </div>
-            <div class="space-y-3 px-6 py-5 text-sm">
-                <div class="flex justify-between"><span class="text-slate-400">Nama</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.nama"></span></div>
-                <div class="flex justify-between"><span class="text-slate-400">NIP</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.nip"></span></div>
-                <div class="flex justify-between"><span class="text-slate-400">Email</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.email"></span></div>
-                <div class="flex justify-between"><span class="text-slate-400">No. HP</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.no_hp"></span></div>
-                <div class="flex justify-between"><span class="text-slate-400">Divisi</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.divisi"></span></div>
-                <div class="flex justify-between"><span class="text-slate-400">Jabatan</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.jabatan"></span></div>
-                <div class="flex justify-between"><span class="text-slate-400">Alamat</span><span class="font-semibold text-slate-800 text-right" x-text="detailKaryawan.alamat"></span></div>
-                <div class="flex justify-between"><span class="text-slate-400">Tgl Bergabung</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.tanggal"></span></div>
-                <div class="flex justify-between"><span class="text-slate-400">Status</span><span class="font-semibold text-slate-800" x-text="detailKaryawan.status"></span></div>
+
+            {{-- Body (scrollable) --}}
+            <div class="-mt-8 flex-1 overflow-y-auto px-6 pb-2">
+
+                {{-- Kartu status kepegawaian --}}
+                <div class="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-[0_10px_30px_rgba(15,52,94,0.08)]">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Status Kepegawaian</p>
+                        <p class="mt-1 text-base font-extrabold text-slate-800" x-text="detailKaryawan.status"></p>
+                    </div>
+                    <span
+                        class="h-3.5 w-3.5 rounded-full"
+                        :class="detailKaryawan.statusValue === 'aktif' ? 'bg-emerald-500' : 'bg-rose-500'"
+                    ></span>
+                </div>
+
+                {{-- Informasi utama --}}
+                <p class="mb-2 mt-5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Informasi Utama</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Nama Lengkap</p>
+                        <p class="mt-0.5 truncate text-sm font-bold text-slate-800" x-text="detailKaryawan.nama"></p>
+                    </div>
+                    <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">NIK</p>
+                        <p class="mt-0.5 truncate text-sm font-bold text-slate-800" x-text="detailKaryawan.nip"></p>
+                    </div>
+                    <div class="col-span-2 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Email</p>
+                        <p class="mt-0.5 truncate text-sm font-bold text-slate-800" x-text="detailKaryawan.email"></p>
+                    </div>
+                    <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Divisi</p>
+                        <p class="mt-0.5 truncate text-sm font-bold text-slate-800" x-text="detailKaryawan.divisi"></p>
+                    </div>
+                    <div class="rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Nomor HP</p>
+                        <p class="mt-0.5 truncate text-sm font-bold text-slate-800" x-text="detailKaryawan.no_hp"></p>
+                    </div>
+                    <div class="col-span-2 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-400">Tanggal Bergabung</p>
+                        <p class="mt-0.5 truncate text-sm font-bold text-slate-800" x-text="detailKaryawan.tanggal"></p>
+                    </div>
+                </div>
+
+                {{-- Alamat --}}
+                <p class="mb-2 mt-5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Alamat</p>
+                <div class="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
+                    <svg class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-11.5A7 7 0 0 0 5 9.5C5 14.5 12 21 12 21Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.7"/></svg>
+                    <p class="text-sm font-semibold text-slate-700" x-text="detailKaryawan.alamat"></p>
+                </div>
+
+                {{-- Berkas lamaran --}}
+                <template x-if="detailKaryawan.berkas && detailKaryawan.berkas.length">
+                    <div class="mt-5">
+                        <p class="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Berkas Lamaran</p>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <template x-for="file in detailKaryawan.berkas" :key="file.label">
+                                <div class="flex items-center justify-between gap-2 rounded-xl border border-slate-100 bg-white px-3 py-2.5 shadow-sm">
+                                    <span class="truncate text-xs font-semibold text-slate-700" x-text="file.label"></span>
+                                    <div class="flex shrink-0 items-center gap-1.5">
+                                        <a :href="file.url" target="_blank" title="Lihat" class="grid h-7 w-7 place-items-center rounded-full bg-sky-100 text-sky-600 transition hover:bg-sky-500 hover:text-white">
+                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg>
+                                        </a>
+                                        <a :href="file.url" download title="Unduh" class="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-700 hover:text-white">
+                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        </a>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="!detailKaryawan.berkas || !detailKaryawan.berkas.length">
+                    <p class="mt-5 rounded-xl border border-dashed border-slate-200 px-4 py-4 text-center text-xs text-slate-400">
+                        Tidak ada berkas lamaran tersimpan.
+                    </p>
+                </template>
+
+                <div class="h-2"></div>
             </div>
-            <div class="border-t border-slate-100 px-6 py-4 text-right">
-                <button type="button" @click="detailOpen = false" class="rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-200">Tutup</button>
+
+            {{-- Footer --}}
+            <div class="shrink-0 border-t border-slate-100 px-6 py-4 text-right">
+                <button type="button" @click="detailOpen = false" class="rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200">Tutup</button>
             </div>
         </div>
     </div>
@@ -292,8 +396,8 @@
                     <input type="text" name="nama_karyawan" x-model="editKaryawan.nama_karyawan" required class="w-full rounded-xl border-slate-300 focus:border-sky-500 focus:ring-sky-500">
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-bold text-slate-700">NIP</label>
-                    <input type="text" name="nip" x-model="editKaryawan.nip" class="w-full rounded-xl border-slate-300 focus:border-sky-500 focus:ring-sky-500">
+                    <label class="mb-1 block text-sm font-bold text-slate-700">NIK</label>
+                    <input type="text" name="nip" x-model="editKaryawan.nip" placeholder="Diambil otomatis dari form pelamar" class="w-full rounded-xl border-slate-300 focus:border-sky-500 focus:ring-sky-500">
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-bold text-slate-700">Email</label>
@@ -305,25 +409,17 @@
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-bold text-slate-700">Divisi</label>
-                    <input
-                        type="text"
-                        readonly
-                        :value="editKaryawan.divisi_nama || 'Belum ada divisi'"
-                        class="w-full rounded-xl border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed focus:ring-0"
+                    <select
+                        name="divisi_id"
+                        x-model="editKaryawan.divisi_id"
+                        class="w-full rounded-xl border-slate-300 focus:border-sky-500 focus:ring-sky-500"
                     >
-                    <p class="mt-1 text-[11px] text-slate-400">Otomatis sesuai divisi saat pendaftaran magang/kerja.</p>
-                    <input type="hidden" name="divisi_id" x-model="editKaryawan.divisi_id">
-                </div>
-                <div>
-                    <label class="mb-1 block text-sm font-bold text-slate-700">Jabatan</label>
-                    <input
-                        type="text"
-                        readonly
-                        :value="editKaryawan.jabatan || '-'"
-                        class="w-full rounded-xl border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed focus:ring-0"
-                    >
-                    <p class="mt-1 text-[11px] text-slate-400">Otomatis sesuai jabatan saat pendaftaran.</p>
-                    <input type="hidden" name="jabatan" x-model="editKaryawan.jabatan">
+                        <option value="">Belum ada divisi</option>
+                        @foreach ($divisiList as $divisi)
+                            <option value="{{ $divisi->id_divisi }}">{{ $divisi->nama_divisi }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-[11px] text-slate-400">Berdasarkan posisi yang dipilih saat mengisi form (tetap dapat diubah).</p>
                 </div>
                 <div class="sm:col-span-2">
                     <label class="mb-1 block text-sm font-bold text-slate-700">Alamat</label>

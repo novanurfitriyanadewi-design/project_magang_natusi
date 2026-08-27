@@ -59,7 +59,7 @@ class RegisteredUserController extends Controller
         $user = $request->user();
 
         abort_unless(
-            in_array($user->role, ['pelamar', 'pelamar_karyawan'], true),
+            in_array($user->role, ['pelamar', 'pelamar_karyawan', 'karyawan'], true),
             403,
             'Halaman status pengajuan hanya dapat diakses oleh akun pengaju.'
         );
@@ -195,7 +195,23 @@ class RegisteredUserController extends Controller
             $nikRules = ['nullable', 'string', 'max:30'];
             $positionRules = ['nullable', 'string', 'max:255'];
         } else {
-            $emailRules[] = Rule::unique('permintaan_lamaran', 'email')->where($permintaanMasihAktif);
+            $emailRules[] = Rule::unique('permintaan_lamaran', 'email')->where(function ($query) {
+                $query->whereIn('status', ['menunggu', 'perlu_revisi', 'disetujui'])
+                    ->where(function ($application) {
+                        $application->where('status', '!=', 'disetujui')
+                            ->orWhereNotExists(function ($subQuery) {
+                                $subQuery->selectRaw('1')
+                                    ->from('karyawan')
+                                    ->whereColumn('karyawan.permintaan_id', 'permintaan_lamaran.id_permintaan');
+                            })
+                            ->orWhereExists(function ($subQuery) {
+                                $subQuery->selectRaw('1')
+                                    ->from('karyawan')
+                                    ->whereColumn('karyawan.permintaan_id', 'permintaan_lamaran.id_permintaan')
+                                    ->where('karyawan.status', 'aktif');
+                            });
+                    });
+            });
             $studentIdRules = ['nullable', 'string', 'max:50'];
             $nikRules = ['required', 'string', 'max:30'];
             $positionRules = ['required', 'string', 'max:255', Rule::exists('divisi', 'nama_divisi')];
@@ -279,6 +295,7 @@ class RegisteredUserController extends Controller
                     'major'       => [$roleSession === 'pelamar' ? 'required' : 'nullable', 'string', 'max:255'],
                     'position'    => $positionRules,
                     'phone'       => ['required', 'string', 'max:20'],
+                    'alamat'      => ['nullable', 'string', 'max:1000'],
                     'description' => ['nullable', 'string', 'max:2000'],
                     'terms'       => ['accepted'],
                 ],
@@ -472,7 +489,7 @@ class RegisteredUserController extends Controller
 
             return redirect()
                 ->route('pengajuan.status')
-                ->with('success', 'Pengajuan magang berhasil dikirim. Gunakan email dan kata sandi pendaftaran untuk memeriksa status.');
+                ->with('success', 'Pengajuan magang berhasil dikirim. Anda langsung diarahkan ke halaman status pengajuan.');
         }
 
         // ==========================================
@@ -514,6 +531,7 @@ class RegisteredUserController extends Controller
                     'posisi'              => trim($validated['position']),
                     'bidang_keahlian'     => trim($validated['major'] ?? ''),
                     'no_hp'               => trim($validated['phone']),
+                    'alamat'              => filled($validated['alamat'] ?? null) ? trim($validated['alamat']) : null,
                     'tanggal_lamar'       => now(),
                     'pesan'               => filled($validated['description'] ?? null) ? trim($validated['description']) : null,
                     'status'              => 'menunggu',
@@ -548,7 +566,7 @@ class RegisteredUserController extends Controller
 
         return redirect()
             ->route('pengajuan.status')
-            ->with('success', 'Lamaran berhasil dikirim. Gunakan email dan kata sandi pendaftaran untuk memeriksa status.');
+            ->with('success', 'Lamaran berhasil dikirim. Anda langsung diarahkan ke halaman status pengajuan.');
     }
 
 

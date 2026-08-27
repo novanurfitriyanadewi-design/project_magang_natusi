@@ -585,6 +585,25 @@
                         @enderror
                     </div>
 
+                    {{-- ALAMAT --}}
+                    <div class="sm:col-span-2">
+                        <label for="alamat" class="block text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-700">
+                            Alamat
+                        </label>
+                        <div class="mt-1.5 rounded-lg border border-slate-300 bg-[#f8faff] px-3 py-2 transition focus-within:bg-white">
+                            <textarea
+                                id="alamat"
+                                name="alamat"
+                                rows="2"
+                                placeholder="Contoh: Jl. Melati No. 10, Medan"
+                                class="w-full resize-none border-0 bg-transparent p-0 text-[13px] text-slate-700 placeholder:text-slate-400 focus:border-0 focus:ring-0 sm:text-sm"
+                            >{{ old('alamat') }}</textarea>
+                        </div>
+                        @error('alamat')
+                            <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     {{-- KATA SANDI --}}
                     <div class="grid gap-3 sm:grid-cols-2" x-data="{ showPassword: false, showConfirm: false }">
                         <div>

@@ -25,6 +25,10 @@ class EmailNotificationService
             return;
         }
 
+        if ($notifikasi->judul === 'Selamat! Lamaran Karyawan Disetujui') {
+            return;
+        }
+
         $notifikasi->loadMissing('user');
         $user = $notifikasi->user;
 

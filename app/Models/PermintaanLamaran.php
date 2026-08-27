@@ -24,6 +24,7 @@ class PermintaanLamaran extends Model
         'bidang_keahlian',      // <-- FIX: kolom baru, tadinya belum ada di fillable
         'tanggal_lamar',
         'no_hp',
+        'alamat',
         'pesan',
         'status',
         'username_karyawan',

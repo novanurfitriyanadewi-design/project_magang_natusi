@@ -9,6 +9,7 @@
             'menunggu' => 'Baru Masuk',
             'interview' => 'Interview',
             'disetujui' => 'Diterima',
+            'nonaktif' => 'Karyawan Non-Aktif',
             'ditolak' => 'Ditolak',
         ];
 
@@ -16,6 +17,7 @@
             'menunggu' => 'bg-amber-100 text-amber-700 ring-amber-200',
             'interview' => 'bg-indigo-100 text-indigo-700 ring-indigo-200',
             'disetujui' => 'bg-emerald-100 text-emerald-700 ring-emerald-200',
+            'nonaktif' => 'bg-slate-100 text-slate-700 ring-slate-200',
             'ditolak' => 'bg-rose-100 text-rose-700 ring-rose-200',
         ];
 
@@ -139,8 +141,9 @@
                             <td class="px-6 py-4 text-sm text-slate-700">{{ $lamaran->posisi ?? '-' }}</td>
                             <td class="px-6 py-4 text-sm text-slate-500">{{ \Illuminate\Support\Carbon::parse($lamaran->created_at)->format('d M Y') }}</td>
                             <td class="px-6 py-4">
-                                <span class="rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide ring-1 {{ $statusBadgeClasses[$lamaran->status] ?? 'bg-slate-100 text-slate-600 ring-slate-200' }}">
-                                    {{ $statusTabs[$lamaran->status] ?? ucfirst($lamaran->status) }}
+                                @php($statusTampilan = $lamaran->status_karyawan === 'nonaktif' ? 'nonaktif' : $lamaran->status)
+                                <span class="rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide ring-1 {{ $statusBadgeClasses[$statusTampilan] ?? 'bg-slate-100 text-slate-600 ring-slate-200' }}">
+                                    {{ $statusTabs[$statusTampilan] ?? ucfirst($statusTampilan) }}
                                 </span>
                                 @if ($lamaran->status === 'interview' && $lamaran->jadwal_interview)
                                     <p class="mt-1 text-[10px] text-slate-400">
