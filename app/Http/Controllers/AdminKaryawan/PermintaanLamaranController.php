@@ -223,18 +223,21 @@ class PermintaanLamaranController extends Controller
                 ->orWhere('user_id', $karyawanUserId)
                 ->first();
 
-            if (! $karyawanRecord) {
-                DB::table('karyawan')->insert([
-                    'user_id'       => $karyawanUserId,
-                    'permintaan_id' => $id,
-                    'nama_karyawan' => $pendaftar->nama_pemohon,
-                    'email'         => $pendaftar->email,
-                    'no_hp'         => $pendaftar->no_hp ?? null,
-                    'jabatan'       => $pendaftar->posisi ?? $pendaftar->jabatan ?? null,
-                    'status'        => 'aktif',
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
-                ]);
+        if (! $karyawanRecord) {
+            DB::table('karyawan')->insert([
+                'user_id'           => $karyawanUserId,
+                'permintaan_id'     => $id,
+                'nama_karyawan'     => $pendaftar->nama_pemohon,
+                'email'             => $pendaftar->email,
+                'no_hp'             => $pendaftar->no_hp ?? null,
+                'alamat'            => $pendaftar->alamat ?? null,
+                'jabatan'           => $pendaftar->posisi ?? null,
+                'divisi_id'         => null,
+                'tanggal_bergabung' => now()->toDateString(),
+                'status'            => 'aktif',
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
             } else {
                 DB::table('karyawan')
                     ->where('id_karyawan', $karyawanRecord->id_karyawan)

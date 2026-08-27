@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Karyawan extends Model
 {
@@ -15,7 +13,6 @@ class Karyawan extends Model
     protected $primaryKey = 'id_karyawan';
 
     protected $fillable = [
-        'user_id',
         'permintaan_id',
         'nip',
         'nama_karyawan',
@@ -23,42 +20,25 @@ class Karyawan extends Model
         'no_hp',
         'alamat',
         'jabatan',
+        'divisi_id',
+        'tanggal_bergabung',
         'status',
+        'user_id',
     ];
 
-    public function user(): BelongsTo
+    /**
+     * Relasi ke Tabel divisi
+     */
+    public function divisi()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id_user');
+        return $this->belongsTo(Divisi::class, 'divisi_id', 'id');
     }
 
-    public function permintaanLamaran(): BelongsTo
+    /**
+     * Relasi ke Tabel permintaan_lamaran
+     */
+    public function permintaanLamaran()
     {
         return $this->belongsTo(PermintaanLamaran::class, 'permintaan_id', 'id_permintaan');
     }
-
-     public function statusMeta(): array
-    {
-        return match ($this->status) {
-            'aktif'    => ['label' => 'Aktif', 'dot' => 'bg-emerald-500', 'text' => 'text-emerald-700'],
-            'nonaktif' => ['label' => 'Non-Aktif', 'dot' => 'bg-rose-500', 'text' => 'text-rose-700'],
-            default    => ['label' => ucfirst($this->status), 'dot' => 'bg-slate-400', 'text' => 'text-slate-600'],
-        };
-    }
-
-    public function initials(): string
-    {
-        $words = preg_split('/\s+/', trim($this->nama_karyawan));
-        return mb_strtoupper(mb_substr($words[0] ?? '', 0, 1) . mb_substr($words[1] ?? '', 0, 1));
-
-    }
-    public function absensi(): MorphMany
-    {
-        return $this->morphMany(Absensi::class, 'absentable');
-
-    }
-    // app/Models/Karyawan.php — tambahkan di dalam class yang sudah ad
-    public function divisi()
-{
-    return $this->belongsTo(divisi::class, 'divisi_id', 'id_divisi');
-}
 }

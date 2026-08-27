@@ -378,14 +378,6 @@ class RegisteredUserController extends Controller
         }
 
 
-        // Simpan Data User
-        $user = User::create([
-            'name'     => $validated['full_name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role'     => $roleSession === 'karyawan' ? 'pelamar_karyawan' : 'pelamar',
-        ]);
-
         $magangBerkas = [];
         $anggotaBerkas = [];
         if ($roleSession === 'pelamar') {
@@ -417,7 +409,7 @@ class RegisteredUserController extends Controller
 
         $username = $roleSession === 'pelamar'
             ? $this->makeApplicantUsernameFromEmail($email)
-            : $this->makeUniqueUsername($validated['student_id'], $email);
+            : $this->makeUniqueUsername($validated['student_id'] ?? null, $email);
 
         // ==========================================
         // 1. ALUR PENDAFTARAN PELAMAR MAGANG
@@ -522,7 +514,7 @@ class RegisteredUserController extends Controller
                 'email'                => $email,
                 'role'                 => 'pelamar',
                 'university'           => trim($validated['university']),
-                'student_id'           => trim($validated['student_id']),
+                'student_id'           => filled($validated['student_id'] ?? null) ? trim($validated['student_id']) : null,
                 'major'                => trim($validated['major']),
                 'phone'                => trim($validated['phone']),
                 'description'          => filled($validated['description'] ?? null) ? trim($validated['description']) : null,
@@ -546,7 +538,7 @@ class RegisteredUserController extends Controller
                     'nama_pemohon'        => trim($validated['full_name']),
                     'email'               => $email,
                     'pendidikan_terakhir' => trim($validated['university']),
-                    'posisi'              => trim($validated['student_id']),
+                    'posisi'              => trim($validated['position']),
                     'bidang_keahlian'     => trim($validated['major']),
                     'no_hp'               => trim($validated['phone']),
                     'tanggal_lamar'       => now(),
@@ -585,5 +577,102 @@ class RegisteredUserController extends Controller
         return redirect()
             ->route('pengajuan.status')
             ->with('success', 'Lamaran berhasil dikirim. Gunakan email dan kata sandi pendaftaran untuk memeriksa status.');
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | NOTIFIKASI KE ADMIN
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Kirim notifikasi ke semua akun admin dengan role yang sesuai
+     * setiap kali ada pengajuan magang / lamaran karyawan baru.
+     */
+    private function kirimNotifikasiKeAdmin(
+        string $namaPemohon,
+        string $judul,
+        array $roles,
+        int $referensiId,
+        ?int $jumlahAnggota = null
+    ): void {
+        $admins = User::query()->whereIn('role', $roles)->get();
+
+        if ($admins->isEmpty()) {
+            return;
+        }
+
+        $pesan = ($jumlahAnggota !== null && $jumlahAnggota > 1)
+            ? "{$namaPemohon} mengajukan permintaan magang kelompok untuk {$jumlahAnggota} orang. Segera periksa detail pengajuan."
+            : "{$namaPemohon} baru saja mengirimkan pengajuan: {$judul}. Segera periksa detail pengajuan.";
+
+        foreach ($admins as $admin) {
+            Notifikasi::query()->create([
+                'user_id'      => $admin->id_user,
+                'judul'        => $judul,
+                'pesan'        => $pesan,
+                'kategori'     => 'pengajuan',
+                'tipe'         => 'info',
+                'referensi_id' => $referensiId,
+                'dibaca'       => false,
+            ]);
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERATE USERNAME
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Buat username untuk pelamar magang berdasarkan bagian depan alamat email.
+     * Contoh: nabila@saintek.unipdu.ac.id -> nabila (atau nabila1 jika sudah dipakai).
+     */
+    private function makeApplicantUsernameFromEmail(string $email): string
+    {
+        $base = Str::of($email)->before('@')->slug('.')->value();
+
+        if ($base === '') {
+            $base = 'pelamar';
+        }
+
+        return $this->generateUniqueUsername($base);
+    }
+
+    /**
+     * Buat username untuk calon karyawan berdasarkan NIK/nomor induk jika tersedia,
+     * jika tidak tersedia jatuh kembali ke bagian depan alamat email.
+     */
+    private function makeUniqueUsername(?string $identifier, string $email): string
+    {
+        $base = filled($identifier)
+            ? Str::slug($identifier, '.')
+            : Str::of($email)->before('@')->slug('.')->value();
+
+        if ($base === '') {
+            $base = 'user';
+        }
+
+        return $this->generateUniqueUsername($base);
+    }
+
+    /**
+     * Pastikan username unik di tabel users dengan menambahkan angka urut
+     * jika base username sudah dipakai (mis. nabila, nabila1, nabila2, dst).
+     */
+    private function generateUniqueUsername(string $base): string
+    {
+        $username = $base;
+        $suffix = 1;
+
+        while (User::query()->where('username', $username)->exists()) {
+            $username = $base.$suffix;
+            $suffix++;
+        }
+
+        return $username;
     }
 }
