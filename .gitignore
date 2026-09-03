@@ -24,6 +24,3 @@ Homestead.yaml
 Thumbs.db
 
 /storage/app/keys/private.pem
-
-.vercel
-.env*
