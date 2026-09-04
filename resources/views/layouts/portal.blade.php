@@ -75,6 +75,7 @@
         }
     </style>
 
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body class="{{ auth()->check() && auth()->user()->role === 'peserta' ? 'peserta-ui ' : '' }}bg-slate-50">
