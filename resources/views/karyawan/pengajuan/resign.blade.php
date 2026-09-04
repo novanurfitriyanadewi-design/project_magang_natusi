@@ -103,7 +103,7 @@
                             @endif
                             <div class="mt-4 flex items-center gap-1.5 border-t border-slate-100 pt-3 text-xs text-slate-400">
                                 <span class="material-symbols-outlined text-[16px]">schedule</span>
-                                Diajukan {{ $item->created_at->translatedFormat('d F Y • H:i') }}
+                                Diajukan {{ $item->created_at->translatedFormat('d F Y ï¿½ H:i') }}
                             </div>
                         </article>
                     @endforeach

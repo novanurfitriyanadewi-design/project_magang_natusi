@@ -189,22 +189,18 @@
         </div>
 
         {{-- BUTTON --}}
-        <div class="mt-7 flex justify-end gap-3">
-
-            <a
-                href="{{ route('admin-karyawan.pengumuman.index') }}"
-                class="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-            >
+        <div class="flex items-center justify-end gap-3 mt-6">
+            <!-- Tombol Batal -->
+            <a href="{{ route('admin-karyawan.pengumuman.index') }}" 
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50">
                 Batal
             </a>
 
-            <button
-                type="submit"
-                class="rounded-xl bg-[#05658f] px-5 py-3 text-sm font-semibold text-white hover:bg-[#045575]"
-            >
-                Simpan Pengumuman
+            <!-- Tombol Simpan (Pastikan type="submit" dan diberi warna kontras) -->
+            <button type="submit" 
+                    class="px-5 py-2 text-sm font-medium text-white bg-sky-600 rounded-xl hover:bg-sky-700 focus:ring-4 focus:ring-sky-200">
+                Simpan
             </button>
-
         </div>
 
     </form>

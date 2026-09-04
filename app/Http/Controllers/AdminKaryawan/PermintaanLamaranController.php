@@ -5,7 +5,7 @@ namespace App\Http\Controllers\AdminKaryawan;
 use App\Http\Controllers\Controller;
 use App\Mail\EmployeeAccountMail;
 use Carbon\Carbon;
-use App\Models\Karyawan;
+use App\Models\Karyawan; 
 use App\Models\Notifikasi;
 use App\Models\PermintaanLamaran;
 use App\Models\User;

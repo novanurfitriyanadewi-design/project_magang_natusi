@@ -75,7 +75,7 @@ class CutiController extends Controller
                         $cuti->tanggal_mulai->translatedFormat('d M Y'),
                         $cuti->tanggal_selesai->translatedFormat('d M Y'),
                     ),
-                    'kategori' => 'cuti',
+                    'kategori' => 'umum',
                     'tipe' => 'info',
                     'referensi_id' => $cuti->getKey(),
                     'dibaca' => false,
