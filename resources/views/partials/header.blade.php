@@ -479,7 +479,7 @@
 
                         @if ($profilePhotoUrl)
                             <img
-                                src="{{ $profilePhotoUrl }}"
+                                src="/images/logo.jpeg"
                                 alt="Foto profil {{ $userName }}"
                                 class="
                                     absolute inset-0 h-full w-full

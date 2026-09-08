@@ -42,15 +42,15 @@ class AuthenticatedSessionController extends Controller
 
         // 2. Redirect Berdasarkan Role Pengguna
         return match ($user->role) {
-            'superadmin'       => redirect()->intended(route('superadmin.dashboard')),
-            'admin', 
-            'admin_peserta'    => redirect()->intended(route('admin-peserta.dashboard')),
-            'admin_karyawan'   => redirect()->intended(route('admin-karyawan.dashboard')),
+            'superadmin'        => redirect()->intended(route('superadmin.dashboard')),
+            'admin',
+            'admin_peserta'     => redirect()->intended(route('admin-peserta.dashboard')),
+            'admin_karyawan'    => redirect()->intended(route('admin-karyawan.dashboard')),
             'pelamar',
-            'pelamar_karyawan' => redirect()->intended(route('pengajuan.status')),
-            'peserta'          => redirect()->intended(route('peserta-magang.dashboard')),
-            'karyawan'         => redirect()->intended(route('karyawan.dashboard')),
-            default            => redirect()->route('login')->withErrors([
+            'pelamar_karyawan'  => redirect()->intended(route('pengajuan.status')), // Mengarahkan pelamar ke halaman status
+            'peserta'           => redirect()->intended(route('peserta-magang.dashboard')),
+            'karyawan'          => redirect()->intended(route('karyawan.dashboard')),
+            default             => redirect()->route('login')->withErrors([
                 'email' => 'Role akun tidak dikenali. Silakan hubungi administrator.',
             ]),
         };

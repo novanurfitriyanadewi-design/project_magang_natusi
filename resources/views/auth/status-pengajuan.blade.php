@@ -122,7 +122,7 @@
         <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
             <a href="{{ $isAuthenticated ? route('pengajuan.status') : route('login') }}" class="flex items-center gap-3">
                 <span class="grid h-9 w-9 place-items-center overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
-                    <img src="{{ asset('images/logo.jpeg') }}" alt="Logo CV Natusi" class="h-8 w-8 object-contain">
+                    <img src="/images/logo.jpeg" alt="Logo CV Natusi" class="h-8 w-8 object-contain">
                 </span>
                 <span class="text-sm font-extrabold text-sky-700">CV Natusi Portal</span>
             </a>

@@ -9,6 +9,7 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -27,21 +28,17 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ];
     }
 
     /**
      * Login portal mendukung:
-     * - pengaju/pelamar: WAJIB email + password pendaftaran;
+     * - pengaju/pelamar: email + password pendaftaran;
      * - peserta magang: email masing-masing + password awal/baru;
-     * - role internal lain: email atau username seperti sebelumnya.
-     *
-     * Akun peserta milik ketua sengaja dapat memiliki users.email = null
-     * karena email ketua tetap dipakai akun pengajuan. Karena itu email
-     * peserta ketua dicocokkan melalui permintaan_magang_anggota atau
-     * permintaan_magang -> peserta_magang.
+     * - karyawan baru: username/email + password baru dari kartu status;
+     * - role internal lain: email atau username.
      */
     public function authenticate(): void
     {
@@ -54,64 +51,87 @@ class LoginRequest extends FormRequest
 
         $user = null;
 
-        if ($isEmail) {
-            // 1) Akun normal yang memang menyimpan email pada tabel users.
-            $candidate = User::query()->whereRaw('LOWER(email) = ?', [$login])->first();
-            if ($candidate && Hash::check($password, $candidate->password)) {
-                $user = $candidate;
-            }
+        // 1) Cari akun utama berdasarkan EMAIL atau USERNAME di tabel users
+        $candidate = User::query()
+            ->whereRaw('LOWER(email) = ?', [$login])
+            ->orWhereRaw('LOWER(username) = ?', [$login])
+            ->first();
 
-            // 2) Jika password bukan milik akun pengajuan, cari akun peserta
-            //    berdasarkan email anggota. Ini membuat ketua tetap dapat
-            //    memakai email yang sama untuk akun peserta dengan password
-            //    peserta yang berbeda.
-            if (! $user) {
-                $anggota = PermintaanMagangAnggota::query()
-                    ->whereRaw('LOWER(email) = ?', [$login])
-                    ->whereNotNull('user_id')
-                    ->latest('id_anggota')
-                    ->get();
+        if ($candidate && Hash::check($password, $candidate->password)) {
+            $user = $candidate;
+        }
 
-                foreach ($anggota as $item) {
-                    $participant = User::query()
-                        ->whereKey($item->user_id)
-                        ->where('role', 'peserta')
-                        ->first();
+        // 2) KARYAWAN BARU: Fallback ke tabel permintaan_lamaran
+        // Jika password di tabel users belum cocok, cek kredensial karyawan yang dibuatkan oleh admin
+        if (! $user) {
+            $lamaran = DB::table('permintaan_lamaran')
+                ->where('status', 'disetujui')
+                ->where(function ($query) use ($login) {
+                    $query->whereRaw('LOWER(username_karyawan) = ?', [$login])
+                          ->orWhereRaw('LOWER(email) = ?', [$login]);
+                })
+                ->where('password_karyawan', $password)
+                ->first();
 
-                    if ($participant && Hash::check($password, $participant->password)) {
-                        $user = $participant;
-                        break;
-                    }
+            if ($lamaran) {
+                $candidateKaryawan = User::query()
+                    ->where('id_user', $lamaran->user_id)
+                    ->orWhereRaw('LOWER(email) = ?', [Str::lower($lamaran->email)])
+                    ->first();
+
+                if ($candidateKaryawan) {
+                    // Update password & role di tabel users agar selanjutnya bisa login biasa
+                    $candidateKaryawan->update([
+                        'password' => bcrypt($password),
+                        'role'     => 'karyawan',
+                    ]);
+
+                    $user = $candidateKaryawan;
                 }
-            }
-
-            // 3) Fallback untuk pengajuan individu/data lama yang belum punya
-            //    record anggota kelompok lengkap.
-            if (! $user) {
-                $pesertaCandidates = PesertaMagang::query()
-                    ->whereHas('permintaan', function ($query) use ($login) {
-                        $query->whereRaw('LOWER(email) = ?', [$login]);
-                    })
-                    ->with('user')
-                    ->latest('id_peserta')
-                    ->get();
-
-                foreach ($pesertaCandidates as $peserta) {
-                    $participant = $peserta->user;
-                    if ($participant && $participant->role === 'peserta' && Hash::check($password, $participant->password)) {
-                        $user = $participant;
-                        break;
-                    }
-                }
-            }
-        } else {
-            // Username tetap dipertahankan untuk admin/karyawan/akun internal.
-            $candidate = User::query()->where('username', trim((string) $this->input('email')))->first();
-            if ($candidate && Hash::check($password, $candidate->password)) {
-                $user = $candidate;
             }
         }
 
+        // 3) PESERTA MAGANG: Cek berdasarkan email anggota kelompok
+        if (! $user && $isEmail) {
+            $anggota = PermintaanMagangAnggota::query()
+                ->whereRaw('LOWER(email) = ?', [$login])
+                ->whereNotNull('user_id')
+                ->latest('id_anggota')
+                ->get();
+
+            foreach ($anggota as $item) {
+                $participant = User::query()
+                    ->whereKey($item->user_id)
+                    ->where('role', 'peserta')
+                    ->first();
+
+                if ($participant && Hash::check($password, $participant->password)) {
+                    $user = $participant;
+                    break;
+                }
+            }
+        }
+
+        // 4) FALLBACK PESERTA MAGANG (Individu / Data Lama)
+        if (! $user && $isEmail) {
+            $pesertaCandidates = PesertaMagang::query()
+                ->whereHas('permintaan', function ($query) use ($login) {
+                    $query->whereRaw('LOWER(email) = ?', [$login]);
+                })
+                ->with('user')
+                ->latest('id_peserta')
+                ->get();
+
+            foreach ($pesertaCandidates as $peserta) {
+                $participant = $peserta->user;
+                if ($participant && $participant->role === 'peserta' && Hash::check($password, $participant->password)) {
+                    $user = $participant;
+                    break;
+                }
+            }
+        }
+
+        // Jika tidak ada skema login yang cocok
         if (! $user) {
             RateLimiter::hit($this->throttleKey());
 
@@ -120,7 +140,7 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        // Halaman status/verifikasi tetap hanya boleh memakai email ketua/pengaju.
+        // Validasi khusus untuk pelamar
         if (in_array($user->role, ['pelamar', 'pelamar_karyawan'], true) && ! $isEmail) {
             RateLimiter::hit($this->throttleKey());
 
@@ -129,8 +149,11 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Validasi Status Akun
         if (isset($user->status)) {
-            if (in_array($user->status, ['pending', 'menunggu'], true)) {
+            $isPelamar = in_array($user->role, ['pelamar', 'pelamar_karyawan'], true);
+
+            if (! $isPelamar && in_array($user->status, ['pending', 'menunggu'], true)) {
                 throw ValidationException::withMessages([
                     'email' => 'Akun Anda masih dalam proses peninjauan oleh Admin. Silakan periksa status pengajuan Anda secara berkala.',
                 ]);

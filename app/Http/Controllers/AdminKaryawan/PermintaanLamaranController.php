@@ -190,7 +190,7 @@ class PermintaanLamaranController extends Controller
             );
         }
 
-        // ==========================================
+// ==========================================
         // 3. AKSI: APPROVE / DISETUJUI
         // ==========================================
         if (! $user) {
@@ -201,35 +201,33 @@ class PermintaanLamaranController extends Controller
         }
 
         $credentials = DB::transaction(function () use ($id, $pendaftar, $user) {
-            // Promosikan akun pendaftar yang sama agar username dan email tetap konsisten.
+            // Tentukan Username & Password Baru Karyawan
             $usernameBaru = $user->username ?: $pendaftar->email;
             $passwordBaru = 'Karyawan#' . rand(10000, 99999);
 
+            // 1. UPDATE TABEL USERS (Wajib update password & role agar login berhasil)
             $user->update([
                 'username'             => $usernameBaru,
                 'email'                => $user->email ?: $pendaftar->email,
-                'password'             => bcrypt($passwordBaru),
-                'role'                 => 'karyawan',
+                'password'             => bcrypt($passwordBaru), // Hash password baru
+                'role'                 => 'karyawan',            // Set role karyawan
                 'wajib_ganti_password' => false,
             ]);
 
             $karyawanUserId = $user->id_user;
 
-            // 2. Update status lamaran & simpan username/password baru
+            // 2. Update status lamaran & simpan plain password untuk tampilan kartu
             DB::table('permintaan_lamaran')
                 ->where('id_permintaan', $id)
                 ->update([
                     'status'            => 'disetujui',
                     'username_karyawan' => $usernameBaru,
                     'password_karyawan' => $passwordBaru,
-                    'akun_dibuat'        => true,
+                    'akun_dibuat'       => true,
                     'updated_at'        => now(),
                 ]);
 
-            // 3. Tambahkan record ke tabel karyawan
-            //    FIX: nip di-copy dari data pelamar (nik).
-            //    FIX: posisi yang dipilih pelamar saat mengisi form dipetakan ke divisi,
-            //         bukan disimpan sebagai jabatan. Admin masih bisa mengubahnya via Edit.
+            // 3. Tambahkan / update record ke tabel karyawan
             $posisiLamaran = trim((string) ($pendaftar->posisi ?? ''));
 
             $divisiIdLamaran = null;
@@ -251,9 +249,9 @@ class PermintaanLamaranController extends Controller
                     'nama_karyawan'     => $pendaftar->nama_pemohon,
                     'email'             => $pendaftar->email,
                     'no_hp'             => $pendaftar->no_hp ?? null,
-                    'nip'               => $pendaftar->nik ?? null,     // <-- FIX: auto-fill NIK
-                    'divisi_id'         => $divisiIdLamaran,             // <-- FIX: posisi form -> divisi
-                    'alamat'            => $pendaftar->alamat ?? null,   // <-- FIX: alamat dari form
+                    'nip'               => $pendaftar->nik ?? null,
+                    'divisi_id'         => $divisiIdLamaran,
+                    'alamat'            => $pendaftar->alamat ?? null,
                     'status'            => 'aktif',
                     'tanggal_bergabung' => today(),
                     'created_at'        => now(),
@@ -265,7 +263,6 @@ class PermintaanLamaranController extends Controller
                     ->update([
                         'user_id'           => $karyawanUserId,
                         'status'            => 'aktif',
-                        // Jangan timpa kalau admin sudah pernah isi manual sebelumnya
                         'nip'               => $karyawanRecord->nip ?? ($pendaftar->nik ?? null),
                         'divisi_id'         => $karyawanRecord->divisi_id ?? $divisiIdLamaran,
                         'alamat'            => filled($karyawanRecord->alamat ?? null) ? $karyawanRecord->alamat : ($pendaftar->alamat ?? null),

@@ -214,7 +214,7 @@
         <div class="flex items-center justify-between px-2">
             <a href="{{ $homeRoute }}" class="group flex min-w-0 items-center gap-3">
                 <span class="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgba(0,0,0,0.15)] ring-1 ring-white/50 transition duration-200 group-hover:-translate-y-0.5">
-                    <img src="{{ asset('images/logo.jpeg') }}" alt="Logo CV Natusi" class="h-9 w-9 object-contain">
+                    <img src="/images/logo.jpeg" alt="Logo CV Natusi" class="h-9 w-9 object-contain">
                 </span>
                 <span class="min-w-0">
                     <strong class="block truncate text-[17px] font-bold leading-5 text-white">{{ $portal['name'] }}</strong>

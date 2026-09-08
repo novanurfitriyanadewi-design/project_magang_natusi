@@ -31,7 +31,7 @@
 
                     <div class="grid h-[56px] w-[56px] place-items-center overflow-hidden rounded-md bg-white shadow-md sm:h-[62px] sm:w-[62px]">
                         <img
-                            src="{{ asset('images/logo.jpeg') }}"
+                            src="/images/logo.jpeg"
                             alt="Logo CV Natusi"
                             class="h-[48px] w-[48px] object-contain sm:h-[54px] sm:w-[54px]"
                         >
